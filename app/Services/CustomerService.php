@@ -26,14 +26,6 @@
     class CustomerService
     {
         public object $user;
-        public array  $blockRoles = [ EnumRole::ADMIN ];
-
-        private function authorizeNotBlocked() : void
-        {
-            if ( in_array( EnumRole::CUSTOMER , $this->blockRoles ) ) {
-                throw new Exception( trans( 'all.message.permission_denied' ) , 422 );
-            }
-        }
 
         public function list(Request $request) : Builder
         {
@@ -63,6 +55,25 @@
             $per_page = $request->integer( 'per_page' , 10 );
             $page     = $request->integer( 'page' , 1 );
             $debtors  = $request->boolean( 'debtors' );
+
+            $customerQuery = User::query()
+                                 ->withDebtMetrics()
+                                 ->withTotalSpent()
+                                 ->withOldestCreditOrderDays()
+                                 ->withWalletBalance()
+                                 ->withCount( [ 'orders as order_count' ] )
+                                 ->with( [
+                                     'media' , 'debtPayments.paymentMethod' , 'ledgers' , 'addresses' , 'unPaidOrders.posPayments.paymentMethod'
+                                 ] )
+                                 ->role( EnumRole::CUSTOMER )
+                                 ->when( $query , fn($q) => $q->where( 'name' , 'ilike' , '%' . $query . '%' ) )
+                                 ->when( $debtors , fn($q) => $q->whereHasDebt() )
+                                 ->orderByDesc( 'created_at' );
+
+            if ( $paginate ) {
+                return $customerQuery->paginate( perPage: $per_page , page: $page );
+            }
+            return $customerQuery->get();
         }
 
         /**
@@ -103,7 +114,6 @@
         public function update(CustomerRequest $request , User $customer)
         {
             try {
-                $this->authorizeNotBlocked();
 
                 DB::transaction( function () use ($customer , $request) {
                     $data = array_filter( [
@@ -286,7 +296,6 @@
         public function destroy(User $customer)
         {
             try {
-                $this->authorizeNotBlocked();
 
                 if ( ! $customer->hasRole( EnumRole::CUSTOMER ) ) {
                     throw new Exception( trans( 'all.message.permission_denied' ) , 422 );
@@ -312,7 +321,6 @@
         public function changePassword(UserChangePasswordRequest $request , User $customer) : User
         {
             try {
-                $this->authorizeNotBlocked();
                 $customer->password = Hash::make( $request->password );
                 $customer->save();
                 return $customer;
@@ -328,7 +336,6 @@
         public function changeImage(ChangeImageRequest $request , User $customer) : User
         {
             try {
-                $this->authorizeNotBlocked();
 
                 if ( $request->image ) {
                     $customer->clearMediaCollection( 'profile' );

@@ -2,6 +2,7 @@
 
     namespace App\Http\Controllers\Admin;
 
+    use App\Enums\CacheEnum;
     use App\Enums\CustomerPaymentType;
     use App\Enums\CustomerWalletTransactionType;
     use App\Enums\Role as EnumRole;
@@ -25,6 +26,7 @@
     use Illuminate\Http\Request;
     use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
     use Illuminate\Http\Response;
+    use Illuminate\Support\Facades\Cache;
     use Illuminate\Support\Facades\DB;
     use Maatwebsite\Excel\Facades\Excel;
 
@@ -96,13 +98,12 @@
         public function posCustomers(Request $request)
         {
             try {
-                $query = $request->input( 'query' );
-
-                $customers = User::role( EnumRole::CUSTOMER )
-                                 ->select( 'id' , 'name' , 'phone' , 'email' , 'status' )
-                                 ->when( $query , fn($q) => $q->where( 'name' , 'ilike' , '%' . $query . '%' ) )
-                                 ->orderByDesc( 'created_at' )
-                                 ->get();
+                $customers = Cache::rememberForever( CacheEnum::POS_CUSTOMERS , function () {
+                    return User::role( EnumRole::CUSTOMER )
+                               ->select( 'id' , 'name' , 'phone' , 'email' , 'status' )
+                               ->orderByDesc( 'created_at' )
+                               ->get();
+                } );
 
                 return response()->json( [ 'data' => $customers ] );
             } catch ( Exception $exception ) {

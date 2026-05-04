@@ -40,6 +40,6 @@
 
         public function getMediaCollectionName() : string
         {
-            return MediaEnum::SERVICES_MEDIA_COLLECTION;
+            return MediaEnum::IMAGES_COLLECTION;
         }
     }

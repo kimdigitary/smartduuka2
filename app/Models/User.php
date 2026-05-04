@@ -2,10 +2,12 @@
 
     namespace App\Models;
 
+    use App\Enums\CacheEnum;
     use App\Enums\CustomerPaymentType;
     use App\Enums\OrderStatus;
     use App\Enums\PaymentType;
     use App\Enums\Status;
+    use App\Traits\ForgetsCacheOnCRUD;
     use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,7 +24,7 @@
 
     class User extends Authenticatable implements HasMedia , Syncable
     {
-        use InteractsWithMedia , HasApiTokens , HasFactory , HasRoles , Notifiable , ResourceSyncing;
+        use InteractsWithMedia , HasApiTokens , HasFactory , HasRoles , Notifiable , ResourceSyncing , ForgetsCacheOnCRUD;
 
         protected $table = 'users';
 
@@ -308,5 +310,14 @@
                  ->crop( 'crop-center' , 225 , 225 )
                  ->keepOriginalImageFormat()
                  ->sharpen( 10 );
+        }
+
+        protected static function getCacheKeysToForget(): array
+        {
+            return [
+                CacheEnum::POS_CUSTOMERS,
+                // dynamic keys now receive the instance as an argument:
+                fn (self $model) => "pos_customer.{$model->id}",
+            ];
         }
     }

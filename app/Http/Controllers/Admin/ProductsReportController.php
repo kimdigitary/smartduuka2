@@ -11,7 +11,11 @@ use App\Services\CompanyService;
 use App\Services\ProductService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Maatwebsite\Excel\Facades\Excel;
 use Smartisan\Settings\Facades\Settings;
@@ -30,7 +34,7 @@ class ProductsReportController extends AdminController
         $this->middleware(['permission:products-report'])->only('index', 'export', 'productsReportOverview', 'exportPdf');
     }
 
-    public function index(PaginateRequest $request): \Illuminate\Http\Response | \Illuminate\Http\Resources\Json\AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    public function index(PaginateRequest $request): Response | AnonymousResourceCollection | Application | ResponseFactory
     {
         try {
             return ProductAdminResource::collection($this->productService->productReport($request));
@@ -39,7 +43,7 @@ class ProductsReportController extends AdminController
         }
     }
 
-    public function export(PaginateRequest $request): \Illuminate\Http\Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    public function export(PaginateRequest $request): Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
     {
         try {
             return Excel::download(new ProductsReportExport($this->productService, $request), 'Product-Report.xlsx');
@@ -48,7 +52,7 @@ class ProductsReportController extends AdminController
         }
     }
 
-    public function productsReportOverview(Request $request): \Illuminate\Foundation\Application|\Illuminate\Http\Response|ProductsReportOverviewResource|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
+    public function productsReportOverview(Request $request): \Illuminate\Foundation\Application| Response|ProductsReportOverviewResource| Application| ResponseFactory
     {
         try {
             return new ProductsReportOverviewResource($this->productService->productsReportOverview($request));

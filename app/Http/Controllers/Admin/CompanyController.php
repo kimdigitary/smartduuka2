@@ -1,40 +1,51 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+    namespace App\Http\Controllers\Admin;
 
-use App\Http\Requests\CompanyRequest;
-use App\Http\Resources\CompanyResource;
-use App\Services\CompanyService;
-use Exception;
-use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\Routing\ResponseFactory;
-use Illuminate\Http\Response;
+    use App\Http\Requests\CompanyRequest;
+    use App\Http\Resources\CompanyResource;
+    use App\Services\CompanyService;
+    use Exception;
+    use Illuminate\Contracts\Foundation\Application;
+    use Illuminate\Contracts\Routing\ResponseFactory;
+    use Illuminate\Http\Response;
+    use Smartisan\Settings\Facades\Settings;
 
-class CompanyController extends AdminController
-{
-    public CompanyService $companyService;
-
-    public function __construct(CompanyService $companyService)
+    class CompanyController extends AdminController
     {
-        parent::__construct();
-        $this->companyService = $companyService;
+        public CompanyService $companyService;
+
+        public function __construct(CompanyService $companyService)
+        {
+            parent::__construct();
+            $this->companyService = $companyService;
 //        $this->middleware(['permission:settings'])->only('update');
-    }
+        }
 
-    public function index() : Response | CompanyResource | Application | ResponseFactory
-    {
-        try {
-            return new CompanyResource($this->companyService->list());
-        } catch (Exception $exception) {
-            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        public function index() : Response | CompanyResource | Application | ResponseFactory
+        {
+            try {
+                return new CompanyResource( $this->companyService->list() );
+            } catch ( Exception $exception ) {
+                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
+            }
+        }
+
+        public function printing()
+        {
+            try {
+                return response()->json( [ 'data' => Settings::group( 'printing' )->all() ] );
+            } catch ( Exception $exception ) {
+                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
+            }
+        }
+
+        public function update(CompanyRequest $request) : Response | CompanyResource | Application | ResponseFactory
+        {
+            try {
+                return new CompanyResource( $this->companyService->update( $request ) );
+            } catch ( Exception $exception ) {
+                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
+            }
         }
     }
-    public function update(CompanyRequest $request) : Response | CompanyResource | Application | ResponseFactory
-    {
-        try {
-            return new CompanyResource($this->companyService->update($request));
-        } catch (Exception $exception) {
-            return response(['status' => false, 'message' => $exception->getMessage()], 422);
-        }
-    }
-}

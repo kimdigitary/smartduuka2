@@ -79,7 +79,9 @@
     use App\Http\Controllers\PaymentController;
     use App\Http\Controllers\PaymentMethodController;
     use App\Http\Controllers\PrintAgentController;
+    use App\Http\Controllers\PrintDesignController;
     use App\Http\Controllers\PrinterController;
+    use App\Http\Controllers\PrintTemplateController;
     use App\Http\Controllers\ProductionController;
     use App\Http\Controllers\ProductionProcessController;
     use App\Http\Controllers\ProductionSetupController;
@@ -88,6 +90,7 @@
     use App\Http\Controllers\ServiceCategoryController;
     use App\Http\Controllers\ServiceController;
     use App\Http\Controllers\StockTransferController;
+    use App\Http\Controllers\TemplateTypeController;
     use App\Http\Controllers\UnitConversionController;
     use App\Http\Controllers\UserController;
     use App\Http\Controllers\WarehouseController;
@@ -160,6 +163,7 @@
         } );
 
         Route::get( 'company' , [ CompanyController::class , 'index' ] );
+        Route::get( 'printing' , [ CompanyController::class , 'printing' ] );
 
         Route::get( 'pin' , [ LoginController::class , 'pin' ] );
         Route::get( 'order/{order}' , [ PosOrderController::class , 'show' ] );
@@ -216,6 +220,10 @@
             Route::put( 'whatsapp-quotation/{order}' , [ OrderService::class , 'sendWhatsappQuotation' ] );
 
             Route::apiResource( 'expense-categories' , ExpenseCategoryController::class )->except( 'destroy' );
+            Route::apiResource( 'printTemplates' , PrintTemplateController::class )->except( 'destroy' );
+            Route::delete( 'printTemplates' , [ PrintTemplateController::class , 'destroy' ] );
+            Route::apiResource( 'printDesigns' , PrintDesignController::class )->except( 'destroy' );
+            Route::apiResource( 'templateTypes' , TemplateTypeController::class )->except( 'destroy' );
             Route::delete( 'expense-categories/delete' , [ ExpenseCategoryController::class , 'destroy' ] );
 
             Route::prefix( 'print-agent' )->group( function () {

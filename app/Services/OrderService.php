@@ -475,7 +475,20 @@
                 $orderColumn = $request->get( 'order_column' ) ?? 'id';
                 $orderType   = $request->get( 'order_by' ) ?? 'desc';
 
-                return Order::where( function ($query) use ($user) {
+                return Order::with( [
+                    'orderProducts.item' => function ($q) {
+                        $q->withTrashed();
+                    } ,
+                    'user' ,
+                    'creator' ,
+                    'paymentMethods.paymentMethod' ,
+                    'originalOrder' ,
+                    'posPayments'        => fn($q) => $q->latest() ,
+                    'posPayments.paymentMethod' ,
+                    'orderServiceProducts.service' ,
+                    'orderServiceProducts.addons.addon' ,
+                    'orderServiceProducts.tier.serviceTier'
+                ] )->where( function ($query) use ($user) {
                     $query->where( 'user_id' , $user->id );
                 } )->orderBy( $orderColumn , $orderType )->$method(
                     $methodValue

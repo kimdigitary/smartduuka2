@@ -30,6 +30,15 @@
                 throw new Exception( $exception->getMessage() , 422 );
             }
         }
+        public function printing()
+        {
+            try {
+                return Settings::group( 'company' )->all();
+            } catch ( Exception $exception ) {
+                Log::info( $exception->getMessage() );
+                throw new Exception( $exception->getMessage() , 422 );
+            }
+        }
 
         public function update(CompanyRequest $request)
         {

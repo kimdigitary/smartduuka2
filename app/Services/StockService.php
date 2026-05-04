@@ -32,7 +32,7 @@
         {
             try {
 
-                $per_page       = $request->integer( 'per_page' , 10 );
+                $per_page     = $request->integer( 'per_page' , 10 );
                 $warehouse_id = $request->warehouse_id;
                 $query        = $request->input( 'query' );
                 $page         = $request->input( 'page' );
@@ -52,7 +52,7 @@
 
                 $processedItems = $stocks->groupBy( $groupCriteria )
                                          ->map( fn($group) => $this->transformStockGrouped( $group ) )
-                                         ->filter( fn($item) => ($item !== NULL && $item[ 'stock' ] > 0) || $item[ 'quantity_deposited' ] > 0 )
+                                         ->filter( fn($item) => ( $item !== NULL && $item[ 'stock' ] > 0 ) || $item[ 'quantity_deposited' ] > 0 )
                                          ->values();
 
                 $totalStockValue    = $processedItems->sum( 'total_price' );
@@ -70,7 +70,7 @@
         public function listGroupedByBatch(Request $request)
         {
             try {
-                $per_page       = $request->integer( 'per_page' , 10 );
+                $per_page     = $request->integer( 'per_page' , 10 );
                 $warehouse_id = $request->warehouse_id;
                 $query        = $request->input( 'query' );
                 $page         = $request->input( 'page' );
@@ -116,7 +116,7 @@
         public function takings(Request $request)
         {
             try {
-                $per_page      = $request->integer( 'per_page' , 10 );
+                $per_page    = $request->integer( 'per_page' , 10 );
                 $isPaginated = $request->boolean( 'paginate' );
                 $stocks      = $this->stockQuery( $request )->get();
                 if ( $stocks->isEmpty() ) {
@@ -212,7 +212,7 @@
         {
             try {
                 $requests    = $request->all();
-                $per_page      = $request->get( 'per_page' , 10 );
+                $per_page    = $request->get( 'per_page' , 10 );
                 $page        = $request->get( 'page' , 1 );
                 $orderColumn = $request->get( 'order_column' ) ?? 'id';
                 $orderType   = $request->get( 'order_type' ) ?? 'desc';
@@ -255,17 +255,17 @@
         {
             try {
                 $per_page = $request->integer( 'per_page' , 10 );
-                $page    = $request->integer( 'page' , 1 );
-                $type    = $request->type;
-                $stocks  = $this->stockQuery( $request )
-                                ->when( $type , fn($q) => $q->where( 'type' , $type ) )
-                                ->get();
+                $page     = $request->integer( 'page' , 1 );
+                $type     = $request->type;
+                $stocks   = $this->stockQuery( $request )
+                                 ->when( $type , fn($q) => $q->where( 'type' , $type ) )
+                                 ->get();
 
                 $processedItems = $stocks->groupBy( 'batch' )
                                          ->map( fn($group , $batch) => $this->groupedStock( $group , $batch ) )
                                          ->values();
 
-                return $this->paginate( $processedItems , $per_page , $page );
+                return $this->paginate( $processedItems, $per_page , $page );
 
             } catch ( Exception $exception ) {
                 Log::error( 'Transfer List Error: ' . $exception->getMessage() );
@@ -279,7 +279,7 @@
             if ( ! $group ) {
                 return NULL;
             }
-            $first = $group->first();
+            $first = $group?->first();
 
             $productsWithQuantity = $group->map( function ($stock) {
                 $product = $stock->product;
@@ -444,7 +444,7 @@
         public function wastage(Request $request , &$totalLoss = 0)
         {
             try {
-                $per_page       = $request->integer( 'per_page' , 10 );
+                $per_page     = $request->integer( 'per_page' , 10 );
                 $page         = $request->integer( 'page' , 1 );
                 $isPaginated  = TRUE;
                 $warehouse_id = $request->warehouse_id;
@@ -533,7 +533,7 @@
         public function stockCapture(Request $request)
         {
             try {
-                $per_page       = $request->integer( 'per_page' , 10 );
+                $per_page     = $request->integer( 'per_page' , 10 );
                 $page         = $request->integer( 'page' , 1 );
                 $warehouse_id = $request->warehouse_id;
 
