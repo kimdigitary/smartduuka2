@@ -9,9 +9,7 @@
 
     class SyncNonCustomerUser
     {
-        /**
-         * @throws \Exception
-         */
+
 //        public function handle(SyncedResourceSaved $event) : void
 //        {
 //            $model = $event->model;
@@ -30,11 +28,21 @@
         {
             $model = $event->model;
 
-            if ( $model instanceof User && tenancy()->initialized ) {
+            if ( $model instanceof User ) {
+                if ( tenancy()->initialized ) {
+                    return;
+                }
+
                 if ( $model->hasRole( Role::CUSTOMER ) ) {
                     return;
                 }
             }
+
+//            if ( $model instanceof User && tenancy()->initialized ) {
+//                if ( $model->hasRole( Role::CUSTOMER ) ) {
+//                    return;
+//                }
+//            }
 
             app( UpdateSyncedResource::class )->handle( $event );
         }
