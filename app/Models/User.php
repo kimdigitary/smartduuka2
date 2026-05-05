@@ -257,7 +257,7 @@
             );
         }
 
-        public function openRegister() : Register
+        public function openRegister() : Register | null
         {
             return $this->registers()->whereNull( 'closed_at' )->latest()->first();
         }

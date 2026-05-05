@@ -60,7 +60,7 @@
                             'reference_no'      => $p[ 'reference' ] ?? time() ,
                             'amount'            => $net_amount ,
                             'payment_method_id' => $p[ 'id' ] ,
-                            'register_id'       => auth()->user()->openRegister()->id
+                            'register_id'       => auth()->user()?->openRegister()->id
                         ] );
 
                         PaymentMethodTransaction::create( [
@@ -111,7 +111,7 @@
                         'amount'            => $net_amount ,
                         'pos_payment_type'  => PosPaymentType::DEBT ,
                         'payment_method_id' => $payment->id ,
-                        'register_id'       => auth()->user()->openRegister()->id
+                        'register_id'       => auth()->user()?->openRegister()->id
                     ] );
 
                     PaymentMethodTransaction::create( [

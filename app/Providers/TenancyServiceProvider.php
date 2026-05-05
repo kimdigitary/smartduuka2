@@ -5,6 +5,7 @@
     namespace App\Providers;
 
     use App\Jobs\PrepareTenantJob;
+    use App\Listeners\CustomUpdateSyncedResource;
     use App\Listeners\SyncNonCustomerUser;
     use Illuminate\Contracts\Http\Kernel;
     use Illuminate\Support\Facades\Event;
@@ -106,6 +107,8 @@
 
                 // Resource syncing
                 Events\SyncedResourceSaved::class                    => [
+//                    SyncNonCustomerUser::class ,
+                    CustomUpdateSyncedResource::class ,
                     SyncNonCustomerUser::class
                 ] ,
 

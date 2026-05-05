@@ -209,7 +209,7 @@
     function register() : Register | null
     {
         $tenant = tenant( 'id' );
-        if ( $tenant ) return auth()->user()->openRegister();
+        if ( $tenant ) return auth()->user()?->openRegister();
         else return NULL;
     }
 

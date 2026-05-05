@@ -306,7 +306,7 @@
 
         public function registerDetails()
         {
-            $register = auth()->user()->openRegister();
+            $register = auth()->user()?->openRegister();
             if ( ! $register ) {
                 return response()->json( [ 'message' => 'No open register found' ] , 404 );
             }
