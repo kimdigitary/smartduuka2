@@ -86,7 +86,6 @@ pa create-tenant ajmalcollections
 tenant_ajmalcollections
 duqihozol@gmail.com
 
-
     Host github-api
     HostName github.com
     User git
