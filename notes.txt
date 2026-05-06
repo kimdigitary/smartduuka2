@@ -23,6 +23,7 @@ sshpass -p "EHhTh8530" scp /Users/mike/Desktop/valet/smartduuka2/setup.sh root@8
   docker exec -it db psql -U tenant_zakayo -l
 
   docker exec -it api /bin/bash
+  docker exec -it api_demo /bin/bash
   truncate -s 0 laravel.log
   docker exec -it smartduuka_next /bin/bash
   truncate -s 0 $(docker inspect --format='{{.LogPath}}' smartduuka_next)
