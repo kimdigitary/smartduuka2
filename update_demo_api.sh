@@ -5,6 +5,7 @@ APP_DIR="$HOME/smartduuka"
 BACKEND_DIR="$APP_DIR/api_demo"
 REPO_URL="git@github-api:omodingmike/smartduuka2.git"
 BRANCH="dev"
+# Explicitly using the demo compose file
 COMPOSE="docker compose -f docker-compose.demo.yml"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
@@ -12,32 +13,38 @@ fail() { echo "❌ $*" >&2; exit 1; }
 
 # Clone or pull
 if [ ! -d "$BACKEND_DIR/.git" ]; then
-  log "📥 Cloning dev branch..."
-  git clone --branch "$BRANCH" "$REPO_URL" "$BACKEND_DIR"
+  log "📥 Cloning dev branch only..."
+  # Single branch clone to keep the demo environment lightweight
+  git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$BACKEND_DIR"
 else
   log "⬇ Pulling latest dev changes..."
   sudo chown -R "$(whoami):$(whoami)" "$BACKEND_DIR"
-  git -C "$BACKEND_DIR" fetch origin
+
+  # Fetch specifically from the dev branch
+  git -C "$BACKEND_DIR" fetch origin "$BRANCH"
+
+  # Force switch to dev branch and reset to match origin/dev[cite: 5]
+  git -C "$BACKEND_DIR" checkout -B "$BRANCH"
   git -C "$BACKEND_DIR" reset --hard origin/"$BRANCH"
 fi
 
 cd "$BACKEND_DIR"
 
-# Fix permissions
+# Fix permissions for the demo directory[cite: 5]
 for DIR in storage bootstrap/cache public public/media public/static; do
   sudo mkdir -p "$DIR"
   sudo chown -R 33:33 "$DIR"
   sudo chmod -R 775 "$DIR"
 done
 
-# Install dependencies
+# Install dependencies using the demo compose configuration[cite: 5]
 $COMPOSE run --rm api_demo bash -c "composer install --no-dev --no-interaction"
 
-# Build containers
+# Build containers using the demo compose configuration[cite: 5]
 log "🐳 Building demo containers..."
 $COMPOSE up -d --build --force-recreate api_demo
 
-# Wait for api_demo
+# Wait for api_demo to be healthy[cite: 5]
 log "⏳ Waiting for api_demo to be healthy..."
 RETRY=0
 until $COMPOSE exec -T api_demo php artisan --version >/dev/null 2>&1; do
@@ -46,15 +53,15 @@ until $COMPOSE exec -T api_demo php artisan --version >/dev/null 2>&1; do
   sleep 3
 done
 
-# Run demo tenant migrations only — do NOT touch prod tenants
+# Run demo tenant migrations[cite: 5]
 log "🗄 Running demo tenant migrations..."
 $COMPOSE exec -T api_demo php artisan migrate --force
 $COMPOSE exec -T api_demo php artisan tenants:migrate --force --tenants=demoshop
 
-# Optimize
+# Optimize Laravel for the demo environment[cite: 5]
 $COMPOSE exec -T api_demo php artisan optimize:clear
 $COMPOSE exec -T api_demo php artisan config:cache
 $COMPOSE exec -T api_demo php artisan route:cache
 $COMPOSE exec -T api_demo php artisan view:cache
 
-log "✅ Demo API deployment complete!"
+log "✅ Demo API deployment complete using docker-compose.demo.yml!"
