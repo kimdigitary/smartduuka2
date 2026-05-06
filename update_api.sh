@@ -108,9 +108,6 @@ done
 log "🗄 Running database migrations and seeders..."
 $COMPOSE exec -T api php artisan migrate --force
 $COMPOSE exec -T api php artisan tenants:migrate --force
-$COMPOSE exec -T api php artisan tenants:seed --class=PrintDesignSeeder
-$COMPOSE exec -T api php artisan tenants:seed --class=PrintTemplateSeeder
-$COMPOSE exec -T api php artisan tenants:seed --class=PrinterTemplatesSeeder
 $COMPOSE exec -T api php artisan tenants:insert-register-report
 
 log "🔗 Ensuring storage symlink..."
