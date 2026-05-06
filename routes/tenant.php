@@ -120,6 +120,7 @@
             Route::post( 'logout' , [ AuthenticatedSessionController::class , 'destroy' ] );
             Route::get( '/user' , [ UserController::class , 'user' ] );
         } );
+
         Route::get( '/mail' , function () {
             return ( new SendEmail( 'emails.newusertemplate' , 'New user' ,
                 [
