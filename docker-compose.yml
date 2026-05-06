@@ -114,6 +114,11 @@ volumes:
   php_socket:
     external: true
     name: smartduuka_php_socket
+
+  smartduuka_php_socket_demo:
+    external: true
+    name: smartduuka_php_socket_demo
+
   demo_assets_media:
     external: true
   demo_assets_static:
