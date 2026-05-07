@@ -17,7 +17,7 @@
             $tenantId = tenant( 'id' );
             $cacheKey = "tenant_subscription_{$tenantId}";
 
-            $subscription = Cache::remember( $cacheKey , now()->addHour() , function () use ($tenantId) {
+            $subscription = Cache::remember( $cacheKey , now()->addMinutes( 30 ) , function () use ($tenantId) {
                 $result = FALSE;
 
                 tenancy()->central( function () use ($tenantId , &$result) {

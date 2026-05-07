@@ -90,6 +90,7 @@
     use App\Http\Controllers\ServiceCategoryController;
     use App\Http\Controllers\ServiceController;
     use App\Http\Controllers\StockTransferController;
+    use App\Http\Controllers\SubscriptionPlanController;
     use App\Http\Controllers\TemplateTypeController;
     use App\Http\Controllers\UnitConversionController;
     use App\Http\Controllers\UserController;
@@ -162,6 +163,7 @@
         Route::get( 'site' , [ SiteController::class , 'index' ] );
 
         Route::get( '/theme' , [ ThemeController::class , 'index' ] );
+        Route::get( 'subscribed' , [ SubscriptionPlanController::class , 'subscribed' ] );
         Route::get( 'pdf/{order}' , [ PosOrderController::class , 'pdf' ] );
 
         Route::post( 'status' , [ PaymentController::class , 'requesttoPayTransactionStatus' ] );

@@ -2,11 +2,15 @@
 
     namespace App\Http\Controllers;
 
+    use App\Enums\Status;
+    use App\Enums\SubscriptionPaymentStatus;
     use App\Http\Requests\SubscriptionPlanRequest;
     use App\Http\Resources\BillingCycleResource;
     use App\Http\Resources\SubscriptionPlanResource;
     use App\Models\BillingCycle;
     use App\Models\SubscriptionPlan;
+    use App\Models\TenantSubscription;
+    use Illuminate\Support\Facades\Cache;
 
     class SubscriptionPlanController extends Controller
     {
@@ -42,5 +46,30 @@
             $subscriptionPlan->delete();
 
             return response()->json();
+        }
+
+        public function subscribed()
+        {
+            $tenantId = tenant( 'id' );
+            $cacheKey = "tenant_subscription_{$tenantId}";
+            Cache::forget( $cacheKey );
+            $subscribed = FALSE;
+
+            tenancy()->central( function () use ($tenantId , &$subscribed) {
+                $subscribed = TenantSubscription::where( 'expires_at' , '>=' , now() )
+                                            ->where( 'payment_status' , '=' , SubscriptionPaymentStatus::Paid )
+                                            ->where( 'status' , '=' , Status::ACTIVE )
+                                            ->where( 'tenant_id' , $tenantId )
+                                            ->exists();
+            } );
+
+            if ( ! $subscribed ) {
+                return response()->json( [
+                    'data' => [ 'subscribed' => FALSE ]
+                ] );
+            }
+            return response()->json( [
+                'data' => [ 'subscribed' => TRUE ]
+            ] );
         }
     }

@@ -8,6 +8,7 @@
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Cache;
     use Illuminate\Support\Str;
+    use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedById;
 
     class PaymentsController extends Controller
     {
@@ -19,16 +20,23 @@
             $yoAPI             = new YoAPI( username: $username , password: $password , mode: $mode );
             $is_from_yo_uganda = $yoAPI->receive_payment_notification( $request );
 
-            if ( $is_from_yo_uganda ) {
-                $subscription = TenantSubscription::where( [ 'transaction_id' => $request->external_ref ] )->first();
-                if ( $subscription ) {
-                    $subscription->update( [
-                        'payment_status' => SubscriptionPaymentStatus::Paid ,
-                    ] );
-                    Cache::forget( "tenant_subscription_{$subscription->tenant_id}" );
+            try {
+                if ( $is_from_yo_uganda ) {
+                    $subscription = TenantSubscription::where( [ 'transaction_id' => $request->external_ref ] )->first();
+                    if ( $subscription ) {
+                        $subscription->update( [
+                            'payment_status' => SubscriptionPaymentStatus::Paid ,
+                        ] );
+                        tenancy()->initialize( $subscription->tenant_id );
+                        Cache::forget( "tenant_subscription_{$subscription->tenant_id}" );
+                        tenancy()->end();
+                    }
                 }
+                return response()->json();
+            } catch ( TenantCouldNotBeIdentifiedById $e ) {
+                info( $e->getMessage() );
+                return response()->json();
             }
-            return response()->json();
         }
 
         public function yoPay(TenantSubscription $tenantSubscription)
@@ -50,7 +58,7 @@
             $yoAPI->set_nonblocking( 'TRUE' );
 
             if ( app()->isLocal() ) {
-                $ipn = 'https://ztmmx82nsn.sharedwithexpose.com/api/webhook/yo';
+                $ipn = 'https://jersey-oral-clicking-spotlight.trycloudflare.com/api/webhook/yo';
             }
 
             else {
@@ -61,6 +69,7 @@
             $yoAPI->set_failure_notification_url( route( 'webhook.yo' ) );
             $response = $yoAPI->ac_deposit_funds( $phone , $amount , $title );
 
+            info( $response );
             if ( $response[ 'Status' ] == 'OK' ) {
                 $tenantSubscription->update( [ 'transaction_id' => $transaction_id ] );
             }

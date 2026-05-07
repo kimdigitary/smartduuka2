@@ -35,17 +35,9 @@
                     Route::get( '/show/{language}' , [ FrontendLanguageController::class , 'show' ] );
                 } );
             } );
-
-//            Route::middleware( [ 'api' ] )->group( function () {
-//                Route::get( 'subscription-plans' , [ SubscriptionPlanController::class , 'index' ] );
-//                Route::prefix( 'webhook' )->group( function () {
-//                    Route::post( 'yo' , [ PaymentsController::class , 'yoUganda' ] )->name( 'webhook.yo');
-//                } );
-//                Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
-//                Route::get( 'billingCycles' , [ SubscriptionPlanController::class , 'billingCycles' ] );
-//            } );
         } );
     }
+
     Route::middleware( [ 'api' ] )->group( function () {
         Route::get( 'subscription-plans' , [ SubscriptionPlanController::class , 'index' ] );
         Route::prefix( 'webhook' )->group( function () {
