@@ -129,7 +129,7 @@
             $yoAPI->set_nonblocking( 'TRUE' );
 
             if ( app()->isLocal() ) {
-                $ipn = 'https://ride-between-rose-come.trycloudflare.com/api/webhook/yo';
+                $ipn = 'https://exotic-mod-held-compromise.trycloudflare.com/api/webhook/yo';
             }
 
             else {

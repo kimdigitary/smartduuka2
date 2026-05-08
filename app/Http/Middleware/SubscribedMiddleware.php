@@ -34,7 +34,7 @@
 //            if ( ! $subscription ) {
 //                return response()->json( [
 //                    'message' => 'Your subscription has expired. Please renew your subscription.'
-//                ] , 402 );
+//                ] , 203 );
 //            }
 
             return $next( $request );
