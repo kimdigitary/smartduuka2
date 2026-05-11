@@ -32,7 +32,6 @@
                     $subscription = TenantSubscription::where( [ 'transaction_id' => $request->external_ref ] )->first();
 
                     if ( $subscription ) {
-
                         DB::transaction( function () use ($subscription , $request) {
                             $onboard = BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )->latest()->first();
                             $onboard->update( [ 'status' => Status::ACTIVE ] );
@@ -42,10 +41,12 @@
                                 'status'         => Status::ACTIVE ,
                                 'transaction_id' => $request->network_ref ,
                             ] );
+
                             TenantSubscription::where( 'tenant_id' , $subscription->tenant_id )
                                               ->where( 'id' , '!=' , $subscription->id )
                                               ->where( 'status' , Status::ACTIVE )
                                               ->update( [ 'status' => Status::INACTIVE ] );
+
                             $data = [
                                 'username'        => $request->payer_names ,
                                 'business_name'   => $onboard->name ,

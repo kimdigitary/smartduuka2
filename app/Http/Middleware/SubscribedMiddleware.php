@@ -2,9 +2,6 @@
 
     namespace App\Http\Middleware;
 
-    use App\Enums\Status;
-    use App\Enums\SubscriptionPaymentStatus;
-    use App\Models\TenantSubscription;
     use Closure;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Cache;
@@ -27,11 +24,11 @@
                 return $result;
             } );
 
-//            if ( ! $subscription ) {
-//                return response()->json( [
-//                    'message' => 'Your subscription has expired. Please renew your subscription.'
-//                ] , 203 );
-//            }
+            if ( ! $subscription ) {
+                return response()->json( [
+                    'message' => 'Your subscription has expired. Please renew your subscription.'
+                ] , 203 );
+            }
 
             return $next( $request );
         }

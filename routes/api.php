@@ -3,12 +3,12 @@
     use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
     use App\Http\Controllers\Frontend\SettingController as FrontendSettingController;
     use App\Http\Controllers\IotecController;
-    use App\Http\Controllers\PaymentsController;
     use App\Http\Controllers\SubscriptionController;
     use App\Http\Controllers\SubscriptionPlanController;
     use App\Http\Controllers\TenantController;
     use App\Http\Controllers\TenantSubscriptionController;
     use App\Http\Controllers\WhatsAppController;
+    use App\Payments\PaymentsController;
     use Illuminate\Support\Facades\Route;
 
     foreach ( config( 'tenancy.central_domains' , [] ) as $domain ) {
@@ -40,10 +40,11 @@
 
     Route::middleware( [ 'api' ] )->group( function () {
         Route::get( 'subscription-plans' , [ SubscriptionPlanController::class , 'index' ] );
-        Route::prefix( 'webhook' )->group( function () {
-            Route::post( 'yo' , [ PaymentsController::class , 'yoUganda' ] )->name( 'webhook.yo' );
-            Route::post( 'iotec' , [ PaymentsController::class , 'iotec' ] )->name( 'webhook.iotec' );
-        } );
+//        Route::prefix( 'webhook' )->group( function () {
+//            Route::post( 'yo' , [ PaymentsController::class , 'yoUganda' ] )->name( 'webhook.yo' );
+//            Route::post( 'iotec' , [ PaymentsController::class , 'iotec' ] )->name( 'webhook.iotec' );
+//        } );
+        Route::post( '/webhook/{gateway}' , [ PaymentsController::class , 'webhook' ] )->name( 'webhook.gateway' );
         Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
         Route::post( 'store-tenant' , [ TenantController::class , 'store' ] );
         Route::get( 'billingCycles' , [ SubscriptionPlanController::class , 'billingCycles' ] );
