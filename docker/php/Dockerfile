@@ -48,7 +48,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" && \
 # 6. Dependency Caching
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-interaction --no-scripts --no-autoloader --no-dev --ignore-platform-reqs
+RUN composer update --no-interaction --no-scripts --no-autoloader --no-dev --ignore-platform-reqs
 
 # 7. Permissions & Environment Fix
 RUN mkdir -p /var/www/.cache/composer /app/storage /app/bootstrap/cache/filament /var/run/php /app/public/media \
