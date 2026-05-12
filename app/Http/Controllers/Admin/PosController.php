@@ -313,9 +313,7 @@
                                  ->sum( fn($order) => $order->posPayments()->sum( 'amount' ) );
 
             $walletTransactions = $register->walletTransactions()->sum( 'amount' );
-            // ----------------------------------------------
 
-            // --- Dispatch ShiftClosed Notification ---
             $notificationSettings = Settings::group( 'notification' )->all();
             $adminEmail           = $notificationSettings[ 'admin_email' ] ?? NULL;
             $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? NULL;
@@ -342,7 +340,6 @@
                             deposits: $deposits ,
                             walletTransactions: $walletTransactions ,
                         ) );
-            // -----------------------------------------
 
             return response()->json( [
                 'message' => 'Register closed successfully' ,

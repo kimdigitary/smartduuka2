@@ -1,12 +1,13 @@
-FROM php:8.4-fpm
+FROM php:8.5-fpm
 
 ENV HOME=/var/www
 ENV CHROME_CRASHPAD_DATABASE_DIR=/tmp/crashpad
 ENV PUPPETEER_CACHE_DIR=/app/.cache/puppeteer
 
 # 1. System Dependencies
-RUN apt-get update && apt-get install -y libicu-dev libuv1-dev \
-    curl nano gnupg ca-certificates supervisor git unzip libpq-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libicu-dev libuv1-dev \
+    curl gnupg ca-certificates supervisor git unzip libpq-dev \
     jpegoptim optipng pngquant gifsicle libavif-bin libmagickwand-dev \
     libzip-dev libx11-xcb1 libxcomposite1 libxshmfence1 libglu1 libnss3 \
     libasound2 libatk1.0-0 libatk-bridge2.0-0 libcairo2 libcups2 \
@@ -17,18 +18,15 @@ RUN apt-get update && apt-get install -y libicu-dev libuv1-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 2. PHP Extensions
-RUN docker-php-ext-install pdo_pgsql pgsql gd exif zip intl opcache pcntl \
-    && pecl install redis imagick \
-    && docker-php-ext-enable redis imagick opcache
+# Note: opcache is statically compiled into PHP 8.5 — no need to install or enable it
+RUN docker-php-ext-install pdo_pgsql pgsql gd exif zip intl pcntl \
+    && pecl install redis imagick-3.8.1 \
+    && docker-php-ext-enable redis imagick
 
 # 3. Node & Puppeteer + Chrome
-#RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-#    && apt-get install -y nodejs \
-#    && npm install -g puppeteer --unsafe-perm=true \
-#    && npx puppeteer browsers install chrome-headless-shell
-
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && npm install -g puppeteer --unsafe-perm=true \
     && npx puppeteer browsers install chrome
 
@@ -45,7 +43,7 @@ RUN curl -fsSLO "$SUPERCRONIC_URL" && \
     chmod +x "supercronic-linux-amd64" && \
     mv "supercronic-linux-amd64" "/usr/local/bin/supercronic"
 
-# 6. Dependency Caching
+# 6. Dependency Caching (separate layer for better cache reuse)
 WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-interaction --no-scripts --no-autoloader --no-dev --ignore-platform-reqs
@@ -67,27 +65,21 @@ RUN git config --global --add safe.directory /app && \
     chown -R www-data:www-data /app/bootstrap/cache
 
 # 10. Configurations
-RUN rm -f /usr/local/etc/php-fpm.d/www.conf.default && \
-    rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
+# zz-docker.conf only contains "daemonize = no" — safe to remove, but do not re-enable daemonization in www.conf
+RUN rm -f /usr/local/etc/php-fpm.d/www.conf.default \
+    && rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
 
 COPY docker/php/supervisord/supervisord.conf /etc/supervisor/supervisord.conf
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
 COPY docker/php/preload.php /app/preload.php
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 
-# 11. Chrome symlink with validation
-#RUN CHROME_BIN=$(find /app/.cache/puppeteer -type f \( -name 'chrome' -o -name 'chrome-headless-shell' \) | grep -v '\.zip' | head -n 1) \
-#    && echo "Found Chrome at: $CHROME_BIN" \
-#    && ln -sf "$CHROME_BIN" /usr/local/bin/chrome-browser \
-#    && chmod +x /usr/local/bin/chrome-browser
-
+# 11. Chrome wrapper with validation
 RUN CHROME_BIN=$(find /app/.cache/puppeteer -type f -name 'chrome' | grep -v '\.zip' | head -n 1) \
     && echo "Found Chrome at: $CHROME_BIN" \
     && printf '#!/bin/sh\nexec "%s" --no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage "$@"\n' "$CHROME_BIN" \
         > /usr/local/bin/chrome-browser \
     && chmod +x /usr/local/bin/chrome-browser
-
-RUN #CHROME_BIN=$(find /app/.cache/puppeteer -type f -name 'chrome' | grep -v '\.zip' | head -n 1) \
 
 USER www-data
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/supervisord.conf"]
