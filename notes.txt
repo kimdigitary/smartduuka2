@@ -131,3 +131,5 @@ git clone -b dev git@github-api:omodingmike/smartduuka2.git
 docker compose -f docker-compose.demo.yml up -d --build --force-recreate
 
 cloudflared tunnel --url http://localhost:8000
+
+docker compose -f docker-compose.demo.yml up -d --build --force-recreate api_demo

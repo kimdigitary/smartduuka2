@@ -31,8 +31,7 @@
             $transactionId  = Str::uuid()->getHex();
             $paymentRequest = new PaymentRequest(
                 phone: $tenantSubscription->phone ,
-//                amount: $tenantSubscription->amount ,
-                amount: 1000 ,
+                amount: isDev() ? 1000 : $tenantSubscription->amount ,
                 description: 'Smart Duuka Payments' ,
                 transactionId: $transactionId ,
                 notificationUrl: $this->webhookUrl( $gatewayName ) ,

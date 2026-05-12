@@ -75,6 +75,12 @@
         return $buildArray;
     }
 
+    function isDev() : bool
+    {
+        return ( (bool) config( 'app.dev' ) ) === TRUE;
+    }
+
+
     function eventConfig(string $event)
     {
         $events = Settings::group( 'notification' )->get( 'events' ) ?? [];

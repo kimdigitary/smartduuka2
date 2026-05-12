@@ -17,7 +17,7 @@
         'project_id'  => env( 'PROJECT_ID' ) ,
         'business_id' => env( 'BUSINESS_ID' ) ,
         'main_app'    => env( 'MAIN_APP' ) ,
-        'dev'         => env( 'DEV' ) ,
+        'dev'         => env( 'DEV' , FALSE ) ,
         'accounting'  => env( 'ACCOUNTING_ENABLED' ) ,
         'chrome_path' => env( 'CHROME_PATH' ) ,
         'pin_pepper'  => env( 'PIN_PEPPER' ) ,
