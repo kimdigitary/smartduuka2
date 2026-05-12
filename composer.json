@@ -11,6 +11,7 @@
   "require": {
     "php": "^8.5",
     "ext-intl": "*",
+    "ext-openssl": "*",
     "ext-pdo": "*",
     "africastalking/africastalking": "^3.0",
     "archtechx/enums": "^1.1",
@@ -22,6 +23,7 @@
     "laravel/reverb": "^1.8",
     "laravel/sanctum": "^4.0",
     "laravel/tinker": "^3.0",
+    "league/csv": "^9.0",
     "picqer/php-barcode-generator": "^3.2",
     "pragmarx/countries": "^1.0",
     "smartisan/settings": "dev-main@dev",
@@ -30,8 +32,7 @@
     "spatie/laravel-medialibrary": "^11.15",
     "spatie/laravel-permission": "^6.21",
     "stancl/tenancy": "^3.9",
-    "staudenmeir/laravel-adjacency-list": "^1.25",
-    "ext-openssl": "*"
+    "staudenmeir/laravel-adjacency-list": "^1.25"
   },
   "repositories": [
     {
