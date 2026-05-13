@@ -12,7 +12,7 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"; }
 fail() { echo "❌ $*" >&2; exit 1; }
 
 # Update system packages
-log "🔄 Updating system packages..."
+#log "🔄 Updating system packages..."
 #sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y
 
 # Clone or pull
