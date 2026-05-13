@@ -15,7 +15,8 @@
         public function index(Request $request)
         {
             $type = $request->integer( 'type' );
-            return SubscriptionPlanResource::collection( SubscriptionPlan::where( 'type' , $type )->get() );
+            return SubscriptionPlanResource::collection( SubscriptionPlan::where( 'type' , $type )
+                                                                         ->orderBy( 'position'  )->get() );
         }
 
         public function billingCycles()

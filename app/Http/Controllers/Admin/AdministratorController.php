@@ -20,8 +20,9 @@
     use Illuminate\Http\Request;
     use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
     use Illuminate\Http\Response;
-    use Maatwebsite\Excel\Facades\Excel;
+    use Illuminate\Routing\Attributes\Controllers\Middleware;
 
+    #[Middleware('users.limit', only: ['store'])]
     class AdministratorController extends AdminController
     {
         private AdministratorService $administratorService;
@@ -92,14 +93,14 @@
             }
         }
 
-        public function export(PaginateRequest $request) : Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
-        {
-            try {
-                return Excel::download( new AdministratorExport( $this->administratorService , $request ) , 'Administrator.xlsx' );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
+//        public function export(PaginateRequest $request) : Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
+//        {
+//            try {
+//                return Excel::download( new AdministratorExport( $this->administratorService , $request ) , 'Administrator.xlsx' );
+//            } catch ( Exception $exception ) {
+//                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
+//            }
+//        }
 
         public function changePassword(UserChangePasswordRequest $request , User $administrator) : AdministratorResource | Response | Application | ResponseFactory
         {

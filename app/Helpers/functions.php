@@ -10,6 +10,7 @@
     use App\Enums\Pad;
     use App\Enums\PaymentStatus;
     use App\Enums\PaymentType;
+    use App\Enums\PlanFeature;
     use App\Enums\PosPaymentType;
     use App\Enums\Role;
     use App\Enums\SettingsEnum;
@@ -29,9 +30,11 @@
     use App\Models\PosPayment;
     use App\Models\Register;
     use App\Models\RoyaltyPointsExchageRate;
+    use App\Models\SubscriptionPlan;
     use App\Models\TenantSubscription;
     use App\Models\ThemeSetting;
     use App\Models\User;
+    use App\Support\PlanFeatureMap;
     use Carbon\Carbon;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Notifications\AnonymousNotifiable;
@@ -208,6 +211,17 @@
         return Settings::group( $group )->get( $key );
     }
 
+    function hasFeature(string $tenantId , PlanFeature $feature) : bool
+    {
+        return tenancy()->central( function () use ($tenantId , $feature) {
+            $plan = activeSubscription( $tenantId );
+
+            if ( ! $plan ) return FALSE;
+
+            return PlanFeatureMap::has( $plan->name , $feature );
+        } );
+    }
+
     function company()
     {
         return Settings::group( 'company' )->all();
@@ -220,10 +234,21 @@
 
     function tenantSubscriptions(string $tenantId)
     {
-        return TenantSubscription::where( 'expires_at' , '>=' , now() )
-                                 ->where( 'payment_status' , '=' , SubscriptionPaymentStatus::Paid )
-                                 ->where( 'status' , '=' , Status::ACTIVE )
-                                 ->where( 'tenant_id' , $tenantId )->latest();
+        return tenancy()->central(
+            fn() => TenantSubscription::with( 'subscriptionPlan' )
+                                      ->where( 'expires_at' , '>=' , now() )
+                                      ->where( 'payment_status' , SubscriptionPaymentStatus::Paid )
+                                      ->where( 'status' , Status::ACTIVE )
+                                      ->where( 'tenant_id' , $tenantId )
+                                      ->latest()
+        );
+    }
+
+    function activeSubscription(string $tenantId) : ?SubscriptionPlan
+    {
+        return tenancy()->central(
+            fn() => tenantSubscriptions( $tenantId )?->first()?->subscriptionPlan
+        );
     }
 
     function addPayment(Order $order = NULL , int $amount = 0 , int $payment_method = 0 , string $reference = NULL , PosPaymentType $pos_payment_type =

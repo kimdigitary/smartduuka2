@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Exports\EmployeeExport;
 use App\Http\Requests\ChangeImageRequest;
 use App\Http\Requests\EmployeeRequest;
 use App\Http\Requests\PaginateRequest;
@@ -19,8 +18,9 @@ use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Routing\Attributes\Controllers\Middleware;
 
+#[Middleware('users.limit', only: ['store'])]
 class EmployeeController extends AdminController
 {
     private EmployeeService $employeeService;
@@ -87,14 +87,14 @@ class EmployeeController extends AdminController
         }
     }
 
-    public function export(PaginateRequest $request): Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
-    {
-        try {
-            return Excel::download(new EmployeeExport($this->employeeService, $request), 'Employee.xlsx');
-        } catch (Exception $exception) {
-            return response(['status' => false, 'message' => $exception->getMessage()], 422);
-        }
-    }
+//    public function export(PaginateRequest $request): Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
+//    {
+//        try {
+//            return Excel::download(new EmployeeExport($this->employeeService, $request), 'Employee.xlsx');
+//        } catch (Exception $exception) {
+//            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+//        }
+//    }
 
     public function changePassword(UserChangePasswordRequest $request, User $employee): Response | EmployeeResource | Application | ResponseFactory
     {

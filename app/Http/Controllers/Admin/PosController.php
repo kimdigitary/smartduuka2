@@ -38,11 +38,13 @@
     use Illuminate\Contracts\Routing\ResponseFactory;
     use Illuminate\Http\Request;
     use Illuminate\Http\Response;
+    use Illuminate\Routing\Attributes\Controllers\Middleware;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Notification;
     use Smartisan\Settings\Facades\Settings;
 
 
+    #[Middleware( 'sales.limit' , only: [  'store' , 'quotationStore' , 'returnOrderStore' ] )]
     class PosController extends AdminController
     {
         use ApiResponse;

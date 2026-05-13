@@ -84,6 +84,7 @@
                         'payment_status' => SubscriptionPaymentStatus::Paid ,
                         'status'         => Status::ACTIVE ,
                         'transaction_id' => $payload->gatewayRef ,
+                        'payer_name'     => $payload->payerName ,
                     ] );
 
                     // Deactivate any other active subscriptions for this tenant
@@ -164,7 +165,6 @@
         {
             if ( app()->isLocal() ) {
                 $url = rtrim( config( 'payments.local_tunnel_url' , '' ) , '/' ) . "/api/webhook/{$gateway}";
-                info( $url );
                 return $url;
             }
 

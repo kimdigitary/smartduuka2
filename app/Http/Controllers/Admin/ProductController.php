@@ -21,10 +21,11 @@
     use Illuminate\Contracts\Routing\ResponseFactory;
     use Illuminate\Http\Request;
     use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+    use Illuminate\Routing\Attributes\Controllers\Middleware;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Response;
-    use Maatwebsite\Excel\Facades\Excel;
 
+    #[Middleware( 'items.limit' , only: [ 'store' ] )]
     class ProductController extends AdminController
     {
         public ProductService $productService;
@@ -117,14 +118,14 @@
             }
         }
 
-        public function export(PaginateRequest $request) : \Illuminate\Http\Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
-        {
-            try {
-                return Excel::download( new ProductExport( $this->productService , $request ) , 'Product.xlsx' );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
+//        public function export(PaginateRequest $request) : \Illuminate\Http\Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | Application | ResponseFactory
+//        {
+//            try {
+//                return Excel::download( new ProductExport( $this->productService , $request ) , 'Product.xlsx' );
+//            } catch ( Exception $exception ) {
+//                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
+//            }
+//        }
 
         public function generateSku($barcodeMethod) : \Illuminate\Foundation\Application | \Illuminate\Http\Response | Application | ResponseFactory
         {
@@ -217,9 +218,6 @@
                 $variation_prices          = json_decode( $request->variation_prices , TRUE );
                 $productModel              = Product::find( $product_id );
                 $batch                     = time();
-
-//                $productModel->retailPrices()->delete();
-//                $productModel->wholesalePrices()->delete();
 
                 if ( $standard_prices ) {
                     $productModel->retailPrices()->upsert(

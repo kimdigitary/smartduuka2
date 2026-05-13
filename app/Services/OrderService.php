@@ -52,6 +52,7 @@
     use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
+    use Illuminate\Routing\Attributes\Controllers\Middleware;
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Log;
@@ -59,24 +60,12 @@
     use Illuminate\Support\Str;
     use Smartisan\Settings\Facades\Settings;
 
-    // Added Service model
 
     class OrderService
     {
-        public object   $order;
-        public array    $items;
-        public int      $stock;
-        protected array $orderFilter = [
-            'order_serial_no' ,
-            'user_id' ,
-            'total' ,
-            'order_datetime' ,
-            'payment_method' ,
-            'payment_status' ,
-            'status' ,
-            'active' ,
-            'source'
-        ];
+        public object $order;
+        public array  $items;
+        public int    $stock;
 
         protected array $exceptFilter = [
             'excepts'
@@ -440,28 +429,13 @@
         public function myOrder(PaginateRequest $request)
         {
             try {
-                $requests    = $request->all();
                 $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
                 $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
                 $orderColumn = $request->get( 'order_column' ) ?? 'id';
                 $orderType   = $request->get( 'order_by' ) ?? 'desc';
 
-                return Order::where( function ($query) use ($requests) {
+                return Order::where( function ($query) {
                     $query->where( 'user_id' , auth()->user()->id );
-                    foreach ( $requests as $key => $request ) {
-                        if ( in_array( $key , $this->orderFilter ) ) {
-                            $query->where( $key , 'like' , '%' . $request . '%' );
-                        }
-                        if ( in_array( $key , $this->exceptFilter ) ) {
-                            $explodes = explode( '|' , $request );
-                            if ( is_array( $explodes ) ) {
-                                foreach ( $explodes as $explode ) {
-                                    $query->where( 'status' , '!=' , $explode );
-                                }
-                            }
-                        }
-                    }
-
                 } )->orderBy( $orderColumn , $orderType )->$method(
                     $methodValue
                 );
@@ -508,6 +482,10 @@
         {
             try {
                 DB::transaction( function () use ($request) {
+                    $current_total_sales = Order::count();
+                    $tenantId            = tenant( 'id' );
+//                      starter( $tenantId )
+
                     $status           = $request->integer( 'status' );
                     $is_preorder      = $request->integer( 'is_preorder' );
                     $paymentType      = $request->integer( 'paymentType' );
@@ -637,7 +615,7 @@
 
                 $notification = new NewOrder(
                     title: 'New Sale / Order' ,
-                    message: 'A new order has been placed at the POS by ' .$user ->name . '.' ,
+                    message: 'A new order has been placed at the POS by ' . $user->name . '.' ,
                     orderNo: $order->order_serial_no ,
                     orderStatus: $order->status?->label() ?? $order->status?->value ,
                     paymentStatus: $order->payment_status?->label() ?? $order->payment_status?->value ,
@@ -1625,11 +1603,10 @@
         public function salesReportOverview(Request $request) : array
         {
             try {
-                $requests    = $request->all();
                 $orderColumn = $request->get( 'order_column' ) ?? 'id';
                 $orderType   = $request->get( 'order_by' ) ?? 'desc';
 
-                $orders           = Order::with( 'orderProducts' )->where( function ($query) use ($requests) {
+                $orders           = Order::with( 'orderProducts' )->where( function ($query) {
                     if ( isset( $requests[ 'from_date' ] ) && isset( $requests[ 'to_date' ] ) ) {
                         $first_date = Date( 'Y-m-d' , strtotime( $requests[ 'from_date' ] ) );
                         $last_date  = Date( 'Y-m-d' , strtotime( $requests[ 'to_date' ] ) );
@@ -1638,31 +1615,6 @@
                             '<=' ,
                             $last_date
                         );
-                    }
-                    foreach ( $requests as $key => $request ) {
-                        if ( in_array( $key , $this->orderFilter ) ) {
-                            if ( $key === 'status' ) {
-                                $query->where( $key , (int) $request );
-                            }
-                            else if ( $key === 'payment_method' ) {
-                                $query->where( 'pos_payment_method' , $request );
-                            }
-                            else if ( $key === 'source' ) {
-                                $query->where( $key , $request );
-                            }
-                            else {
-                                $query->where( $key , 'like' , '%' . $request . '%' );
-                            }
-                        }
-
-                        if ( in_array( $key , $this->exceptFilter ) ) {
-                            $explodes = explode( '|' , $request );
-                            if ( is_array( $explodes ) ) {
-                                foreach ( $explodes as $explode ) {
-                                    $query->where( 'order_type' , '!=' , $explode );
-                                }
-                            }
-                        }
                     }
                 } )->orderBy( $orderColumn , $orderType )->get();
                 $salesReportArray = [];

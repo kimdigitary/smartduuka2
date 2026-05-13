@@ -3,9 +3,14 @@
     use App\Http\Middleware\AddCurrencySymbol;
     use App\Http\Middleware\AfterMiddleware;
     use App\Http\Middleware\CheckActiveRegister;
+    use App\Http\Middleware\CheckProductLimit;
+    use App\Http\Middleware\CheckSalesLimit;
+    use App\Http\Middleware\CheckUsersLimit;
     use App\Http\Middleware\DetectUnusualLogin;
+    use App\Http\Middleware\FeaturesMiddleware;
     use App\Http\Middleware\ForceAdminLogin;
     use App\Http\Middleware\PermissionMiddleware;
+    use App\Http\Middleware\RequireFeature;
     use App\Http\Middleware\SubscribedMiddleware;
     use Illuminate\Foundation\Application;
     use Illuminate\Foundation\Configuration\Exceptions;
@@ -40,6 +45,10 @@
                               'local.auth'      => ForceAdminLogin::class ,
                               'register'        => CheckActiveRegister::class ,
                               'afterMiddleware' => AfterMiddleware::class ,
+                              'feature'         => RequireFeature::class ,
+                              'sales.limit'     => CheckSalesLimit::class ,
+                              'users.limit'     => CheckUsersLimit::class ,
+                              'items.limit'     => CheckProductLimit::class ,
                           ] );
                           $middleware->append( [
                               AddCurrencySymbol::class ,

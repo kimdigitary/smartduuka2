@@ -133,3 +133,7 @@ docker compose -f docker-compose.demo.yml up -d --build --force-recreate
 cloudflared tunnel --url http://localhost:8000
 
 docker compose -f docker-compose.demo.yml up -d --build --force-recreate api_demo
+
+scp -P 7589 -i ~/.ssh/erudite \
+/Users/mike/Desktop/valet/smartduuka2/app/YoPayments/private_key.pem \
+deploy@161.97.184.49:~/smartduuka/api_demo/app/YoPayments/

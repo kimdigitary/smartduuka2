@@ -18,7 +18,8 @@
             $yoAPI->set_external_reference( $payment->transactionId );
             $yoAPI->set_nonblocking( 'TRUE' );
             $yoAPI->set_instant_notification_url( $payment->notificationUrl );
-            $yoAPI->set_failure_notification_url( $payment->failureUrl ?: $payment->notificationUrl );
+//            $yoAPI->set_failure_notification_url( $payment->failureUrl ?: $payment->notificationUrl );
+            $yoAPI->set_failure_notification_url( $payment->notificationUrl );
 
             $response = $yoAPI->ac_deposit_funds(
                 $this->normalisePhone( $payment->phone ) ,
@@ -42,20 +43,20 @@
 
         public function isSuccessWebhook(Request $request) : bool
         {
-            return ( new YoAPI(
+            return new YoAPI(
                 username: config( 'payments.yo.username' ) ,
                 password: config( 'payments.yo.password' ) ,
                 mode: $this->mode() ,
-            ) )->receive_payment_notification( $request );
+            )->receive_payment_notification( $request );
         }
 
         public function isFailureWebhook(Request $request) : bool
         {
-            return ( new YoAPI(
+            return new YoAPI(
                 username: config( 'payments.yo.username' ) ,
                 password: config( 'payments.yo.password' ) ,
                 mode: $this->mode() ,
-            ) )->receive_payment_failure_notification( $request );
+            )->receive_payment_failure_notification( $request );
         }
 
         public function parseWebhook(Request $request) : WebhookPayload
