@@ -18,7 +18,6 @@
 
         public function handle() : void
         {
-//            Tenant::all()->runForEach( function (Tenant $tenant) {
             Order::query()
                  ->where( 'due_date' , '<' , now() )
                  ->where( 'quotation_status' , '<>' , QuotationStatus::EXPIRED )
@@ -27,6 +26,5 @@
                          $order->update( [ 'quotation_status' => QuotationStatus::EXPIRED ] );
                      }
                  } );
-//            } );
         }
     }

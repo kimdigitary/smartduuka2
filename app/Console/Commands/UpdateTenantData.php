@@ -16,12 +16,9 @@
 
         protected $description = 'Command description';
 
-
         public function handle() : void
         {
-//            Tenant::all()->runForEach( function ($tenant) {
             $p = PaymentMethod::firstWhere( 'name' , 'Wallet' );
             $p?->update( [ 'name' => DefaultPaymentMethods::WALLET->value ] );
-//            } );
         }
     }

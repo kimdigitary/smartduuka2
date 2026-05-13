@@ -16,6 +16,7 @@
     class SendSubscriptionReminders extends Command
     {
         use TenantAwareCommand , HasATenantsOption;
+
         protected $signature = 'subscriptions:send-reminders';
 
         protected $description = 'Send email and WhatsApp reminders for expiring and expired subscriptions';
@@ -26,13 +27,16 @@
 
         public function handle() : void
         {
-//            Tenant::all()->runForEach( function (Tenant $tenant) {
-                tenancy()->central( function () use ($tenant) {
-                    $this->processReminder( $tenant );
-                } );
-//            } );
+            $tenant = tenant(); //currently initialized tenant
 
-            $this->info( 'Subscription reminder process completed.' );
+            if ( ! $tenant ) {
+                return;
+            }
+
+            tenancy()->central( function () use ($tenant) {
+                $this->processReminder( $tenant );
+            } );
+
         }
 
         private function processReminder(Tenant $tenant) : void

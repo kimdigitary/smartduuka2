@@ -120,9 +120,11 @@
                 $subdomain  = explode( '.' , $host )[ 0 ];
                 $tenantSlug = Str::before( $subdomain , '-api' );
 
-                $tenant = Tenant::where( 'id' , $tenantSlug )->first();
+                $tenant = Tenant::where( 'id' , $tenantSlug )
+                                ->orWhere( 'id' , $centralUser->tenant_id )
+                                ->first();
 
-                if ( ! $tenant || ! $tenant->database() ) return NULL;
+                if ( ! $tenant ) return NULL;
 
                 tenancy()->initialize( $tenant );
 
@@ -163,7 +165,6 @@
 
                 activityLog( 'Logged in' , $app_id , $tenantUser );
                 app( SyncTenantUsersToCentral::class )->sync();
-
                 return $tenantUser;
             } );
         }

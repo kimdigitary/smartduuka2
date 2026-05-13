@@ -18,7 +18,6 @@
 
         public function handle() : void
         {
-//        Tenant::all()->runForEach(function (Tenant $tenant) {
             Order::query()
                  ->where( 'pre_order_status' , PreOrderStatus::PENDING_STOCK )
                  ->with( 'orderProducts.item' )
@@ -27,7 +26,6 @@
                          $this->checkAndUpdatePreOrder( $order );
                      }
                  } );
-//        });
         }
 
         private function checkAndUpdatePreOrder(Order $order) : void

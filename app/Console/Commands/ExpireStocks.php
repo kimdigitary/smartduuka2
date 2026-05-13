@@ -21,9 +21,7 @@
 
         public function handle() : void
         {
-//        Tenant::all()->runForEach(function (Tenant $tenant) {
             $this->expireStocksForTenant();
-//        });
         }
 
         private function expireStocksForTenant() : void

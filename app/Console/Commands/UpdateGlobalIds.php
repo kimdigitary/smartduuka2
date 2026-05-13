@@ -19,7 +19,6 @@
         public function handle() : void
         {
             try {
-                $this->info( 'Step 1: Ensuring all Central Users have a global_id...' );
 
                 foreach ( CentralUser::all() as $centralUser ) {
                     if ( ! $centralUser->global_id ) {
@@ -27,7 +26,6 @@
                     }
                 }
 
-                $this->info( 'Step 2: Syncing Tenant Users to Central Users...' );
                 $tenants = Tenant::all();
 
                 foreach ( $tenants as $tenant ) {
