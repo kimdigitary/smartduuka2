@@ -252,7 +252,7 @@
                                       ->where( 'payment_status' , SubscriptionPaymentStatus::Paid )
                                       ->where( 'status' , Status::ACTIVE )
                                       ->where( 'tenant_id' , $tenantId )
-                                      ->where( 'branch_id' , branchId() )
+//                                      ->where( 'branch_id' , branchId() )
                                       ->latest()
         );
     }
