@@ -16,7 +16,7 @@
         {
             $type = $request->integer( 'type' );
             return SubscriptionPlanResource::collection( SubscriptionPlan::where( 'type' , $type )
-                                                                         ->orderBy( 'position'  )->get() );
+                                                                         ->orderBy( 'position' )->get() );
         }
 
         public function billingCycles()
@@ -50,15 +50,12 @@
 
         public function subscribed()
         {
-            $tenantId = tenant( 'id' );
-            $cacheKey = "tenant_subscription_{$tenantId}";
+            $tenantId  = tenant( 'id' );
+            $branch_id = branchId();
+            $cacheKey  = "tenant_subscription_{$tenantId}_{$branch_id}";
             Cache::forget( $cacheKey );
-            $subscribed = FALSE;
 
-            tenancy()->central( function () use ($tenantId , &$subscribed) {
-                $subscribed = tenantSubscriptions( $tenantId )->exists();
-            } );
-
+            $subscribed = tenancy()->central( fn() => tenantSubscriptions( $tenantId )->exists() );
 
             if ( ! $subscribed ) {
                 return response()->json( [

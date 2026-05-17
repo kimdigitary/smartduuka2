@@ -49,4 +49,9 @@
             return $this->belongsToMany( CentralUser::class , 'tenant_users' , 'tenant_id' , 'global_user_id' , 'id' , 'global_id' )
                         ->using( TenantPivot::class );
         }
+
+        public function branches() : HasMany
+        {
+            return $this->hasMany( TenantBranch::class , 'tenant_id' , 'id' );
+        }
     }

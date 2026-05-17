@@ -15,8 +15,8 @@
         public function index(PaginateRequest $request)
         {
             try {
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
                 return ChartOfAccountGroupResource::collection(ChartOfAccountGroup::whereNull('parent_id')
                                                                                   ->with([ 'childrenRecursive' , 'ledgers' ])
                                                                                   ->$method($methodValue));

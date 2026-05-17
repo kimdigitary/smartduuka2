@@ -1,5 +1,6 @@
 <?php
 
+    use App\Http\Controllers\Admin\BranchController;
     use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
     use App\Http\Controllers\Frontend\SettingController as FrontendSettingController;
     use App\Http\Controllers\IotecController;

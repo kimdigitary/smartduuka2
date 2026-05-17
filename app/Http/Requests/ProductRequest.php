@@ -2,7 +2,6 @@
 
     namespace App\Http\Requests;
 
-    use App\Models\ProductVariation;
     use Illuminate\Foundation\Http\FormRequest;
     use Illuminate\Validation\Rule;
 
@@ -38,7 +37,7 @@
                 ] ,
                 'barcode'                    => [ 'required' , 'numeric' , 'not_in:0' ] ,
                 'type'                       => [ 'required' , 'numeric' , 'not_in:0' ] ,
-                'trackStock'                 => [ 'sometimes' , 'numeric'   ] ,
+                'trackStock'                 => [ 'sometimes' , 'numeric' ] ,
                 'product_category_id'        => [ 'required' , 'numeric' , 'not_in:0' ] ,
                 'product_brand_id'           => [ 'nullable' , 'numeric' , 'max_digits:10' ] ,
                 'weight'                     => [ 'nullable' , 'string' , 'max:100' ] ,
@@ -48,6 +47,7 @@
                 'returnable'                 => [ 'nullable' , 'string' ] ,
                 'description'                => [ 'nullable' , 'string' , 'max:5000' ] ,
                 'image'                      => 'sometimes|file' ,
+                'branch_id'                  => 'sometimes|numeric:' ,
                 'status'                     => [ 'required' , 'numeric' , 'max:24' ] ,
                 'can_purchasable'            => [ 'required' , 'numeric' , 'max:24' ] ,
                 'stock_out'                  => [ 'sometimes' , 'numeric' , 'max:24' ] ,

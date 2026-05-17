@@ -32,7 +32,7 @@
             $this->middleware([ 'permission:dining_tables_show' ])->only('show');
         }
 
-        public function index(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index(PaginateRequest $request) 
         {
             try {
                 return DiningTableResource::collection($this->diningTableService->list($request));
@@ -41,7 +41,7 @@
             }
         }
 
-        public function all(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function all(PaginateRequest $request) 
         {
             try {
                 return DiningTableResource::collection(Diningtable::all());

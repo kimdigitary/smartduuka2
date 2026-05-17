@@ -5,7 +5,9 @@
     use App\Enums\DamageStatus;
     use App\Enums\MediaEnum;
     use App\Enums\Pad;
+    use App\Models\Scopes\BranchScope;
     use App\Traits\HasImageMedia;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
@@ -13,6 +15,7 @@
     use Illuminate\Support\Str;
     use Spatie\MediaLibrary\HasMedia;
 
+    #[ScopedBy([BranchScope::class])]
     class Damage extends Model implements HasMedia
     {
         use HasFactory;
@@ -28,7 +31,8 @@
             'note' ,
             'reason' ,
             'creator_id' ,
-            'status'
+            'status' ,
+            'branch_id'
         ];
 
         protected $casts = [

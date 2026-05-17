@@ -2,7 +2,6 @@
 
     namespace App\Http\Requests;
 
-    // Ensure this matches your actual Enum namespace
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Foundation\Http\FormRequest;
     use Illuminate\Validation\Rule;
@@ -34,7 +33,6 @@
                     Rule::unique( 'branches' , 'code' )->ignore( $branchId )
                 ] ,
                 'address' => [ 'required' , 'string' , 'max:500' ] ,
-                'manager'  => [ 'required' , 'string' , 'max:190' ] ,
                 'phone'    => [ 'required' , 'string' , 'max:20' ] ,
                 'email'    => [ 'nullable' , 'email' , 'max:190' ] ,
                 'status'   => [ 'nullable' , 'numeric:' , 'max:190' ] ,

@@ -9,7 +9,6 @@
     use App\Enums\PurchaseRequestStatus;
     use App\Enums\PurchaseStatus;
     use App\Enums\StockStatus;
-    use App\Exports\PurchasesExport;
     use App\Http\Requests\PaginateRequest;
     use App\Http\Requests\PurchasePaymentRequest;
     use App\Http\Requests\PurchaseRequest;
@@ -41,17 +40,15 @@
     use App\Services\PurchaseService;
     use App\Traits\SaveMedia;
     use Exception;
-    use Illuminate\Contracts\Routing\ResponseFactory;
-    use Illuminate\Foundation\Application;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
     use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-    use Illuminate\Http\Response;
+    use Illuminate\Routing\Attributes\Controllers\Middleware;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Log;
     use Illuminate\Support\Str;
-    use Maatwebsite\Excel\Facades\Excel;
 
+    #[Middleware( 'feature' , only: [ 'transferStock' ] )]
     class PurchaseController extends AdminController
     {
         use SaveMedia;
@@ -72,13 +69,6 @@
         )
         {
             parent::__construct();
-
-            // Uncomment and adjust permissions as needed:
-            // $this->middleware(['permission:purchase'])->only('export', 'downloadAttachment');
-            // $this->middleware(['permission:purchase_create'])->only('store');
-            // $this->middleware(['permission:purchase_edit'])->only('edit', 'update');
-            // $this->middleware(['permission:purchase_delete'])->only('destroy');
-            // $this->middleware(['permission:purchase_show'])->only('show');
         }
 
         // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -94,12 +84,13 @@
 
         // ─── Lookup endpoints ────────────────────────────────────────────────────────
 
-        public function paymentMethods() : AnonymousResourceCollection
+        public function paymentMethods(Request $request) : AnonymousResourceCollection
         {
-            return PaymentMethodResource::collection( PaymentMethod::all() );
+            $branch_id = $request->input( 'branch_id' );
+            return PaymentMethodResource::collection( PaymentMethod::branch( $branch_id )->get() );
         }
 
-        public function taxes() : AnonymousResourceCollection
+        public function taxes(Request $request) : AnonymousResourceCollection
         {
             return TaxResource::collection( Tax::all() );
         }
@@ -136,33 +127,6 @@
         /**
          * Ingredient purchase list (used by older routes that pass a 'type' filter directly).
          */
-        public function ingreidentList(PaginateRequest $request)
-        {
-            try {
-                $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' , 'id' );
-                $orderType   = $request->get( 'order_type' , 'desc' );
-
-                return Purchase::with( 'supplier' )
-                               ->where( function ($query) use ($requests) {
-                                   $query->where( 'type' , $requests[ 'type' ] );
-
-                                   foreach ( $requests as $key => $value ) {
-                                       if ( ! in_array( $key , $this->purchaseFilter ) ) {
-                                           continue;
-                                       }
-                                       $this->applyPurchaseFilter( $query , $key , $value );
-                                   }
-                               } )
-                               ->orderBy( $orderColumn , $orderType )
-                               ->$method( $methodValue );
-            } catch ( Exception $exception ) {
-                Log::error( $exception->getMessage() );
-                throw new Exception( $exception->getMessage() , 422 );
-            }
-        }
 
         // ─── CRUD endpoints ──────────────────────────────────────────────────────────
 
@@ -288,12 +252,13 @@
             try {
                 DB::transaction( function () use ($purchase , $request) {
                     $purchase->update( [ 'status' => $request->status ] );
+                    $branch_id = $request->input( 'branch_id' );
 
                     if ( (int) $request->status !== PurchaseRequestStatus::ORDERED->value ) {
                         return;
                     }
 
-                    $warehouseId = Warehouse::value( 'id' ); // single query instead of first()->id
+                    $warehouseId = Warehouse::value( 'id' );
                     $products    = $purchase->stocks->map( function (Stock $stock) {
                         return [
                             'stock_id'         => $stock->id ,
@@ -316,6 +281,7 @@
                         'reference_no'   => 'PO' . time() ,
                         'subtotal'       => $total ,
                         'total'          => $total ,
+                        'branch_id'      => $branch_id ,
                         'notes'          => $purchase->reason ,
                         'status'         => PurchaseStatus::PENDING ,
                         'shipping'       => 0 ,
@@ -323,12 +289,14 @@
                         'warehouse_id'   => $warehouseId ,
                         'supplier_id'    => $purchase->supplier_id ,
                     ] );
+                    $p->update( [ 'reference_no' => recordId( 'PO' , $p ) ] );
 
                     $stockRows = $products->map( fn($product) => [
                         'model_type'       => Purchase::class ,
                         'reference'        => 'S' . time() ,
                         'model_id'         => $p->id ,
                         'expiry_date'      => NULL ,
+                        'branch_id'        => $branch_id ,
                         'item_type'        => Product::class ,
                         'product_id'       => $product[ 'product_id' ] ,
                         'item_id'          => $product[ 'product_id' ] ,
@@ -366,6 +334,7 @@
                 DB::transaction( function () use ($request , $order) {
                     $paymentMethod = PaymentMethod::findOrFail( $request->payment_method );
                     $amount        = $request->amount;
+                    $branch_id     = $request->input( 'branch_id' );
 
                     if ( Str::contains( $paymentMethod->name , 'points' , TRUE ) ) {
                         $points       = $request->points;
@@ -391,6 +360,7 @@
                         'date'           => now()->parse( $request->date )->format( 'Y-m-d H:i:s' ) ,
                         'reference_no'   => $request->reference_no ,
                         'amount'         => $amount ,
+                        'branch_id'      => $branch_id ,
                         'payment_method' => $request->payment_method ,
                     ] );
 
@@ -431,7 +401,7 @@
 
         // ─── Payment endpoints ───────────────────────────────────────────────────────
 
-        public function payment(PurchasePaymentRequest $request , Purchase $purchase) : Application | Response | PurchaseResource | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+        public function payment(PurchasePaymentRequest $request , Purchase $purchase)
         {
             try {
                 return new PurchaseResource( $this->purchaseService->payment( $request , $purchase ) );
@@ -440,7 +410,7 @@
             }
         }
 
-        public function paymentHistory(int $type , Purchase $purchase) : Application | Response | AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+        public function paymentHistory(int $type , Purchase $purchase)
         {
             try {
                 return PurchasePaymentResource::collection( $this->purchaseService->paymentHistory( $type , $purchase ) );
@@ -458,7 +428,7 @@
             }
         }
 
-        public function paymentDestroy(int $type , Purchase $purchase , PurchasePayment $purchasePayment) : Application | Response | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+        public function paymentDestroy(int $type , Purchase $purchase , PurchasePayment $purchasePayment)
         {
             try {
                 $this->purchaseService->paymentDestroy( $purchase , $purchasePayment , $type );
@@ -470,14 +440,14 @@
 
         // ─── Export / download endpoints ─────────────────────────────────────────────
 
-        public function export(PaginateRequest $request) : Application | Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
-        {
-            try {
-                return Excel::download( new PurchasesExport( $this->purchaseService , $request ) , 'Purchases.xlsx' );
-            } catch ( Exception $exception ) {
-                return $this->errorResponse( $exception );
-            }
-        }
+//        public function export(PaginateRequest $request) : Application | Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+//        {
+//            try {
+//                return Excel::download( new PurchasesExport( $this->purchaseService , $request ) , 'Purchases.xlsx' );
+//            } catch ( Exception $exception ) {
+//                return $this->errorResponse( $exception );
+//            }
+//        }
 
         public function downloadAttachment(Purchase $purchase)
         {

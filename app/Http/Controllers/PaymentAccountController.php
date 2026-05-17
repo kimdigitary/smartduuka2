@@ -15,10 +15,10 @@
         public function index(PaginateRequest $request)
         {
             try {
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_type') ?? 'desc';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_type') ?? 'desc';
                 return PaymentaccountResource::collection(PaymentAccount::with('currency')->orderBy($orderColumn , $orderType)->$method($methodValue));
             } catch ( \Exception $e ) {
                 Log::info($e->getMessage());

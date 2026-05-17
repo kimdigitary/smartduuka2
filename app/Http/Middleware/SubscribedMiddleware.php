@@ -11,8 +11,10 @@
     {
         public function handle(Request $request , Closure $next) : Response
         {
-            $tenantId = tenant( 'id' );
-            $cacheKey = "tenant_subscription_{$tenantId}";
+
+            $tenantId  = tenant( 'id' );
+            $branch_id = branchId();
+            $cacheKey = "tenant_subscription_{$tenantId}_{$branch_id}";
 
             $subscription = Cache::remember( $cacheKey , now()->addMinutes( 10 ) , function () use ($tenantId) {
                 $result = FALSE;

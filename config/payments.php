@@ -30,5 +30,8 @@
             'iotec_wallet_id' => env( 'IO_TEC_WALLET_ID' ) ,
             'iotec_client_id' => env( 'IO_TEC_CLIENT_ID' ) ,
             'iotec_secrete'   => env( 'IO_TEC_SECRET' ) ,
+        ] ,
+        'jpesa'            => [
+            'api_key' => env( 'JPESA_API_KEY' )
         ]
     ];

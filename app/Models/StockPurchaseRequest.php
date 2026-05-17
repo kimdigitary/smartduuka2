@@ -5,9 +5,12 @@
     use App\Enums\Department;
     use App\Enums\Priority;
     use App\Enums\PurchaseRequestStatus;
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class StockPurchaseRequest extends Model
     {
         protected $fillable = [
@@ -18,7 +21,8 @@
             'reason' ,
             'reference' ,
             'status' ,
-            'supplier_id'
+            'supplier_id' ,
+            'branch_id'
         ];
         protected $table    = 'stock_purchase_requests';
 

@@ -63,10 +63,10 @@
         public function index(Request $request)
         {
             $requests    = $request->all();
-            $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType   = $request->get('order_type') ?? 'desc';
+            $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+            $orderColumn = $request->input('order_column') ?? 'id';
+            $orderType   = $request->input('order_type') ?? 'desc';
             return RoyaltyCustomerResource::collection(RoyaltyCustomer::where(function ($query) use ($requests) {
                 foreach ( $requests as $key => $request ) {
                     if ( in_array($key , $this->itemFilter) ) {
@@ -173,7 +173,7 @@
         public function myOrders(
             PaginateRequest $request ,
             RoyaltyCustomer $customer
-        ) : Response | AnonymousResourceCollection | Application | ResponseFactory {
+        )  {
             try {
                 return OrderResource::collection($this->userOrders($request , $customer));
             } catch ( Exception $exception ) {
@@ -184,7 +184,7 @@
         public function myOrder(
             PaginateRequest $request ,
             RoyaltyCustomer $customer
-        ) : Response | AnonymousResourceCollection | Application | ResponseFactory {
+        )  {
             try {
                 return OrderResource::collection($this->userOrder($request , $customer));
             } catch ( Exception $exception ) {
@@ -238,10 +238,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_by') ?? 'desc';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_by') ?? 'desc';
 
                 return Order::where(function ($query) use ($requests , $user) {
                     $query->where('user_id' , $user->id)
@@ -272,10 +272,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_by') ?? 'desc';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_by') ?? 'desc';
 
                 return RoyaltyPointsLog::with([ 'customer' , 'earnedBy' , 'redeemedBy' ])->where(function ($query) use ($requests , $customer) {
                     $query->where('customer_id' , $customer->id);
@@ -305,10 +305,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_by') ?? 'desc';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_by') ?? 'desc';
 
                 return Order::where(function ($query) use ($requests , $user) {
                     $query->where('user_id' , $user->id)

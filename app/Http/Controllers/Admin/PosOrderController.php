@@ -46,7 +46,7 @@
 //            $this->middleware( [ 'permission:pos-orders' ] )->only( 'index' , 'show' , 'destroy' , 'export' , 'changeStatus' , 'changePaymentStatus' );
         }
 
-        public function index(Request $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index(Request $request) 
         {
             try {
                 return $this->orderService->list( $request );
@@ -55,7 +55,7 @@
             }
         }
 
-        public function indexCredit(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function indexCredit(PaginateRequest $request) 
         {
             try {
                 return OrderResource::collection( $this->orderService->listCredits( $request ) );
@@ -64,7 +64,7 @@
             }
         }
 
-        public function indexQuotations(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function indexQuotations(PaginateRequest $request) 
         {
             try {
                 return OrderResource::collection( $this->orderService->listQuotations( $request ) );
@@ -73,7 +73,7 @@
             }
         }
 
-        public function indexDeposit(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function indexDeposit(PaginateRequest $request) 
         {
             try {
                 return OrderResource::collection( $this->orderService->listDeposits( $request ) );

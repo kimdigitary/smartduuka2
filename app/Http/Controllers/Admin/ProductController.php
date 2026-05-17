@@ -34,11 +34,6 @@
         {
             parent::__construct();
             $this->productService = $productService;
-//            $this->middleware([ 'permission:products' ])->only('export' , 'generateSku' , 'downloadAttachment');
-//            $this->middleware([ 'permission:products_create' ])->only('store' , 'uploadImage' , 'import');
-//            $this->middleware([ 'permission:products_edit' ])->only('update');
-//            $this->middleware([ 'permission:products_delete' ])->only('destroy' , 'deleteImage');
-//            $this->middleware([ 'permission:products_show' ])->only('show' , 'downloadBarcode');
         }
 
         public function index(Request $request)
@@ -70,7 +65,7 @@
             }
         }
 
-        public function store(ProductRequest $request) : \Illuminate\Http\Response | ProductAdminResource | Application | ResponseFactory
+        public function store(ProductRequest $request) 
         {
             try {
                 return new ProductAdminResource( $this->productService->store( $request ) );
@@ -80,7 +75,7 @@
             }
         }
 
-        public function update(ProductRequest $request , Product $product) : \Illuminate\Http\Response | ProductAdminResource | Application | ResponseFactory
+        public function update(ProductRequest $request , Product $product) 
         {
 
             try {
@@ -100,7 +95,7 @@
             }
         }
 
-        public function uploadImage(ChangeImageRequest $request , Product $product) : \Illuminate\Foundation\Application | \Illuminate\Http\Response | ProductDetailsAdminResource | Application | ResponseFactory
+        public function uploadImage(ChangeImageRequest $request , Product $product) 
         {
             try {
                 return new ProductDetailsAdminResource( $this->productService->uploadImage( $request , $product ) );
@@ -109,7 +104,7 @@
             }
         }
 
-        public function deleteImage(Product $product , $index) : \Illuminate\Foundation\Application | \Illuminate\Http\Response | ProductDetailsAdminResource | Application | ResponseFactory
+        public function deleteImage(Product $product , $index) 
         {
             try {
                 return new ProductDetailsAdminResource( $this->productService->deleteImage( $product , $index ) );
@@ -127,7 +122,7 @@
 //            }
 //        }
 
-        public function generateSku($barcodeMethod) : \Illuminate\Foundation\Application | \Illuminate\Http\Response | Application | ResponseFactory
+        public function generateSku($barcodeMethod) 
         {
             try {
                 return response( [ 'data' => [ 'product_sku' => $this->productService->generateSku( $barcodeMethod ) ] ] , 200 );
@@ -136,7 +131,7 @@
             }
         }
 
-        public function productOffer(ProductOfferRequest $request , Product $product) : \Illuminate\Foundation\Application | \Illuminate\Http\Response | ProductAdminResource | Application | ResponseFactory
+        public function productOffer(ProductOfferRequest $request , Product $product)
         {
             try {
                 return new ProductAdminResource( $this->productService->productOffer( $request , $product ) );
@@ -145,7 +140,7 @@
             }
         }
 
-        public function purchasableProducts() : \Illuminate\Foundation\Application | \Illuminate\Http\Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function purchasableProducts() 
         {
             try {
                 return simpleProductWithVariationCountResource::collection( $this->productService->purchasableProducts() );
@@ -154,7 +149,7 @@
             }
         }
 
-        public function simpleProducts() : \Illuminate\Foundation\Application | \Illuminate\Http\Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function simpleProducts() 
         {
             try {
                 return simpleProductWithVariationCountResource::collection( $this->productService->simpleProducts() );
@@ -163,7 +158,7 @@
             }
         }
 
-        public function posProduct(Product $product , Request $request) : SimpleProductDetailsResource | \Illuminate\Foundation\Application | \Illuminate\Http\Response | Application | ResponseFactory
+        public function posProduct(Product $product , Request $request) 
         {
             try {
                 return new SimpleProductDetailsResource( $this->productService->showWithRelation( $product , $request ) );

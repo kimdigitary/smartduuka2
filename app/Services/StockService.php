@@ -166,8 +166,8 @@
         {
             try {
                 $requests    = $request->all();
-                $orderColumn = $request->get('order_column', 'id');
-                $orderType   = $request->get('order_type', 'desc');
+                $orderColumn = $request->input('order_column', 'id');
+                $orderType   = $request->input('order_type', 'desc');
 
                 $stockFilter = ['name', 'status'];
 
@@ -215,10 +215,10 @@
         {
             try {
                 $requests    = $request->all();
-                $perPage     = $request->get('per_page', 10);
-                $page        = $request->get('page', 1);
-                $orderColumn = $request->get('order_column', 'id');
-                $orderType   = $request->get('order_type', 'desc');
+                $perPage     = $request->input('per_page', 10);
+                $page        = $request->input('page', 1);
+                $orderColumn = $request->input('order_column', 'id');
+                $orderType   = $request->input('order_type', 'desc');
 
                 $stocks = Stock::with([
                     'product.sellingUnits:id,short_name',

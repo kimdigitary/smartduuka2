@@ -26,14 +26,7 @@
     {
         use SaveMedia;
 
-        public object   $damage;
-        protected array $damageFilter = [
-            'date' ,
-            'reference_no' ,
-            'total' ,
-            'note' ,
-            'except'
-        ];
+        public object $damage;
 
         /**
          * @throws Exception
@@ -41,36 +34,12 @@
         public function list(PaginateRequest $request)
         {
             try {
-                $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'desc';
 
-                return Damage::with( 'stocks.product' , 'creator' )->where( function ($query) use ($requests) {
-//                    foreach ( $requests as $key => $request ) {
-//                        if ( in_array( $key , $this->damageFiltexr ) ) {
-//                            if ( $key == "except" ) {
-//                                $explodes = explode( '|' , $request );
-//                                if ( count( $explodes ) ) {
-//                                    foreach ( $explodes as $explode ) {
-//                                        $query->where( 'id' , '!=' , $explode );
-//                                    }
-//                                }
-//                            }
-//                            else {
-//                                if ( $key == "date" && ! empty( $request ) ) {
-//                                    $date_start = date( 'Y-m-d 00:00:00' , strtotime( $request ) );
-//                                    $date_end   = date( 'Y-m-d 23:59:59' , strtotime( $request ) );
-//                                    $query->where( $key , '>=' , $date_start )->where( $key , '<=' , $date_end );
-//                                }
-//                                else {
-//                                    $query->where( $key , 'like' , '%' . $request . '%' );
-//                                }
-//                            }
-//                        }
-//                    }
-                } )->orderBy( $orderColumn , $orderType )->$method( $methodValue );
+                return Damage::with( [ 'stocks.product' , 'creator' ] )->orderBy( $orderColumn , $orderType )->$method( $methodValue );
             } catch ( Exception $exception ) {
                 Log::info( $exception->getMessage() );
                 throw new Exception( $exception->getMessage() , 422 );
@@ -91,6 +60,7 @@
                         'subtotal'     => 0 ,
                         'creator_id'   => auth()->id() ,
                         'tax'          => 0 ,
+                        'branch_id'    => branchId() ,
                         'discount'     => 0 ,
                         'total'        => 0 ,
                         'note'         => "" ,
@@ -110,6 +80,7 @@
                         'warehouse_id'    => $warehouse->id ,
                         'item_type'       => Product::class ,
                         'product_id'      => $product_id ,
+                        'branch_id'       => branchId() ,
                         'variation_names' => 'variation_names' ,
                         'item_id'         => $product_id ,
                         'price'           => 0 ,
@@ -195,7 +166,7 @@
                                 'item_type'       => $product[ 'is_variation' ] ? ProductVariation::class : Product::class ,
                                 'product_id'      => $product[ 'product_id' ] ,
                                 'variation_names' => $product[ 'variation_names' ] ,
-                                'product_id'      => $product[ 'product_id' ] ,
+                                'item_id'         => $product[ 'product_id' ] ,
                                 'price'           => $product[ 'price' ] ,
                                 'quantity'        => -$product[ 'quantity' ] ,
                                 'discount'        => $product[ 'total_discount' ] ,

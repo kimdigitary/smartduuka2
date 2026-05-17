@@ -20,7 +20,7 @@
             $this->timezoneService = $timezoneService;
         }
 
-        public function index() : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index() 
         {
             try {
                 return TimezoneResource::collection( $this->timezoneService->list() );

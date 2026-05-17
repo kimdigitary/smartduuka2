@@ -38,11 +38,8 @@
                 failureUrl: $this->webhookUrl( $gatewayName ) ,
             );
 
-            $result = $gateway->charge( $paymentRequest );
-
             $tenantSubscription->update( [ 'transaction_id' => $transactionId ] );
-
-            info( $result->message ?: 'Failed to initiate payment' );
+            $gateway->charge( $paymentRequest );
         }
 
         public function webhook(Request $request , string $gateway) : JsonResponse

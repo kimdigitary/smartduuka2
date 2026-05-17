@@ -10,7 +10,6 @@
     use App\Listeners\SyncNonCustomerUser;
     use Illuminate\Contracts\Http\Kernel;
     use Illuminate\Support\Facades\Event;
-    use Illuminate\Support\Facades\Log;
     use Illuminate\Support\Facades\Route;
     use Illuminate\Support\ServiceProvider;
     use Spatie\Permission\PermissionRegistrar;
@@ -133,7 +132,7 @@
             $this->makeTenancyMiddlewareHighestPriority();
             InitializeTenancyByDomain::$onFail                 = function ($exception , $request) {
 //                Log::warning( 'Tenancy identification failed!' , [
-//                    'host'       => $request->getHost() ,
+//                    'host'       => $request->inputHost() ,
 //                    'url'        => $request->fullUrl() ,
 //                    'ip'         => $request->ip() ,
 //                    'user_agent' => $request->userAgent() ,
@@ -141,7 +140,7 @@
             };
             Middleware\InitializeTenancyByRequestData::$onFail = function ($exception , $request) {
 //                Log::warning( 'Tenancy identification failed!' , [
-//                    'host'       => $request->getHost() ,
+//                    'host'       => $request->inputHost() ,
 //                    'url'        => $request->fullUrl() ,
 //                    'ip'         => $request->ip() ,
 //                    'user_agent' => $request->userAgent() ,

@@ -31,14 +31,9 @@ class EmployeeController extends AdminController
         parent::__construct();
         $this->employeeService = $employeeService;
         $this->orderService = $orderService;
-//        $this->middleware(['permission:employees'])->only('export', 'changePassword', 'changeImage', 'myOrder');
-//        $this->middleware(['permission:employees_create'])->only('store');
-//        $this->middleware(['permission:employees_edit'])->only('update');
-//        $this->middleware(['permission:employees_delete'])->only('destroy');
-//        $this->middleware(['permission:employees_show'])->only('show');
     }
 
-    public function index(PaginateRequest $request): Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function index(PaginateRequest $request)
     {
         try {
             return EmployeeResource::collection($this->employeeService->list($request));
@@ -114,7 +109,7 @@ class EmployeeController extends AdminController
         }
     }
 
-    public function myOrder(PaginateRequest $request, User $employee) : Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function myOrder(PaginateRequest $request, User $employee) 
     {
         try {
             return OrderResource::collection($this->orderService->userOrder($request, $employee));

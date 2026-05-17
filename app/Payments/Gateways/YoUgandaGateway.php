@@ -22,7 +22,7 @@
             $yoAPI->set_failure_notification_url( $payment->notificationUrl );
 
             $response = $yoAPI->ac_deposit_funds(
-                $this->normalisePhone( $payment->phone ) ,
+                normalisePhone( $payment->phone ) ,
                 $payment->amount ,
                 $payment->description ,
             );
@@ -87,18 +87,5 @@
         private function mode() : string
         {
             return app()->isLocal() ? 'sandbox' : 'production';
-        }
-
-        private function normalisePhone(string $phone) : string
-        {
-            if ( str_starts_with( $phone , '+256' ) ) {
-                return substr( $phone , 1 );
-            }
-
-            if ( str_starts_with( $phone , '0' ) ) {
-                return '256' . substr( $phone , 1 );
-            }
-
-            return $phone;
         }
     }

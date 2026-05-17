@@ -137,3 +137,13 @@ docker compose -f docker-compose.demo.yml up -d --build --force-recreate api_dem
 scp -P 7589 -i ~/.ssh/erudite \
 /Users/mike/Desktop/valet/smartduuka2/app/YoPayments/private_key.pem \
 deploy@161.97.184.49:~/smartduuka/api_demo/app/YoPayments/
+
+sshpass -p 'Nahurira256@' scp root@45.9.188.146:/home/qualitywifi-exotic/htdocs/exotic.qualitywifi.xyz/my_archive.zip ~/Downloads/
+sshpass -p 'Nahurira256@' scp /Users/mike/Downloads/my_archive.zip root@45.9.188.146:/home/qualitywifi-exotic/htdocs/exotic.qualitywifi.xyz/
+adamssh "cd /home/qualitywifi-exotic/htdocs/exotic.qualitywifi.xyz && unzip -o my_archive.zip"
+
+  #[Scope]
+        protected function branch(Builder $query , int $branch_id) : void
+        {
+            $query->where( 'branch_id' , $branch_id );
+        }

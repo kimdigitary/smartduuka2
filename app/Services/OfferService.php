@@ -37,11 +37,11 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_type') ?? 'desc';
-                $limit       = $request->get('limit') ? $request->get('limit') : '';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_type') ?? 'desc';
+                $limit       = $request->input('limit') ? $request->input('limit') : '';
 
                 return Offer::with('items')->where(function ($query) use ($requests) {
                     foreach ( $requests as $key => $request ) {
@@ -79,11 +79,11 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_type') ?? 'desc';
-                $limit       = $request->get('limit') ? $request->get('limit') : '';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_type') ?? 'desc';
+                $limit       = $request->input('limit') ? $request->input('limit') : '';
 
                 return Offer::with('items')->where('end_date' , '>=' , now()->toDateTimeString())->where(function ($query) use ($requests) {
                     foreach ( $requests as $key => $request ) {

@@ -40,10 +40,10 @@ class ItemService
     {
         try {
             $requests = $request->all();
-            $method = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType = $request->get('order_type') ?? 'desc';
+            $method = $request->input('paginate', 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate', 0) == 1 ? $request->input('per_page', 10) : '*';
+            $orderColumn = $request->input('order_column') ?? 'id';
+            $orderType = $request->input('order_type') ?? 'desc';
 
             return Item::with('media', 'category', 'tax')->where(function ($query) use ($requests) {
                 foreach ($requests as $key => $request) {
@@ -77,10 +77,10 @@ class ItemService
     {
         try {
             $requests = $request->all();
-            $method = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType = $request->get('order_type') ?? 'desc';
+            $method = $request->input('paginate', 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate', 0) == 1 ? $request->input('per_page', 10) : '*';
+            $orderColumn = $request->input('order_column') ?? 'id';
+            $orderType = $request->input('order_type') ?? 'desc';
 
             return Item::with('media', 'category', 'tax')->where(function ($query) use ($requests) {
                 $query->where('is_stockable', Ask::YES);
@@ -116,10 +116,10 @@ class ItemService
     {
         try {
             $requests = $request->all();
-            $method = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType = $request->get('order_type') ?? 'desc';
+            $method = $request->input('paginate', 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate', 0) == 1 ? $request->input('per_page', 10) : '*';
+            $orderColumn = $request->input('order_column') ?? 'id';
+            $orderType = $request->input('order_type') ?? 'desc';
 
             return Ingredient::where(function ($query) use ($requests) {
                 foreach ($requests as $key => $request) {
@@ -321,8 +321,8 @@ class ItemService
     {
         try {
             $requests = $request->all();
-            $method = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
+            $method = $request->input('paginate', 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate', 0) == 1 ? $request->input('per_page', 10) : '*';
 //            return Item::withCount('orders')->where(function ($query) use ($requests) {
             return Item::with('orders')->where(function ($query) use ($requests) {
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {

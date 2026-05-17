@@ -15,6 +15,7 @@
         {
             return TRUE;
         }
+
         public function rules() : array
         {
             return [
@@ -22,6 +23,7 @@
 //                'product_attribute_options' => [ 'required' , 'string' ] ,
                 'product_id' => [ 'required' , 'numeric' , 'not_in:0' ] ,
                 'variations' => [ 'required' , 'string' ] ,
+                'branch_id'  => [ 'sometimes' , 'numeric:' ] ,
 //                'barcode'                   => [ 'required' , 'string' ] ,
 //                'trackStock'                => [ 'sometimes' , 'numeric' ] ,
 //                'retail_pricing'            => [ 'required' , 'string' ] ,

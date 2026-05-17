@@ -55,7 +55,7 @@
 
         public function deleteMethods(Request $request)
         {
-            Tax::destroy( $request->get( 'ids' ) );
+            Tax::destroy( $request->input( 'ids' ) );
         }
 
         public function destroy(Tax $tax) : Application | Response | \Illuminate\Contracts\Foundation\Application | ResponseFactory

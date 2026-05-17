@@ -5,7 +5,9 @@
     use App\Enums\MediaEnum;
     use App\Enums\Status;
     use App\Enums\StockStatus;
+    use App\Models\Scopes\BranchScope;
     use App\Traits\HasImageMedia;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
     use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -14,6 +16,7 @@
     use Spatie\MediaLibrary\MediaCollections\Models\Media;
     use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class ProductVariation extends Model implements HasMedia
     {
         use HasRecursiveRelationships , HasImageMedia;
@@ -25,7 +28,7 @@
             'product_attribute_option_id' ,
             'price' ,
             'sku' ,
-            'parent_id' ,
+            'parent_id' , 'branch_id' ,
             'order'
         ];
         protected $appends  = [ 'stock' ];
@@ -129,16 +132,16 @@
 
         public function retailPrices() : MorphMany
         {
-            return $this->morphMany(RetailPrice::class, 'item')
-                        ->where(function ($query) {
-                            $query->where('batch', function ($subQuery) {
-                                $subQuery->selectRaw('MAX(batch)')
-                                         ->from('retail_prices')
-                                         ->whereColumn('item_id', 'retail_prices.item_id')
-                                         ->whereColumn('item_type', 'retail_prices.item_type');
-                            })->orWhereNull('batch');
-                        })
-                        ->latest('id');
+            return $this->morphMany( RetailPrice::class , 'item' )
+                        ->where( function ($query) {
+                            $query->where( 'batch' , function ($subQuery) {
+                                $subQuery->selectRaw( 'MAX(batch)' )
+                                         ->from( 'retail_prices' )
+                                         ->whereColumn( 'item_id' , 'retail_prices.item_id' )
+                                         ->whereColumn( 'item_type' , 'retail_prices.item_type' );
+                            } )->orWhereNull( 'batch' );
+                        } )
+                        ->latest( 'id' );
         }
 
         public function getStockAttribute() : float

@@ -98,15 +98,15 @@
                 return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
             }
         }
-
-        public function export(PaginateRequest $request) : Application | Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
-        {
-            try {
-                return Excel::download( new DamageExport( $this->damageService , $request ) , 'Damages.xlsx' );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
+//
+//        public function export(PaginateRequest $request) : Application | Response | \Symfony\Component\HttpFoundation\BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+//        {
+//            try {
+//                return Excel::download( new DamageExport( $this->damageService , $request ) , 'Damages.xlsx' );
+//            } catch ( Exception $exception ) {
+//                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
+//            }
+//        }
 
         public function downloadAttachment(Damage $damage)
         {

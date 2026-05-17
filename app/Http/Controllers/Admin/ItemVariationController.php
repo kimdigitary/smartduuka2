@@ -26,7 +26,7 @@ class ItemVariationController extends AdminController
         $this->middleware(['permission:items_show'])->only('index', 'listGroupByAttribute', 'show', 'store', 'update', 'destroy');
     }
 
-    public function index(PaginateRequest $request, Item $item) : Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function index(PaginateRequest $request, Item $item) 
     {
         try {
             return ItemVariationResource::collection($this->itemVariationService->list($request, $item));
@@ -35,7 +35,7 @@ class ItemVariationController extends AdminController
         }
     }
 
-    public function listGroupByAttribute(PaginateRequest $request, Item $item): Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function listGroupByAttribute(PaginateRequest $request, Item $item)
     {
         try {
             return ItemVariationGroupByAttributeResource::collection($this->itemVariationService->listGroupByAttribute($request, $item));

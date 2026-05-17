@@ -192,9 +192,9 @@
             try {
                 $start    = $request->date( 'start' );
                 $end      = $request->date( 'end' );
-                $query    = $request->get( 'query' );
-                $page     = $request->get( 'page' ) ?? 1;
-                $per_page = $request->get( 'per_page' ) ?? 10;
+                $query    = $request->input( 'query' );
+                $page     = $request->input( 'page' ) ?? 1;
+                $per_page = $request->input( 'per_page' ) ?? 10;
 
                 $products = OrderProduct::query()
                                         ->select( 'item_id' , 'item_type' )
@@ -269,9 +269,9 @@
             try {
                 $start    = $request->date( 'start' );
                 $end      = $request->date( 'end' );
-                $query    = $request->get( 'query' );
-                $page     = $request->get( 'page' ) ?? 1;
-                $per_page = $request->get( 'per_page' ) ?? 10;
+                $query    = $request->input( 'query' );
+                $page     = $request->input( 'page' ) ?? 1;
+                $per_page = $request->input( 'per_page' ) ?? 10;
 
                 $customers = Order::query()
                                   ->select( 'user_id' )
@@ -312,9 +312,9 @@
             try {
                 $start    = $request->date( 'start' );
                 $end      = $request->date( 'end' );
-                $query    = $request->get( 'query' );
-                $page     = $request->get( 'page' ) ?? 1;
-                $per_page = $request->get( 'per_page' ) ?? 10;
+                $query    = $request->input( 'query' );
+                $page     = $request->input( 'page' ) ?? 1;
+                $per_page = $request->input( 'per_page' ) ?? 10;
 
                 $categories = DB::table( 'order_products' )
                                 ->join( 'orders' , 'order_products.order_id' , '=' , 'orders.id' )
@@ -400,10 +400,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_by' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_by' ) ?? 'desc';
 
                 return Order::with( 'orderProducts' )
                             ->where( 'order_type' , 25 )
@@ -429,10 +429,10 @@
         public function myOrder(PaginateRequest $request)
         {
             try {
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_by' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_by' ) ?? 'desc';
 
                 return Order::where( function ($query) {
                     $query->where( 'user_id' , auth()->user()->id );
@@ -448,10 +448,10 @@
         public function userOrder(PaginateRequest $request , User $user)
         {
             try {
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_by' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_by' ) ?? 'desc';
 
                 return Order::with( [
                     'orderProducts.item' => function ($q) {
@@ -1603,8 +1603,8 @@
         public function salesReportOverview(Request $request) : array
         {
             try {
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_by' ) ?? 'desc';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_by' ) ?? 'desc';
 
                 $orders           = Order::with( 'orderProducts' )->where( function ($query) {
                     if ( isset( $requests[ 'from_date' ] ) && isset( $requests[ 'to_date' ] ) ) {

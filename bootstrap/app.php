@@ -1,13 +1,13 @@
 <?php
 
     use App\Http\Middleware\AddCurrencySymbol;
+    use App\Http\Middleware\AddTenantIDAndBranchID;
     use App\Http\Middleware\AfterMiddleware;
     use App\Http\Middleware\CheckActiveRegister;
     use App\Http\Middleware\CheckProductLimit;
     use App\Http\Middleware\CheckSalesLimit;
     use App\Http\Middleware\CheckUsersLimit;
     use App\Http\Middleware\DetectUnusualLogin;
-    use App\Http\Middleware\FeaturesMiddleware;
     use App\Http\Middleware\ForceAdminLogin;
     use App\Http\Middleware\PermissionMiddleware;
     use App\Http\Middleware\RequireFeature;
@@ -25,6 +25,12 @@
                           api: __DIR__ . '/../routes/api.php' ,
                           commands: __DIR__ . '/../routes/console.php' ,
                           health: '/up' ,
+                          then: function () {
+                              Route::middleware( [ 'api' ] )
+                                   ->name( 'auth-api.' )
+                                   ->prefix( 'api' )
+                                   ->group( base_path( 'routes/auth-api.php' ) );
+                          } ,
                       )
                       ->withBroadcasting(
                           __DIR__ . '/../routes/channels.php' ,
@@ -52,7 +58,8 @@
                           ] );
                           $middleware->append( [
                               AddCurrencySymbol::class ,
-                              AfterMiddleware::class
+                              AfterMiddleware::class,
+                              AddTenantIDAndBranchID::class
                           ] );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
                       } )

@@ -40,12 +40,10 @@
 
     class StockController extends AdminController
     {
-        protected array $stockFilter = [ 'name' , 'status' ];
-
         public function __construct(protected StockService $stockService)
         {
             parent::__construct();
-            $this->middleware( [ 'permission:stock' ] )->only( 'index' , 'export' );
+//            $this->middleware( [ 'permission:stock' ] )->only( 'index' , 'export' );
         }
 
         // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -168,7 +166,6 @@
         public function reconciliation(PaginateRequest $request)
         {
             try {
-                // TODO: implement reconciliation logic
                 return response()->json( [ 'data' => [] ] );
             } catch ( Exception $exception ) {
                 return $this->errorResponse( $exception );
@@ -301,6 +298,7 @@
                         'tax'            => 0 ,
                         'discount'       => 0 ,
                         'total'          => 0 ,
+                        'branch_id'      => branchId() ,
                         'note'           => $request->note ?? '' ,
                         'status'         => PurchaseStatus::RECEIVED ,
                         'payment_status' => PurchasePaymentStatus::FULLY_PAID ,
@@ -316,6 +314,7 @@
                         'quantity'   => $product[ 'quantity' ] ,
                         'discount'   => $product[ 'total_discount' ] ,
                         'tax'        => $product[ 'total_tax' ] ,
+                        'branch_id'  => branchId() ,
                         'subtotal'   => $product[ 'subtotal' ] ,
                         'total'      => $product[ 'total' ] ,
                         'status'     => Status::ACTIVE ,
@@ -353,6 +352,7 @@
                                 'item_type'  => Product::class ,
                                 'product_id' => $product[ 'product_id' ] ,
                                 'price'      => $product[ 'price' ] ,
+                                'branch_id'  => branchId() ,
                                 'quantity'   => $product[ 'quantity' ] ,
                                 'discount'   => $product[ 'total_discount' ] ,
                                 'tax'        => $product[ 'total_tax' ] ,
@@ -372,21 +372,21 @@
 
         // ─── Export endpoints ────────────────────────────────────────────────────────
 
-        public function export(PaginateRequest $request) : Application | Response | BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
-        {
-            try {
-                return Excel::download( new StockExport( $this->stockService , $request ) , 'Stock.xlsx' );
-            } catch ( Exception $exception ) {
-                return $this->errorResponse( $exception );
-            }
-        }
+//        public function export(PaginateRequest $request) : Application | Response | BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+//        {
+//            try {
+//                return Excel::download( new StockExport( $this->stockService , $request ) , 'Stock.xlsx' );
+//            } catch ( Exception $exception ) {
+//                return $this->errorResponse( $exception );
+//            }
+//        }
 
-        public function expiryReportExport(PaginateRequest $request) : Application | Response | BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
-        {
-            try {
-                return Excel::download( new StockExpiryExport( $this->stockService , $request ) , 'Stock_Expiry_Report.xlsx' );
-            } catch ( Exception $exception ) {
-                return $this->errorResponse( $exception );
-            }
-        }
+//        public function expiryReportExport(PaginateRequest $request) : Application | Response | BinaryFileResponse | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+//        {
+//            try {
+//                return Excel::download( new StockExpiryExport( $this->stockService , $request ) , 'Stock_Expiry_Report.xlsx' );
+//            } catch ( Exception $exception ) {
+//                return $this->errorResponse( $exception );
+//            }
+//        }
     }

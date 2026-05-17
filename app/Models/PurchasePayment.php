@@ -2,12 +2,15 @@
 
     namespace App\Models;
 
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
     use Spatie\MediaLibrary\HasMedia;
     use Spatie\MediaLibrary\InteractsWithMedia;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class PurchasePayment extends Model implements HasMedia
     {
         use HasFactory;
@@ -20,7 +23,8 @@
             'amount' ,
             'payment_method' ,
             'purchase_type' ,
-            'register_id'
+            'register_id' ,
+            'branch_id'
         ];
         protected $casts    = [
             'id'             => 'integer' ,

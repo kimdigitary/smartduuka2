@@ -26,7 +26,7 @@
             $this->middleware( [ 'permission:settings' ] )->only( 'show' , 'store' , 'update' , 'destroy' );
         }
 
-        public function index(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index(PaginateRequest $request) 
         {
             try {
                 return ProductAttributeResource::collection( $this->productAttributeService->list( $request ) );

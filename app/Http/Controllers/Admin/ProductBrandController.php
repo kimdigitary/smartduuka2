@@ -25,7 +25,7 @@
             $this->middleware( [ 'permission:settings' ] )->only( 'store' , 'update' , 'destroy' , 'show' );
         }
 
-        public function index(Request $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index(Request $request) 
         {
             try {
                 $page         = $request->input( 'page' , 1 );
@@ -38,7 +38,7 @@
             }
         }
 
-        public function list(Request $request): Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function list(Request $request)
         {
             try {
                 $query = ProductBrand::query();

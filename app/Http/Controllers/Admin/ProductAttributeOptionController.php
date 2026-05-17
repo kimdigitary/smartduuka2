@@ -26,7 +26,7 @@ class ProductAttributeOptionController extends AdminController
         $this->middleware(['permission:settings'])->only('index', 'store', 'update', 'destroy', 'show');
     }
 
-    public function index(PaginateRequest $request, ProductAttribute $productAttribute): Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function index(PaginateRequest $request, ProductAttribute $productAttribute)
     {
         try {
             return ProductAttributeOptionResource::collection($this->productAttributeOptionService->list($request, $productAttribute));

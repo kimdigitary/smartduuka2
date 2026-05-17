@@ -6,7 +6,6 @@
     use App\Http\Controllers\Admin\AdministratorAddressController;
     use App\Http\Controllers\Admin\AdministratorController;
     use App\Http\Controllers\Admin\BarcodeController;
-    use App\Http\Controllers\Admin\BranchController;
     use App\Http\Controllers\Admin\CityController;
     use App\Http\Controllers\Admin\CompanyController;
     use App\Http\Controllers\Admin\CountryCodeController;
@@ -19,15 +18,11 @@
     use App\Http\Controllers\Admin\EmployeeAddressController;
     use App\Http\Controllers\Admin\EmployeeController;
     use App\Http\Controllers\Admin\IngredientsController;
-    use App\Http\Controllers\Admin\LanguageController;
     use App\Http\Controllers\Admin\MailController;
-    use App\Http\Controllers\Admin\MenuSectionController;
-    use App\Http\Controllers\Admin\MenuTemplateController;
     use App\Http\Controllers\Admin\MyOrderDetailsController;
     use App\Http\Controllers\Admin\NotificationAlertController;
     use App\Http\Controllers\Admin\NotificationController;
     use App\Http\Controllers\Admin\OtpController;
-    use App\Http\Controllers\Admin\PaymentGatewayController;
     use App\Http\Controllers\Admin\PermissionController;
     use App\Http\Controllers\Admin\PosController;
     use App\Http\Controllers\Admin\PosOrderController;
@@ -59,9 +54,6 @@
     use App\Http\Controllers\Auth\RefreshTokenController;
     use App\Http\Controllers\BookingController;
     use App\Http\Controllers\ChartOfAccountGroupController;
-    use App\Http\Controllers\CleaningOrderController;
-    use App\Http\Controllers\CleaningServiceCategoryController;
-    use App\Http\Controllers\CleaningServiceController;
     use App\Http\Controllers\CommissionController;
     use App\Http\Controllers\CommissionPayoutController;
     use App\Http\Controllers\CreditDepositPurchaseController;
@@ -69,16 +61,13 @@
     use App\Http\Controllers\ExpenseCategoryController;
     use App\Http\Controllers\ExpensePaymentController;
     use App\Http\Controllers\ExpensesController;
-    use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
     use App\Http\Controllers\Frontend\ProfileController;
-    use App\Http\Controllers\Frontend\SettingController as FrontendSettingController;
     use App\Http\Controllers\LedgerController;
     use App\Http\Controllers\LegacyDebtController;
     use App\Http\Controllers\ModuleController;
     use App\Http\Controllers\PaymentAccountController;
     use App\Http\Controllers\PaymentController;
     use App\Http\Controllers\PaymentMethodController;
-    use App\Http\Controllers\PrintAgentController;
     use App\Http\Controllers\PrintDesignController;
     use App\Http\Controllers\PrinterController;
     use App\Http\Controllers\PrintTemplateController;
@@ -218,42 +207,32 @@
             Route::apiResource( 'templateTypes' , TemplateTypeController::class )->except( 'destroy' );
             Route::delete( 'expense-categories/delete' , [ ExpenseCategoryController::class , 'destroy' ] );
 
-            Route::prefix( 'print-agent' )->group( function () {
-                Route::post( '/trigger-scan' , [ PrintAgentController::class , 'triggerScan' ] );
-                Route::get( '/latest-scan' , [ PrintAgentController::class , 'latestScan' ] );
-                Route::post( '/print' , [ PrintAgentController::class , 'print' ] );
-                Route::post( '/open-drawer' , [ PrintAgentController::class , 'openDrawer' ] );
-                Route::get( '/status' , [ PrintAgentController::class , 'status' ] );
-                Route::post( '/report-printers' , [ PrintAgentController::class , 'reportPrinters' ] );
-                Route::post( '/status' , [ PrintAgentController::class , 'updateJobStatus' ] );
-                Route::get( '/me' , function (Request $request) {
-                    return response()->json( [
-                        'business_id' => $request->user()->business_id ,
-                        'currency'    => 'UGX'
-                    ] );
-                } );
-            } );
+//            Route::prefix( 'print-agent' )->group( function () {
+//                Route::post( '/trigger-scan' , [ PrintAgentController::class , 'triggerScan' ] );
+//                Route::get( '/latest-scan' , [ PrintAgentController::class , 'latestScan' ] );
+//                Route::post( '/print' , [ PrintAgentController::class , 'print' ] );
+//                Route::post( '/open-drawer' , [ PrintAgentController::class , 'openDrawer' ] );
+//                Route::get( '/status' , [ PrintAgentController::class , 'status' ] );
+//                Route::post( '/report-printers' , [ PrintAgentController::class , 'reportPrinters' ] );
+//                Route::post( '/status' , [ PrintAgentController::class , 'updateJobStatus' ] );
+//                Route::get( '/me' , function (Request $request) {
+//                    return response()->json( [
+//                        'business_id' => $request->user()->business_id ,
+//                        'currency'    => 'UGX'
+//                    ] );
+//                } );
+//            } );
 
-            Route::prefix( 'branches' )->name( 'branches.' )->group( function () {
-                Route::get( '/' , [ BranchController::class , 'branches' ] );
-                Route::post( '/' , [ BranchController::class , 'store' ] );
-                Route::put( '/{branch}' , [ BranchController::class , 'update' ] );
-                Route::delete( '/delete' , [ BranchController::class , 'destroy' ] );
-            } );
+//            Route::prefix( 'branches' )->name( 'branches.' )->group( function () {
+//                Route::get( '/' , [ BranchController::class , 'branches' ] );
+//                Route::post( '/' , [ BranchController::class , 'store' ] );
+//                Route::put( '/{branch}' , [ BranchController::class , 'update' ] );
+//                Route::delete( '/delete' , [ BranchController::class , 'destroy' ] );
+//            } );
+
             Route::apiResource( 'returns' , PurchaseReturnController::class )->except( 'destroy' );
 
             Route::get( '/menu' , [ LoginController::class , 'menu' ] );
-
-            Route::get( 'cleaningOrder' , [ CleaningOrderController::class , 'order' ] );
-            Route::apiResource( 'cleaningOrders' , CleaningOrderController::class )->except( [ 'destroy' , 'update' ] );
-            Route::put( 'cleaningOrders/{cleaningOrder}' , [ CleaningOrderController::class , 'update' ] );
-            Route::get( 'cleaningServiceCategories/list' , [ CleaningServiceCategoryController::class , 'list' ] );
-            Route::apiResource( 'cleaningServiceCategories' , CleaningServiceCategoryController::class )->except( [ 'destroy' , ] );
-            Route::get( 'cleaningServices/{category}' , [ CleaningServiceController::class , 'cleaningServicesByCategory' ] );
-            Route::apiResource( 'cleaningServices' , CleaningServiceController::class )->except( [ 'destroy' ] );
-            Route::delete( 'cleaningServiceCategories/delete' , [ CleaningServiceCategoryController::class , 'destroy' ] );
-            Route::delete( 'cleaningServices/delete' , [ CleaningServiceController::class , 'destroy' ] );
-            Route::delete( 'cleaningOrders/delete' , [ CleaningOrderController::class , 'destroy' ] );
 
             Route::apiResource( '/distributionRoutes' , DistributionRouteController::class );
             Route::apiResource( '/commissions' , CommissionController::class );
@@ -311,10 +290,6 @@
                         [ PaymentMethodController::class , 'update' ]
                     );
                     Route::delete( '/delete' , [ PaymentMethodController::class , 'deleteMethods' ] );
-                } );
-                Route::prefix( 'payment-gateway' )->name( 'payment-gateway.' )->group( function () {
-                    Route::get( '/' , [ PaymentGatewayController::class , 'index' ] );
-                    Route::match( [ 'put' , 'patch' ] , '/' , [ PaymentGatewayController::class , 'update' ] );
                 } );
 
                 Route::prefix( 'site' )->name( 'site.' )->group( function () {
@@ -405,30 +380,6 @@
                     Route::delete( '/delete' , [ ProductBrandController::class , 'destroy' ] );
                 } );
 
-                Route::prefix( 'language' )->name( 'language.' )->group( function () {
-                    Route::get( '/' , [ LanguageController::class , 'index' ] );
-                    Route::post( '/' , [ LanguageController::class , 'store' ] );
-                    Route::get( '/show/{language}' , [ LanguageController::class , 'show' ] );
-                    Route::match( [ 'post' , 'put' , 'patch' ] , '/update/{language}' , [ LanguageController::class , 'update' ] );
-                    Route::delete( '/{language}' , [ LanguageController::class , 'destroy' ] );
-
-                    Route::get( '/file-list/{language:code}' , [ LanguageController::class , 'fileList' ] );
-                    Route::post( '/file-text' , [ LanguageController::class , 'fileText' ] );
-                    Route::post( '/file-text/store' , [ LanguageController::class , 'fileTextStore' ] );
-                } );
-
-                Route::prefix( 'menu-section' )->name( 'menu-section.' )->group( function () {
-                    Route::get( '/' , [ MenuSectionController::class , 'index' ] );
-                } );
-
-                Route::prefix( 'menu-template' )->name( 'menu-template.' )->group( function () {
-                    Route::get( '/' , [ MenuTemplateController::class , 'index' ] );
-                    Route::get( '/show/{menuTemplate}' , [ MenuTemplateController::class , 'show' ] );
-                    Route::post( '/' , [ MenuTemplateController::class , 'store' ] );
-                    Route::match( [ 'put' , 'patch' ] , '/{menuTemplate}' , [ MenuTemplateController::class , 'update' ] );
-                    Route::delete( '/{menuTemplate}' , [ MenuTemplateController::class , 'destroy' ] );
-                } );
-
                 Route::prefix( 'product-attribute' )->name( 'product-attribute.' )->group( function () {
                     Route::get( '/' , [ ProductAttributeController::class , 'index' ] );
                     Route::get( '/show/{productAttribute}' , [ ProductAttributeController::class , 'show' ] );
@@ -484,7 +435,7 @@
             Route::delete( 'expenses/delete' , [ ExpensesController::class , 'destroy' ] );
             Route::get( 'expense-category/depth-tree' , [ ExpenseCategoryController::class , 'depthTree' ] );
             Route::post( 'expenses/payment/{expense}' , [ ExpensePaymentController::class , 'store' ] )->middleware( 'register' );
-            Route::get( 'expense-categories-export' , [ ExpenseCategoryController::class , 'export' ] );
+
             Route::prefix( 'expense-report' )->name( 'expense-report.' )->group( function () {
                 Route::get( '/' , [ ExpensesController::class , 'index' ] );
                 Route::get( '/category' , [ ExpensesController::class , 'perCategoryExpenses' ] );
@@ -502,7 +453,7 @@
                 Route::delete( '/' , [ ProductController::class , 'destroy' ] );
                 Route::post( '/upload-image/{product}' , [ ProductController::class , 'uploadImage' ] );
                 Route::get( '/delete-image/{product}/{index}' , [ ProductController::class , 'deleteImage' ] );
-                Route::get( '/export' , [ ProductController::class , 'export' ] );
+//                Route::get( '/export' , [ ProductController::class , 'export' ] );
                 Route::get( '/generate-sku/{barcodeMethod}' , [ ProductController::class , 'generateSku' ] );
                 Route::post( '/offer/{product}' , [ ProductController::class , 'productOffer' ] );
                 Route::get( '/purchasable-product' , [ ProductController::class , 'purchasableProducts' ] );
@@ -536,7 +487,7 @@
                 Route::post( '/' , [ AdministratorController::class , 'store' ] );
                 Route::match( [ 'post' , 'put' , 'patch' ] , '/{administrator}' , [ AdministratorController::class , 'update' ] );
                 Route::delete( '/delete' , [ AdministratorController::class , 'destroy' ] );
-                Route::get( '/export' , [ AdministratorController::class , 'export' ] );
+//                Route::get( '/export' , [ AdministratorController::class , 'export' ] );
                 Route::post( '/change-password/{administrator}' , [ AdministratorController::class , 'changePassword' ] );
                 Route::post( '/change-image/{administrator}' , [ AdministratorController::class , 'changeImage' ] );
                 Route::get( '/my-order/{administrator}' , [ AdministratorController::class , 'myOrder' ] );
@@ -550,7 +501,7 @@
             Route::prefix( 'country' )->name( 'country.' )->group( function () {
                 Route::get( '/' , [ CountryController::class , 'index' ] )->name( 'index' );
                 Route::get( '/list' , [ CountryController::class , 'list' ] )->name( 'list' );
-                Route::get( '/show/{country}' , [ CountryController::class , 'show' ] )->name( 'show' );
+//                Route::get( '/show/{country}' , [ CountryController::class , 'show' ] )->name( 'show' );
                 Route::post( '/' , [ CountryController::class , 'store' ] )->name( 'store' );
                 Route::delete( '/{country}' , [ CountryController::class , 'destroy' ] )->name( 'destroy' );
                 Route::match( [ 'put' , 'patch' , 'post' ] , '/{country}' , [ CountryController::class , 'update' ] )->name( 'update' );
@@ -565,7 +516,7 @@
                 Route::get( '/' , [ StateController::class , 'index' ] );
                 Route::get( '/{country:id}' , [ StateController::class , 'state' ] );
                 Route::get( '/simple-lists' , [ StateController::class , 'simpleLists' ] );
-                Route::get( '/show/{state}' , [ StateController::class , 'show' ] );
+//                Route::get( '/show/{state}' , [ StateController::class , 'show' ] );
                 Route::post( '/' , [ StateController::class , 'store' ] );
                 Route::delete( '/{state}' , [ StateController::class , 'destroy' ] );
                 Route::match( [ 'put' , 'patch' , 'post' ] , '/{state}' , [ StateController::class , 'update' ] );
@@ -609,7 +560,6 @@
                 Route::delete( '/address/{customer}/{address}' , [ CustomerAddressController::class , 'destroy' ] );
             } );
 
-
             Route::prefix( 'warehouse' )->name( 'warehouse.' )->group( function () {
                 Route::get( '/' , [ WarehouseController::class , 'index' ] );
                 Route::post( '/' , [ WarehouseController::class , 'store' ] );
@@ -617,7 +567,7 @@
                 Route::match( [ 'put' , 'patch' ] , '/{warehouse}' , [ WarehouseController::class , 'update' ] );
                 Route::delete( '/{warehouse}' , [ WarehouseController::class , 'destroy' ] );
                 Route::delete( '/delete' , [ WarehouseController::class , 'destroy' ] );
-                Route::get( '/export' , [ WarehouseController::class , 'export' ] );
+//                Route::get( '/export' , [ WarehouseController::class , 'export' ] );
             } );
 
             Route::prefix( 'employee' )->name( 'employee.' )->group( function () {
@@ -626,7 +576,7 @@
                 Route::get( '/show/{employee}' , [ EmployeeController::class , 'show' ] );
                 Route::match( [ 'put' , 'patch' ] , '/{employee}' , [ EmployeeController::class , 'update' ] );
                 Route::delete( 'delete' , [ EmployeeController::class , 'destroy' ] );
-                Route::get( '/export' , [ EmployeeController::class , 'export' ] );
+//                Route::get( '/export' , [ EmployeeController::class , 'export' ] );
                 Route::post( '/change-password/{employee}' , [ EmployeeController::class , 'changePassword' ] );
                 Route::post( '/change-image/{employee}' , [ EmployeeController::class , 'changeImage' ] );
                 Route::get( '/my-order/{employee}' , [ EmployeeController::class , 'myOrder' ] );
@@ -684,7 +634,7 @@
                 Route::get( '/show/{purchase}' , [ PurchaseController::class , 'show' ] );
                 Route::get( '/edit/{purchase}' , [ PurchaseController::class , 'edit' ] );
                 Route::match( [ 'post' , 'put' , 'patch' ] , '/update/{purchase}' , [ PurchaseController::class , 'update' ] );
-                Route::get( '/export' , [ PurchaseController::class , 'export' ] );
+//                Route::get( '/export' , [ PurchaseController::class , 'export' ] );
                 Route::get( '/download-attachment/{purchase}' , [ PurchaseController::class , 'downloadAttachment' ] );
                 Route::get( '/payment/{type}/{purchase}' , [ PurchaseController::class , 'paymentHistory' ] );
                 Route::post( '/payment/{purchase}' , [ PurchaseController::class , 'payment' ] )->middleware( 'register' );
@@ -698,7 +648,7 @@
                 Route::post( '/' , [ IngredientsController::class , 'store' ] );
                 Route::match( [ 'post' , 'put' , 'patch' ] , '/{ingredient}' , [ IngredientsController::class , 'update' ] );
                 Route::delete( '/{ingredient}' , [ IngredientsController::class , 'destroy' ] );
-                Route::get( '/export' , [ ProductController::class , 'export' ] );
+//                Route::get( '/export' , [ ProductController::class , 'export' ] );
             } );
             Route::resource( 'stockTransfer' , StockTransferController::class );
 
@@ -706,7 +656,7 @@
                 Route::get( '/' , [ StockController::class , 'index' ] );
                 Route::get( '/takings' , [ StockController::class , 'takings' ] );
                 Route::get( '/expiryList' , [ StockController::class , 'expiryList' ] );
-                Route::get( '/expiryList/export' , [ StockController::class , 'expiryReportExport' ] );
+//                Route::get( '/expiryList/export' , [ StockController::class , 'expiryReportExport' ] );
                 Route::get( '/transfers' , [ StockController::class , 'stockTransfers' ] );
                 Route::get( '/reconciliations' , [ StockController::class , 'stockReconciliations' ] );
                 Route::post( '/transfer/cancelOrAccept' , [ StockController::class , 'cancelOrAccept' ] );
@@ -803,17 +753,6 @@
                 Route::put( '/customer/{customer}' , [ PosController::class , 'updateCustomer' ] );
                 Route::match( [ 'post' , 'put' ] , '/{order}' , [ PosController::class , 'update' ] )->middleware( 'register' );
                 Route::get( '/{order}' , [ PosController::class , 'index' ] );
-            } );
-        } );
-
-        Route::prefix( 'frontend' )->name( 'frontend.' )->group( function () {
-            Route::prefix( 'setting' )->name( 'setting.' )->group( function () {
-                Route::get( '/' , [ FrontendSettingController::class , 'index' ] );
-            } );
-
-            Route::prefix( 'language' )->name( 'language.' )->group( function () {
-                Route::get( '/' , [ FrontendLanguageController::class , 'index' ] );
-                Route::get( '/show/{language}' , [ FrontendLanguageController::class , 'show' ] );
             } );
         } );
     } );

@@ -210,7 +210,7 @@
         public function myOrder(
             PaginateRequest $request ,
             User $customer
-        ) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        ) 
         {
             try {
                 return OrderResource::collection( $this->orderService->userOrder( $request , $customer ) );

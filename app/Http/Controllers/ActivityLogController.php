@@ -26,10 +26,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-                $orderColumn = $request->get('order_column') ?? 'id';
-                $orderType   = $request->get('order_by') ?? 'desc';
+                $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+                $orderColumn = $request->input('order_column') ?? 'id';
+                $orderType   = $request->input('order_by') ?? 'desc';
 
                 return ActivityLogResource::collection(ActivityLog::with('user')->where(function ($query) use ($requests) {
                     if ( isset($requests['from_date']) && isset($requests['to_date']) ) {

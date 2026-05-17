@@ -3,8 +3,12 @@
     namespace App\Http\Resources;
 
 
+    use App\Models\TenantBranch;
     use Illuminate\Http\Resources\Json\JsonResource;
 
+    /**
+     * @mixin TenantBranch
+     */
     class BranchResource extends JsonResource
     {
         /**
@@ -21,11 +25,12 @@
                 "name"       => $this->name ,
                 "email"      => $this->email === NULL ? '' : $this->email ,
                 "phone"      => $this->phone === NULL ? '' : $this->phone ,
-                "address"   => $this->address ,
+                "address"    => $this->address ,
                 "staffCount" => 0 ,
                 "code"       => $this->code ,
-                "manager"    => $this->manager ,
-                "status"     => $this->status
+                "can_delete" => $this->can_delete ,
+                "status"     => $this->status ,
+                "c"          => $this->status
             ];
         }
     }

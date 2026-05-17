@@ -3,16 +3,20 @@
     namespace App\Models;
 
     use App\Enums\PosPaymentType;
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class PosPayment extends Model
     {
         use HasFactory;
 
         protected $fillable = [ 'date' , 'reference_no' , 'amount' , 'order_id' , 'payment_method' , 'payment_method_id' ,
-            'register_id' , 'pos_payment_type'
+            'register_id' , 'pos_payment_type' ,
+            'branch_id'
         ];
         protected $casts    = [
             'id'               => 'integer' ,

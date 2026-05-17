@@ -2,9 +2,12 @@
 
     namespace App\Models;
 
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class WholeSalePrice extends Model
     {
         public    $timestamps = FALSE;
@@ -14,7 +17,8 @@
             'minQuantity' ,
             'price' ,
             'item_id' ,
-            'item_type' ,'batch'
+            'item_type' , 'batch' ,
+            'branch_id'
         ];
 
         public function item() : MorphTo

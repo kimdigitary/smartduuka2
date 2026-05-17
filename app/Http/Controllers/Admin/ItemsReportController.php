@@ -25,7 +25,7 @@ class ItemsReportController extends AdminController
         $this->middleware(['permission:items-report'])->only('index', 'export');
     }
 
-    public function index(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function index(PaginateRequest $request) 
 //    public function index(PaginateRequest $request)
     {
         try {

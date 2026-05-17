@@ -12,17 +12,18 @@
 
     class PurchaseReturnController extends Controller
     {
- 
+
         public function index(PaginateRequest $request) : AnonymousResourceCollection
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'desc';
+                $branch_id   = $request->input( 'branch_id' );
 
-                $query = PurchaseReturn::with( [ 'supplier' , 'purchase' ] );
+                $query = PurchaseReturn::branch( $branch_id )->with( [ 'supplier' , 'purchase' ] );
 
                 if ( isset( $requests[ 'supplier_id' ] ) ) {
                     $query->where( 'supplier_id' , $requests[ 'supplier_id' ] );
@@ -45,7 +46,7 @@
                 throw new Exception( $exception->getMessage() , 422 );
             }
         }
-        
+
         public function store(Request $request) : PurchaseReturnResource
         {
             $validated = $request->validate( [
@@ -54,6 +55,7 @@
                 'date'        => 'required|date' ,
                 'debit_note'  => 'nullable|string' ,
                 'notes'       => 'nullable|string' ,
+                'branch_id'   => 'nullable|numeric:' ,
             ] );
 
             $purchaseReturn = PurchaseReturn::create( $validated );
@@ -65,7 +67,7 @@
         {
             return new PurchaseReturnResource( $return->load( [ 'supplier' , 'purchase' ] ) );
         }
-        
+
         public function update(Request $request , PurchaseReturn $return) : PurchaseReturnResource
         {
             $validated = $request->validate( [
@@ -74,13 +76,14 @@
                 'date'        => 'sometimes|date' ,
                 'debit_note'  => 'nullable|string' ,
                 'notes'       => 'nullable|string' ,
+                'branch_id'   => 'nullable|numeric:' ,
             ] );
 
             $return->update( $validated );
 
             return new PurchaseReturnResource( $return );
         }
-        
+
         public function destroy(PurchaseReturn $return)
         {
             $return->delete();

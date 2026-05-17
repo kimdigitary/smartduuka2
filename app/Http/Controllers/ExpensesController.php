@@ -33,14 +33,14 @@
         public function index(Request $request)
         {
             try {
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'desc';
                 $from_date   = $request->start;
                 $to_date     = $request->end;
                 $category    = $request->category;
                 $query       = $request->input( 'query' );
-                $page        = $request->get( 'page' ) ?? 1;
-                $per_page    = $request->get( 'per_page' ) ?? 10;
+                $page        = $request->input( 'page' ) ?? 1;
+                $per_page    = $request->input( 'per_page' ) ?? 10;
 
                 $data = Expense::with( [ 'expenseCategory' , 'payments' ] )
                                ->when( $from_date && ! $to_date , function ($query) use ($from_date) {
@@ -71,8 +71,8 @@
                 $to_date   = $request->end;
                 $category  = $request->category;
                 $query     = $request->input( 'query' );
-                $page      = $request->get( 'page' ) ?? 1;
-                $per_page  = $request->get( 'per_page' ) ?? 10;
+                $page      = $request->input( 'page' ) ?? 1;
+                $per_page  = $request->input( 'per_page' ) ?? 10;
 
                 $expenses = Expense::query()
                                    ->select( 'expense_category_id' )
@@ -119,8 +119,8 @@
                 $to_date   = $request->end;
                 $category  = $request->category;
                 $query     = $request->input( 'query' );
-                $page      = $request->get( 'page' ) ?? 1;
-                $per_page  = $request->get( 'per_page' ) ?? 10;
+                $page      = $request->input( 'page' ) ?? 1;
+                $per_page  = $request->input( 'per_page' ) ?? 10;
 
                 $expenses = ExpensePayment::query()
                                           ->select( 'payment_method_id' )
@@ -229,6 +229,7 @@
         {
             try {
                 $isRecurring = $request->integer( 'isRecurring' );
+                $branch_id   = $request->integer( 'branch_id' );
                 $expense     = Expense::create( [
                     'name'                => $request->name ,
                     'amount'              => $request->amount ,
@@ -237,13 +238,14 @@
                     'note'                => $request->note ?? '' ,
                     'is_recurring'        => $request->isRecurring ?? 0 ,
                     'base_amount'         => $request->baseAmount ,
+                    'branch_id'           => $request->branch_id ,
                     'expense_type'        => $isRecurring == 1 ? ExpenseType::RECURRING->value : ExpenseType::NON_RECURRING->value ,
                     'extra_charge'        => $request->extraCharge ,
                     'paid'                => $request->paidAmount ?? 0 ,
                     'register_id'         => register()->id ,
                 ] );
 
-                ExpenseTitle::firstOrCreate( [ 'name' => $request->name ] , [ 'name' => $request->name ] );
+                ExpenseTitle::firstOrCreate( [ 'name' => $request->name , 'branch_id' => $request->branch_id ] , [ 'name' => $request->name ] );
 
                 $expense->update( [ 'expense_id' => recordId( 'EXP-' , $expense ) ] );
 

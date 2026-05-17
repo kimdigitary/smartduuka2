@@ -118,4 +118,21 @@
                 throw new Exception( $exception->getMessage() , 422 );
             }
         }
+
+//        public function setDefaultBranch(Request $request)
+//        {
+//            Settings::group( 'site' )->set( [ 'site_default_branch' => $request->branch_id ] );
+//            return response()->json();
+//        }
+
+//        public function defaultBranch()
+//        {
+//            $default = Settings::group( 'site' )->get( 'site_default_branch' );
+//            if ( is_null( $default ) ) {
+//                $default = 1;
+//                Settings::group( 'site' )->set( [ 'site_default_branch' => $default ] );
+//            }
+//            return response()->json( [ 'site_default_branch' => $default ] );
+//        }
     }
+    

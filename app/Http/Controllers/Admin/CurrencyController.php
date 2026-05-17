@@ -26,7 +26,7 @@
             $this->middleware( [ 'permission:settings' ] )->only( 'store' , 'update' , 'destroy' , 'show' );
         }
 
-        public function index(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index(PaginateRequest $request) 
         {
             try {
                 return CurrencyResource::collection( $this->currencyService->list( $request ) );
@@ -85,6 +85,6 @@
 
         public function deleteMethods(Request $request)
         {
-            Currency::destroy( $request->get( 'ids' ) );
+            Currency::destroy( $request->input( 'ids' ) );
         }
     }

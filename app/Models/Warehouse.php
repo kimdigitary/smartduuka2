@@ -4,14 +4,16 @@
 
     use App\Enums\Status;
     use App\Http\Requests\PaginateRequest;
+    use App\Models\Scopes\BranchScope;
     use App\Services\StockService;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class Warehouse extends Model
     {
         use HasFactory;
-
 
         protected $fillable = [
             'name' ,
@@ -22,7 +24,8 @@
             'manager' ,
             'capacity' ,
             'status' ,
-            'id'
+            'id' ,
+            'branch_id'
         ];
         protected $casts    = [
             'deletable' => 'boolean',

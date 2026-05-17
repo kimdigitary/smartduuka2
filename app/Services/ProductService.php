@@ -108,10 +108,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'desc';
 
                 return Ingredient::where( function ($query) use ($requests) {
                     foreach ( $requests as $key => $request ) {
@@ -164,6 +164,7 @@
                         'slug'                => $data[ 'name' ] ,
                         'type'                => $data[ 'type' ] ,
                         'sku'                 => $data[ 'sku' ] ,
+                        'branch_id'           => $data[ 'branch_id' ] ,
                         'barcode'             => $data[ 'barcode' ] ,
                         'product_category_id' => $data[ 'product_category_id' ] ,
                         'product_brand_id'    => $data[ 'product_brand_id' ] ?? NULL ,
@@ -203,13 +204,14 @@
                             $warehouse    = Warehouse::firstOrCreate(
                                 [ 'id' => 1 ] ,
                                 [
-                                    'name'     => 'Shop Storage' ,
-                                    'status'   => Status::ACTIVE ,
-                                    'phone'    => '0701234567' ,
-                                    'email'    => 'shop@example.com' ,
-                                    'location' => 'Kampala' ,
-                                    'manager'  => 'Manager' ,
-                                    'capacity' => '2 sqr ft' ,
+                                    'name'      => 'Shop Storage' ,
+                                    'status'    => Status::ACTIVE ,
+                                    'phone'     => '0701234567' ,
+                                    'email'     => 'shop@example.com' ,
+                                    'location'  => 'Kampala' ,
+                                    'branch_id' => branchId() ,
+                                    'manager'   => 'Manager' ,
+                                    'capacity'  => '2 sqr ft' ,
                                 ]
                             );
                             $warehouse_id = $warehouse->id;
@@ -223,6 +225,7 @@
                             'reference'    => 'S' . time() ,
                             'item_type'    => Product::class ,
                             'product_id'   => $product->id ,
+                            'branch_id'    => branchId() ,
                             'item_id'      => $product->id ,
                             'price'        => $retail_pricing[ 0 ][ 'buyingPrice' ] ,
                             'quantity'     => $data[ 'stock' ] ,
@@ -241,6 +244,7 @@
                                 'minQuantity' => $wholesale_price[ 'minQuantity' ] ,
                                 'price'       => $wholesale_price[ 'price' ] ,
                                 'item_id'     => $product->id ,
+                                'branch_id'   => branchId() ,
                                 'item_type'   => Product::class ,
                             ] );
                         }
@@ -252,6 +256,7 @@
                                 'buying_price'  => $retail_price[ 'buyingPrice' ] ,
                                 'selling_price' => $retail_price[ 'sellingPrice' ] ,
                                 'item_id'       => $product->id ,
+                                'branch_id'     => branchId() ,
                                 'item_type'     => Product::class ,
                             ] );
                         }
@@ -262,6 +267,7 @@
                         foreach ( $tagItems as $tagItem ) {
                             ProductTag::create( [
                                 'product_id' => $product->id ,
+                                'branch_id'  => branchId() ,
                                 'name'       => trim( $tagItem )
                             ] );
                         }
@@ -296,6 +302,7 @@
                         'slug'                => $data[ 'name' ] ,
                         'type'                => $data[ 'type' ] ,
                         'sku'                 => $data[ 'sku' ] ,
+                        'branch_id'           => $data[ 'branch_id' ] ,
                         'tax_inclusive'       => $tax_inclusive ,
                         'barcode'             => $data[ 'barcode' ] ,
                         'product_category_id' => $data[ 'product_category_id' ] ,
@@ -316,6 +323,7 @@
                     foreach ( $tax_ids as $tax_id ) {
                         ItemTax::create( [
                             'item_id'   => $product->id ,
+                            'branch_id' => $data[ 'branch_id' ] ,
                             'item_type' => Product::class ,
                             'tax_id'    => $tax_id
                         ] );
@@ -335,6 +343,7 @@
                                 'minQuantity' => $wholesale_price[ 'minQuantity' ] ,
                                 'price'       => $wholesale_price[ 'price' ] ,
                                 'item_id'     => $product->id ,
+                                'branch_id'   => $data[ 'branch_id' ] ,
                                 'item_type'   => Product::class ,
                             ] );
                         }
@@ -349,6 +358,7 @@
                                 'buying_price'  => $retail_price[ 'buyingPrice' ] ,
                                 'selling_price' => $retail_price[ 'sellingPrice' ] ,
                                 'item_id'       => $product->id ,
+                                'branch_id'     => $data[ 'branch_id' ] ,
                                 'item_type'     => Product::class ,
                             ] );
                         }
@@ -361,6 +371,7 @@
                         foreach ( $tagItems as $tagItem ) {
                             ProductTag::create( [
                                 'product_id' => $product->id ,
+                                'branch_id'  => $data[ 'branch_id' ] ,
                                 'name'       => trim( $tagItem )
                             ] );
                         }
@@ -533,11 +544,11 @@
         {
             try {
 
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 32 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
-                $rand        = $request->get( 'rand' , 0 ) > 0 ? $request->get( 'rand' ) : 0;
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 32 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'desc';
+                $rand        = $request->input( 'rand' , 0 ) > 0 ? $request->input( 'rand' ) : 0;
 
                 return Product::select( 'products.id' , 'products.name' , 'products.sku' , 'products.slug' , 'products.selling_price' , 'products.variation_price' , 'products.add_to_flash_sale' , 'products.offer_start_date' , 'products.offer_end_date' , 'products.discount' , 'products.status' )
                               ->withCount( 'orderCountable' )
@@ -558,10 +569,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'asc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'asc';
                 return Product::withCount( 'orders' )->where( function ($query) use ($requests) {
                     if ( isset( $requests[ 'from_date' ] ) && isset( $requests[ 'to_date' ] ) ) {
                         $first_date = date( 'Y-m-d' , strtotime( $requests[ 'from_date' ] ) );
@@ -868,64 +879,6 @@
             }
         }
 
-        /**
-         * @throws Exception
-         */
-        public function flashSaleProducts(PaginateRequest $request)
-        {
-            try {
-                $now         = Carbon::now();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 32 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
-                $rand        = $request->get( 'rand' , 0 ) > 0 ? $request->get( 'rand' ) : 0;
-
-                return Product::select( 'products.id' , 'products.name' , 'products.sku' , 'products.slug' , 'products.selling_price' , 'products.variation_price' , 'products.add_to_flash_sale' , 'products.offer_start_date' , 'products.offer_end_date' , 'products.discount' , 'products.status' )
-                              ->withReviewRating()
-                              ->with( 'media' , 'variations' , 'reviews' )
-                              ->active( 'products.status' )
-                              ->where( 'products.add_to_flash_sale' , Ask::YES )
-                              ->where( 'products.offer_start_date' , '<=' , $now )
-                              ->where( 'products.offer_end_date' , '>=' , $now )
-                              ->randAndLimitOrOrderBy( $rand , $orderColumn , $orderType )
-                              ->$method( $methodValue );
-            } catch ( Exception $exception ) {
-                Log::info( $exception->getMessage() );
-                throw new Exception( $exception->getMessage() , 422 );
-            }
-        }
-
-        /**
-         * @throws Exception
-         */
-        public function offerProducts(PaginateRequest $request)
-        {
-            try {
-                $now         = Carbon::now();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 32 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
-                $rand        = $request->get( 'rand' , 0 ) > 0 ? $request->get( 'rand' ) : 0;
-
-                return Product::select( 'products.id' , 'products.name' , 'products.sku' , 'products.slug' , 'products.selling_price' , 'products.variation_price' , 'products.add_to_flash_sale' , 'products.offer_start_date' , 'products.offer_end_date' , 'products.discount' , 'products.status' )
-                              ->withReviewRating()
-                              ->with( 'media' , 'variations' , 'reviews' )
-                              ->active( 'products.status' )
-                              ->where( 'products.offer_start_date' , '<=' , $now )
-                              ->where( 'products.offer_end_date' , '>=' , $now )
-                              ->randAndLimitOrOrderBy( $rand , $orderColumn , $orderType )
-                              ->$method( $methodValue );
-            } catch ( Exception $exception ) {
-                Log::info( $exception->getMessage() );
-                throw new Exception( $exception->getMessage() , 422 );
-            }
-        }
-
-        /**
-         * @throws Exception
-         */
         public function showWithRelation(Product $product , Request $request)
         {
             $user = Auth::user();
@@ -953,7 +906,7 @@
                                   }
                               }
                               ] , 'quantity' )
-                              ->with( [ 'reviews' => fn($query) => $query->with( 'user' , 'media' )->take( $request->get( 'review_limit' , 3 ) ) ] )
+                              ->with( [ 'reviews' => fn($query) => $query->with( 'user' , 'media' )->take( $request->input( 'review_limit' , 3 ) ) ] )
                               ->withReviewRating()
                               ->where( [ 'id' => $product->id , 'status' => Status::ACTIVE ] )->first();
             } catch ( Exception $exception ) {
@@ -962,55 +915,6 @@
             }
         }
 
-        /**
-         * @throws Exception
-         */
-        public function relatedProducts(Product $product , PaginateRequest $request)
-        {
-            try {
-                $productTags = $product->tags;
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 32 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
-                $rand        = $request->get( 'rand' , 0 ) > 0 ? $request->get( 'rand' ) : 0;
-
-                if ( count( $productTags ) > 0 ) {
-                    return Product::select( 'products.id' , 'products.name' , 'products.sku' , 'products.slug' , 'products.selling_price' , 'products.variation_price' , 'products.add_to_flash_sale' , 'products.offer_start_date' , 'products.offer_end_date' , 'products.discount' , 'products.status' )
-                                  ->withReviewRating()
-                                  ->with( 'media' , 'variations' , 'reviews' , 'tags' )
-                                  ->active( 'products.status' )
-                                  ->whereHas( 'tags' , function ($query) use ($productTags) {
-                                      if ( count( $productTags ) > 0 ) {
-                                          $i = 0;
-                                          foreach ( $productTags as $productTag ) {
-                                              if ( $i === 0 ) {
-                                                  $query->where( 'name' , 'like' , '%' . $productTag->name . '%' );
-                                              }
-                                              else {
-                                                  $query->orWhere( 'name' , 'like' , '%' . $productTag->name . '%' );
-                                              }
-                                              $i++;
-                                          }
-                                      }
-                                      return $query;
-                                  } )
-                                  ->whereNot( 'id' , $product->id )
-                                  ->randAndLimitOrOrderBy( $rand , $orderColumn , $orderType )
-                                  ->$method( $methodValue );
-                }
-                else {
-                    return collect( [] );
-                }
-            } catch ( Exception $exception ) {
-                Log::info( $exception->getMessage() );
-                throw new Exception( $exception->getMessage() , 422 );
-            }
-        }
-
-        /**
-         * @throws Exception
-         */
         public function purchasableProducts()
         {
             try {
@@ -1040,60 +944,6 @@
                               ->with( 'productTaxes' )
                               ->with( 'variations' )
                               ->orderBy( 'name' , 'asc' )
-                              ->get();
-            } catch ( Exception $exception ) {
-                Log::info( $exception->getMessage() );
-                throw new Exception( $exception->getMessage() , 422 );
-            }
-        }
-
-        /**
-         * @throws Exception
-         */
-        public function topProducts()
-        {
-            try {
-                return Product::withCount( 'orderCountable' )->where( [ 'status' => Status::ACTIVE ] )->orderBy( 'order_countable_count' , 'desc' )->limit( 12 )->get();
-            } catch ( Exception $exception ) {
-                Log::info( $exception->getMessage() );
-                throw new Exception( $exception->getMessage() , 422 );
-            }
-        }
-
-        /**
-         * @throws Exception
-         */
-        public function ancestorCategoryWiseProducts(ProductCategory $category , $rand = NULL)
-        {
-
-            try {
-                $categories = [];
-                if ( ! blank( $category ) ) {
-                    $categories = ProductCategory::where( [ 'id' => $category->id ] )->first();
-                    if ( $categories ) {
-                        $categories = $categories->descendantsAndSelf->toArray();
-                    }
-                    else {
-                        $categories = [];
-                    }
-                }
-
-                return Product::select( 'id' , 'name' , 'sku' , 'slug' , 'status' , 'product_category_id' )
-                              ->where( function ($query) use ($categories) {
-                                  if ( count( $categories ) ) {
-                                      $i = 0;
-                                      foreach ( $categories as $category ) {
-                                          if ( $i === 0 ) {
-                                              $query->where( 'product_category_id' , $category[ 'id' ] );
-                                          }
-                                          else {
-                                              $query->orWhere( 'product_category_id' , $category[ 'id' ] );
-                                          }
-                                          $i++;
-                                      }
-                                  }
-                              } )
-                              ->randAndLimitOrOrderBy( $rand , 'id' , 'asc' )
                               ->get();
             } catch ( Exception $exception ) {
                 Log::info( $exception->getMessage() );

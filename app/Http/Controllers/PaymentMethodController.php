@@ -47,7 +47,7 @@
 
         public function deleteMethods(Request $request)
         {
-            PaymentMethod::destroy( $request->get( 'ids' ) );
+            PaymentMethod::destroy( $request->input( 'ids' ) );
         }
 
         public function transfer(FundsTransferRequest $request)

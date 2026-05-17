@@ -30,7 +30,7 @@ class ItemAddonController extends AdminController
         $this->middleware(['permission:items_show'])->only('index', 'store', 'destroy');
     }
 
-    public function index(PaginateRequest $request, Item $item) : Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function index(PaginateRequest $request, Item $item) 
     {
         try {
             return ItemAddonResource::collection($this->itemAddonService->list($request, $item));

@@ -138,10 +138,22 @@
         return "$code$phone";
     }
 
-    function recordId(string $prefix , Model $model) : string
+    function normalisePhone(string $phone) : string
     {
-//        $dynamicPadding = max( 3 , strlen( (string) $model->id ) + 1 );
-        return $prefix . '-' . Str::padLeft( $model->id , 6 , '0' );
+        if ( str_starts_with( $phone , '+256' ) ) {
+            return substr( $phone , 1 );
+        }
+
+        if ( str_starts_with( $phone , '0' ) ) {
+            return '256' . substr( $phone , 1 );
+        }
+
+        return $phone;
+    }
+
+    function recordId(string $prefix , Model $model , $pad = NULL) : string
+    {
+        return $prefix . '-' . Str::padLeft( $model->id , $pad ?? 6 , '0' );
     }
 
     function permissionWithAccess(&$permissions , $rolePermissions) : object
@@ -240,6 +252,7 @@
                                       ->where( 'payment_status' , SubscriptionPaymentStatus::Paid )
                                       ->where( 'status' , Status::ACTIVE )
                                       ->where( 'tenant_id' , $tenantId )
+                                      ->where( 'branch_id' , branchId() )
                                       ->latest()
         );
     }
@@ -249,6 +262,16 @@
         return tenancy()->central(
             fn() => tenantSubscriptions( $tenantId )?->first()?->subscriptionPlan
         );
+    }
+
+    function branchId() : int
+    {
+        return (int) request()->header( 'X-BranchId' );
+    }
+
+    function tenantId()
+    {
+        return request()->header( 'X-TenantId' );
     }
 
     function addPayment(Order $order = NULL , int $amount = 0 , int $payment_method = 0 , string $reference = NULL , PosPaymentType $pos_payment_type =
@@ -637,10 +660,9 @@
 
     function activityLog(string $description , string $app_id = NULL , Model | null $model = NULL) : void
     {
-        info( 'Log' );
         $activity = activity();
         if ( $model ) $activity->performedOn( $model );
-        if ( $app_id ) $activity->withProperties( [ 'app_id' => $app_id ] );
+        if ( $app_id ) $activity->withProperties( [ 'app_id' => $app_id , 'branch_id' => request( 'branch_id' ) ] );
         $activity->log( $description );
     }
 

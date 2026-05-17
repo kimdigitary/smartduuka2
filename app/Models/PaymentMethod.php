@@ -3,10 +3,13 @@
     namespace App\Models;
 
     use App\Traits\HasImageMedia;
+    use Illuminate\Database\Eloquent\Attributes\Scope;
+    use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\HasMany;
     use Spatie\MediaLibrary\HasMedia;
+
 
     class PaymentMethod extends Model implements HasMedia
     {
@@ -33,5 +36,10 @@
         public function getTotalOutAttribute() : float
         {
             return (float) $this->transactions()->where( 'amount' , '<' , 0 )->sum( 'amount' );
+        }
+        #[Scope]
+        protected function branch(Builder $query , int | string $branch_id) : void
+        {
+            $query->where( 'branch_id' , $branch_id );
         }
     }

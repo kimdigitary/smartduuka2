@@ -28,22 +28,22 @@ class ProductVariationController extends AdminController
         $this->middleware(['permission:products_show'])->only('store', 'update', 'destroy', 'show');
     }
 
-    public function tree(Request $request, Product $product): Response | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function tree(Request $request, Product $product)
     {
         return response(['data' =>  $this->productVariationService->tree($request, $product)]);
     }
 
-    public function singleTree(Product $product): Response | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function singleTree(Product $product)
     {
         return response(['data' =>  $this->productVariationService->singleTree($product)]);
     }
 
-    public function treeWithSelected(Request $request, Product $product): Response | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function treeWithSelected(Request $request, Product $product)
     {
         return response(['data' =>  $this->productVariationService->treeWithSelected($request, $product)]);
     }
 
-    public function index(PaginateRequest $request, Product $product): Response | AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function index(PaginateRequest $request, Product $product)
     {
         try {
             return ProductVariationResource::collection($this->productVariationService->list($request, $product));
@@ -61,7 +61,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function update(ProductVariationRequest $request, Product $product, ProductVariation $productVariation): Application| Response| AnonymousResourceCollection|\Illuminate\Contracts\Foundation\Application| ResponseFactory
+    public function update(ProductVariationRequest $request, Product $product, ProductVariation $productVariation)
     {
         try {
             return ProductVariationResource::collection($this->productVariationService->update($request, $product, $productVariation));
@@ -70,7 +70,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function destroy(Product $product, ProductVariation $productVariation): Response | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function destroy(Product $product, ProductVariation $productVariation)
     {
         try {
             $this->productVariationService->destroy($product, $productVariation);
@@ -80,7 +80,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function show(Product $product, ProductVariation $productVariation): Response | ProductVariationResource | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function show(Product $product, ProductVariation $productVariation)
     {
         try {
             return new ProductVariationResource($this->productVariationService->show($product, $productVariation));
@@ -89,8 +89,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function initialVariation(Product $product,Request $request ): Application| Response| AnonymousResourceCollection|\Illuminate\Contracts\Foundation\Application|
-    ResponseFactory
+    public function initialVariation(Product $product,Request $request )
     {
         try {
             return SimpleProductVariationResource::collection($this->productVariationService->initialVariation($product,$request));
@@ -99,7 +98,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function childrenVariation(ProductVariation $productVariation): Application| Response| AnonymousResourceCollection|\Illuminate\Contracts\Foundation\Application| ResponseFactory
+    public function childrenVariation(ProductVariation $productVariation)
     {
         try {
             return SimpleProductVariationResource::collection($this->productVariationService->childrenVariation($productVariation));
@@ -108,7 +107,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function ancestorsToString(ProductVariation $productVariation): Application| Response|\Illuminate\Contracts\Foundation\Application| ResponseFactory
+    public function ancestorsToString(ProductVariation $productVariation)
     {
         try {
             return response(['data' => $this->productVariationService->ancestorsToString($productVariation)], 200);
@@ -117,7 +116,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function ancestorsAndSelfId(ProductVariation $productVariation): Application| Response|\Illuminate\Contracts\Foundation\Application| ResponseFactory
+    public function ancestorsAndSelfId(ProductVariation $productVariation)
     {
         try {
             return response(['data' => $this->productVariationService->ancestorsAndSelfId($productVariation)], 200);
@@ -126,7 +125,7 @@ class ProductVariationController extends AdminController
         }
     }
 
-    public function barcodeVariationProduct(ProductVariation $productVariation): Response | SimpleProductVariationResourceAdmin | \Illuminate\Contracts\Foundation\Application | ResponseFactory
+    public function barcodeVariationProduct(ProductVariation $productVariation)
     {
         try {
             return new SimpleProductVariationResourceAdmin($this->productVariationService->barcodeVariationProduct($productVariation));

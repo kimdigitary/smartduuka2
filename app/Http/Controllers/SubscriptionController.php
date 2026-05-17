@@ -17,10 +17,10 @@
         public function index(PaginateRequest $request)
         {
             $project_id  = config('app.project_id');
-            $method      = $request->get('paginate' , 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate' , 0) == 1 ? $request->get('per_page' , 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType   = $request->get('order_type') ?? 'desc';
+            $method      = $request->input('paginate' , 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate' , 0) == 1 ? $request->input('per_page' , 10) : '*';
+            $orderColumn = $request->input('order_column') ?? 'id';
+            $orderType   = $request->input('order_type') ?? 'desc';
             return SubscriptionResource::collection(Subscription::where('project_id' , $project_id)->orderBy($orderColumn , $orderType)->$method($methodValue));
         }
 

@@ -7,7 +7,9 @@
     use App\Enums\StockStatus;
     use App\Http\Resources\RetailPriceResource;
     use App\Http\Resources\WholeSalePriceResource;
+    use App\Models\Scopes\BranchScope;
     use App\Traits\HasImageMedia;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,6 +25,7 @@
     use Spatie\MediaLibrary\HasMedia;
     use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
+    #[ScopedBy([BranchScope::class])]
     class Product extends Model implements HasMedia
     {
         use HasFactory , SoftDeletes , HasImageMedia;

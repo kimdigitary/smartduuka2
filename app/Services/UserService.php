@@ -21,10 +21,10 @@ class UserService
     {
         try {
             $requests    = $request->all();
-            $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType   = $request->get('order_type') ?? 'desc';
+            $method      = $request->input('paginate', 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->input('paginate', 0) == 1 ? $request->input('per_page', 10) : '*';
+            $orderColumn = $request->input('order_column') ?? 'id';
+            $orderType   = $request->input('order_type') ?? 'desc';
 
             return User::with('media', 'addresses', 'roles')->where(function ($query) use ($requests) {
                 foreach ($requests as $key => $request) {

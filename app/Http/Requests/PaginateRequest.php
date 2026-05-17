@@ -1,30 +1,22 @@
 <?php
 
-namespace App\Http\Requests;
+    namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
+    use Illuminate\Foundation\Http\FormRequest;
 
-class PaginateRequest extends FormRequest
-{
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize(): bool
+    class PaginateRequest extends FormRequest
     {
-        return true;
-    }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules(): array
-    {
-        return [
-            'per_page' => ['numeric', 'min:1', 'max:1000']
-        ];
+        public function authorize() : bool
+        {
+            return TRUE;
+        }
+
+        public function rules() : array
+        {
+            return [
+                'per_page' => [ 'numeric' , 'min:1' , 'max:1000' ] ,
+//                'page'     => [ 'numeric' , 'min:1' , 'max:1000' ]
+            ];
+        }
     }
-}

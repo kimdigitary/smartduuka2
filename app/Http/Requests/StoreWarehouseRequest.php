@@ -21,6 +21,7 @@
                 'location' => [ 'sometimes' , 'string' , 'max:255' ] ,
                 'manager'  => [ 'sometimes' , 'string' , 'max:255' ] ,
                 'capacity' => [ 'sometimes' , 'string' , 'max:255' ] ,
+                'branch_id' => [ 'sometimes' , 'numeric:' , ] ,
             ];
         }
     }

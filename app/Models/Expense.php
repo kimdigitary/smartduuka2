@@ -6,6 +6,8 @@
     use App\Enums\ExpenseType;
     use App\Enums\MediaEnum;
     use App\Enums\PaymentStatus;
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,12 +15,13 @@
     use Spatie\MediaLibrary\HasMedia;
     use Spatie\MediaLibrary\InteractsWithMedia;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class Expense extends Model implements HasMedia
     {
         use HasFactory , InteractsWithMedia;
 
         protected $fillable = [ 'name' , 'amount' , 'date' , 'note' , 'attachment' , 'recurs' , 'repetitions' , 'paid' , 'paid_on' , 'repeats_on' , 'count' ,
-            'register_id' , 'expense_category_id' , 'reference_no' , 'is_recurring' , 'base_amount' , 'extra_charge' , 'expense_nature' , 'expense_type' , 'expense_id' , 'registerMediaConversionsUsingModelInstance'
+            'register_id' , 'expense_category_id' , 'reference_no' , 'is_recurring' , 'base_amount' , 'extra_charge' , 'expense_nature' , 'expense_type' , 'expense_id' , 'registerMediaConversionsUsingModelInstance','branch_id'
         ];
         protected $casts    = [
             'date'         => 'datetime' ,

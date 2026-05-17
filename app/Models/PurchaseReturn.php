@@ -2,6 +2,8 @@
 
     namespace App\Models;
 
+    use Illuminate\Database\Eloquent\Attributes\Scope;
+    use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -30,5 +32,11 @@
             return [
                 'date' => 'datetime' ,
             ];
+        }
+
+        #[Scope]
+        protected function branch(Builder $query , int | string $branch_id) : void
+        {
+            $query->where( 'branch_id' , $branch_id );
         }
     }

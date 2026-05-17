@@ -34,7 +34,7 @@ class ProductsReportController extends AdminController
         $this->middleware(['permission:products-report'])->only('index', 'export', 'productsReportOverview', 'exportPdf');
     }
 
-    public function index(PaginateRequest $request): Response | AnonymousResourceCollection | Application | ResponseFactory
+    public function index(PaginateRequest $request)
     {
         try {
             return ProductAdminResource::collection($this->productService->productReport($request));

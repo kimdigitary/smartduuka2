@@ -241,10 +241,10 @@
         {
             try {
                 $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
+                $method      = $request->input( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
+                $methodValue = $request->input( 'paginate' , 0 ) == 1 ? $request->input( 'per_page' , 10 ) : '*';
+                $orderColumn = $request->input( 'order_column' ) ?? 'id';
+                $orderType   = $request->input( 'order_type' ) ?? 'desc';
 
                 return ProductVariation::with( [ 'product' , 'productAttribute' , 'productAttributeOption' ] )->where( [
                     'product_id' => $product->id
@@ -263,9 +263,6 @@
             }
         }
 
-        /**
-         * @throws Exception
-         */
 
         /**
          * @throws Exception
@@ -344,10 +341,12 @@
                                     'product_attribute_id'        => $variation[ 'product_attribute_id' ] ,
                                     'product_attribute_option_id' => $variation[ 'product_attribute_option_id' ] ,
                                     'price'                       => $variation[ 'price' ] ,
+                                    'branch_id'                   => branchId() ,
                                     'sku'                         => $isLast ? $sku : NULL ,
                                     'parent_id'                   => $parentId ,
                                     'order'                       => $order ,
                                 ];
+
                                 if ( $isLast ) {
                                     $createData[ 'barcode' ]     = $barcode;
                                     $createData[ 'stock' ]       = $stock;
@@ -389,51 +388,52 @@
                                 // ---------------------------------------------------------
 
                                 // Prevent duplicate initial stock insertions if variation is just being updated
-                                $existingStock = Stock::where('item_type', ProductVariation::class)
-                                                      ->where('variation_id', $productVariation->id)
+                                $existingStock = Stock::where( 'item_type' , ProductVariation::class )
+                                                      ->where( 'variation_id' , $productVariation->id )
                                                       ->exists();
 
-                                if ($trackStock == 1 && $stock > 0 && !$existingStock) {
+                                if ( $trackStock == 1 && $stock > 0 && ! $existingStock ) {
                                     // Defaulting to the first warehouse since payload lacks warehouse_id
                                     $warehouse   = Warehouse::first();
                                     $warehouseId = $warehouse ? $warehouse->id : 1;
                                     $batch       = 'B' . time();
-                                    $buyingPrice = $retailData[0]['buyingPrice'] ?? ($product->buying_price ?? 0);
+                                    $buyingPrice = $retailData[ 0 ][ 'buyingPrice' ] ?? ( $product->buying_price ?? 0 );
                                     $total       = $stock * $buyingPrice;
 
                                     // Construct variation_names string dynamically
                                     $names = [];
-                                    foreach ($hierarchyVariations as $hv) {
-                                        $option = ProductAttributeOption::with('productAttribute')->find($hv['product_attribute_option_id']);
-                                        if ($option && $option->productAttribute) {
+                                    foreach ( $hierarchyVariations as $hv ) {
+                                        $option = ProductAttributeOption::with( 'productAttribute' )->find( $hv[ 'product_attribute_option_id' ] );
+                                        if ( $option && $option->productAttribute ) {
                                             $names[] = $option->productAttribute->name . ' :: ' . $option->name;
                                         }
                                     }
-                                    $variationNames = implode(' > ', $names);
+                                    $variationNames = implode( ' > ' , $names );
 
-                                    Stock::create([
-                                        'model_type'      => ProductVariation::class,
-                                        'model_id'        => $productVariation->id,
-                                        'warehouse_id'    => $warehouseId,
-                                        'reference'       => 'S' . time(),
-                                        'item_type'       => ProductVariation::class,
-                                        'item_id'         => $productVariation->id,
-                                        'product_id'      => $product->id,
-                                        'variation_id'    => $productVariation->id,
-                                        'variation_names' => $variationNames,
-                                        'price'           => $buyingPrice,
-                                        'quantity'        => $stock,
-                                        'expiry_date'     => null,
-                                        'discount'        => 0,
-                                        'tax'             => 0,
-                                        'batch'           => $batch,
-                                        'subtotal'        => $total,
-                                        'total'           => $total,
-                                        'sku'             => $sku,
-                                        'status'          => StockStatus::RECEIVED,
-                                        'creator'         => auth()->id(),
+                                    Stock::create( [
+                                        'model_type'      => ProductVariation::class ,
+                                        'model_id'        => $productVariation->id ,
+                                        'warehouse_id'    => $warehouseId ,
+                                        'reference'       => 'S' . time() ,
+                                        'item_type'       => ProductVariation::class ,
+                                        'item_id'         => $productVariation->id ,
+                                        'product_id'      => $product->id ,
+                                        'variation_id'    => $productVariation->id ,
+                                        'variation_names' => $variationNames ,
+                                        'price'           => $buyingPrice ,
+                                        'quantity'        => $stock ,
+                                        'branch_id'       => branchId() ,
+                                        'expiry_date'     => NULL ,
+                                        'discount'        => 0 ,
+                                        'tax'             => 0 ,
+                                        'batch'           => $batch ,
+                                        'subtotal'        => $total ,
+                                        'total'           => $total ,
+                                        'sku'             => $sku ,
+                                        'status'          => StockStatus::RECEIVED ,
+                                        'creator'         => auth()->id() ,
                                         'user_id'         => auth()->id()
-                                    ]);
+                                    ] );
                                 }
                             }
                         }
@@ -560,6 +560,7 @@
                                 'product_attribute_id'        => $variation->product_attribute_id ,
                                 'product_attribute_option_id' => $variation->product_attribute_option_id ,
                                 'price'                       => $variation->price ,
+                                'branch_id'                   => branchId() ,
                                 'sku'                         => ( $key == $variationsCount ? $sku : NULL ) ,
                                 'parent_id'                   => $parentId ,
                                 'order'                       => $order

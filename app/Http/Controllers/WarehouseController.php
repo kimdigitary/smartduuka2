@@ -56,14 +56,15 @@
         {
             try {
                 DB::transaction( function () use ($warehouse , $request) {
-                    $this->warehouse           = $warehouse;
-                    $this->warehouse->name     = $request->name;
-                    $this->warehouse->email    = $request->email;
-                    $this->warehouse->phone    = $request->phone;
-                    $this->warehouse->location = $request->location;
-                    $this->warehouse->manager  = $request->manager;
-                    $this->warehouse->status   = $request->status;
-                    $this->warehouse->capacity = $request->capacity;
+                    $this->warehouse            = $warehouse;
+                    $this->warehouse->name      = $request->name;
+                    $this->warehouse->email     = $request->email;
+                    $this->warehouse->phone     = $request->phone;
+                    $this->warehouse->branch_id = $request->branch_id;
+                    $this->warehouse->location  = $request->location;
+                    $this->warehouse->manager   = $request->manager;
+                    $this->warehouse->status    = $request->status;
+                    $this->warehouse->capacity  = $request->capacity;
                     $this->warehouse->save();
                 } );
                 return $this->warehouse;
@@ -78,16 +79,5 @@
         public function destroy(Request $request)
         {
             Warehouse::destroy( $request->ids );
-//            try {
-//                if ( ! $warehouse->deletable ) {
-//                    throw new Exception( 'This warehouse is not deletable' , 422 );
-//                }
-//                else {
-//                    $warehouse->delete();
-//                }
-//            } catch ( Exception $exception ) {
-//                Log::info( $exception->getMessage() );
-//                throw new Exception( $exception->getMessage() , 422 );
-//            }
         }
     }

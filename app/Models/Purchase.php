@@ -5,6 +5,10 @@
     use App\Enums\PurchasePaymentStatus;
     use App\Enums\PurchaseStatus;
     use App\Enums\PurchaseType;
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\Scope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+    use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +17,7 @@
     use Spatie\MediaLibrary\HasMedia;
     use Spatie\MediaLibrary\InteractsWithMedia;
 
+    #[ScopedBy([BranchScope::class])]
     class Purchase extends Model implements HasMedia
     {
         use HasFactory;
@@ -33,7 +38,8 @@
             'type' , 'warehouse_id' , 'source_warehouse_id' , 'destination_warehouse_id' , 'description' ,
             'balance' ,
             'notes' ,
-            'shipping'
+            'shipping' ,
+            'branch_id'
         ];
 
         protected $casts   = [

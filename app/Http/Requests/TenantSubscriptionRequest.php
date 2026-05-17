@@ -12,6 +12,7 @@
                 'phone'            => [ 'required' , 'string' ] ,
                 'tenant'           => [ 'required' , 'string' ] ,
                 'amount'           => [ 'required' , 'numeric:' ] ,
+                'branch_id'        => [ 'required' , 'numeric:' ] ,
                 'billingCycle'     => [ 'required' , 'numeric:' ] ,
                 'subscriptionPlan' => [ 'required' , 'numeric:' ] ,
             ];

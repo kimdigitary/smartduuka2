@@ -23,9 +23,9 @@ class ProfileService
             $user               = User::find(auth()->user()->id);
             if (!blank($user)) {
                 $user->name         = $request->name;
-                $user->phone        = $request->get('phone');
-                $user->email        = $request->get('email');
-                $user->country_code = $request->get('country_code');
+                $user->phone        = $request->input('phone');
+                $user->email        = $request->input('email');
+                $user->country_code = $request->input('country_code');
                 $user->save();
             }
 
@@ -50,7 +50,7 @@ class ProfileService
     {
         try {
             $user           = User::find(auth()->user()->id);
-            $user->password = bcrypt($request->get('new_password'));
+            $user->password = bcrypt($request->input('new_password'));
             $user->save();
             return $user;
         } catch (Exception $exception) {

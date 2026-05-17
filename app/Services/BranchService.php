@@ -4,55 +4,34 @@
 
 
     use App\Http\Requests\BranchRequest;
-    use App\Http\Requests\PaginateRequest;
     use App\Libraries\QueryExceptionLibrary;
     use App\Models\Branch;
+    use App\Models\TenantBranch;
     use Exception;
+    use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Log;
     use Smartisan\Settings\Facades\Settings;
 
     class BranchService
     {
-        protected array $branchFilter = [
-            'name' ,
-            'email' ,
-            'phone' ,
-            'latitude' ,
-            'longitude' ,
-            'city' ,
-            'state' ,
-            'zip_code' ,
-            'address' ,
-            'status'
-        ];
-
-        public function list(PaginateRequest $request)
+        public function list(Request $request)
         {
             try {
-                $requests    = $request->all();
-                $method      = $request->get( 'paginate' , 0 ) == 1 ? 'paginate' : 'get';
-                $methodValue = $request->get( 'paginate' , 0 ) == 1 ? $request->get( 'per_page' , 10 ) : '*';
-                $orderColumn = $request->get( 'order_column' ) ?? 'id';
-                $orderType   = $request->get( 'order_type' ) ?? 'desc';
+                $page     = $request->integer( 'page' , 1 );
+                $status   = $request->integer( 'status' , 10 );
+                $per_page = $request->integer( 'per_page' , 10 );
+                $query    = $request->string( 'query' , 10 );
+                $query    = $request->string( 'query' , 10 );
 
-                return Branch::where( function ($query) use ($requests) {
-                    foreach ( $requests as $key => $request ) {
-                        if ( in_array( $key , $this->branchFilter ) ) {
-                            $query->where( $key , 'like' , '%' . $request . '%' );
-                        }
-                    }
-                } )->orderBy( $orderColumn , $orderType )->$method(
-                    $methodValue
-                );
+                return TenantBranch::forTenant( tenantId() )
+                                   ->paginate( perPage: $per_page , page: $page );
+
             } catch ( Exception $exception ) {
                 Log::info( $exception->getMessage() );
                 throw new Exception( $exception->getMessage() , 422 );
             }
         }
 
-        /**
-         * @throws Exception
-         */
         public function store(BranchRequest $request)
         {
             try {

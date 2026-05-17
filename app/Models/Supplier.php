@@ -3,12 +3,15 @@
     namespace App\Models;
 
     use App\Enums\Status;
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\HasMany;
     use Spatie\MediaLibrary\HasMedia;
     use Spatie\MediaLibrary\InteractsWithMedia;
 
+    #[ScopedBy( [ BranchScope::class ] )]
     class Supplier extends Model implements HasMedia
     {
         use HasFactory;

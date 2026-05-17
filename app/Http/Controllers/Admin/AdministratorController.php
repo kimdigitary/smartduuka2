@@ -41,7 +41,7 @@
 //            $this->middleware( [ 'permission:administrators_show' ] )->only( 'show' , 'changePassword' , 'changeImage' , 'myOrder' );
         }
 
-        public function index(PaginateRequest $request) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function index(PaginateRequest $request) 
         {
             try {
                 return AdministratorResource::collection( $this->administratorService->list( $request ) );
@@ -120,7 +120,7 @@
             }
         }
 
-        public function myOrder(PaginateRequest $request , User $administrator) : Response | AnonymousResourceCollection | Application | ResponseFactory
+        public function myOrder(PaginateRequest $request , User $administrator) 
         {
             try {
                 return OrderResource::collection( $this->orderService->userOrder( $request , $administrator ) );
