@@ -5,18 +5,22 @@
     use App\Http\Requests\TenantBranchRequest;
     use App\Http\Resources\TenantBranchResource;
     use App\Models\TenantBranch;
+    use Illuminate\Http\Request;
 
     class TenantBranchController extends Controller
     {
         public function index()
         {
-            return TenantBranchResource::collection( TenantBranch::all() );
+            return tenancy()->central( fn() => TenantBranchResource::collection( TenantBranch::all() ) );
+//            return TenantBranchResource::collection( TenantBranch::all() );
         }
 
         public function store(TenantBranchRequest $request)
         {
-            $tenant = TenantBranch::create( $request->validated() );
-            $tenant->update( [ 'code' => recordId( 'BR' , $tenant,3 ) ] );
+            tenancy()->central( function () use ($request) {
+                $tenant = TenantBranch::create( $request->validated() );
+                $tenant->update( [ 'code' => recordId( 'BR' , $tenant , 3 ) ] );
+            } );
             return response()->json();
         }
 
@@ -27,14 +31,14 @@
 
         public function update(TenantBranchRequest $request , TenantBranch $tenantBranch)
         {
-            $tenantBranch->update( $request->validated() );
+            tenancy()->central( fn() => $tenantBranch->update( $request->validated() ) );
 
-            return new TenantBranchResource( $tenantBranch );
+            return response()->json();
         }
 
-        public function destroy(TenantBranch $tenantBranch)
+        public function destroy(Request $request)
         {
-            $tenantBranch->delete();
+            tenancy()->central( fn() => TenantBranch::destroy( $request->ids ) );
 
             return response()->json();
         }

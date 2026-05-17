@@ -82,6 +82,7 @@
     use App\Http\Controllers\SubscriptionPlanController;
     use App\Http\Controllers\SystemNotificationController;
     use App\Http\Controllers\TemplateTypeController;
+    use App\Http\Controllers\TenantBranchController;
     use App\Http\Controllers\UnitConversionController;
     use App\Http\Controllers\UserController;
     use App\Http\Controllers\WarehouseController;
@@ -668,6 +669,11 @@
                 Route::post( '/items' , [ StockController::class , 'storeItemStock' ] );
                 Route::get( '/ingredients' , [ StockController::class , 'indexIngredients' ] );
                 Route::get( '/export' , [ StockController::class , 'export' ] );
+            } );
+
+            Route::prefix( 'branches' )->name( 'branches.' )->group( function () {
+                Route::apiResource( '/' , TenantBranchController::class )->except( 'destroy' );
+                Route::delete( '/delete' , [ TenantBranchController::class , 'destroy' ] );
             } );
 
             Route::prefix( 'damage' )->name( 'damage.' )->group( function () {

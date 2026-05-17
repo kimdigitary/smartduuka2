@@ -24,18 +24,6 @@
             Route::apiResource( 'subscriptions' , SubscriptionController::class );
             Route::get( 'subscriptionPlans' , [ SubscriptionController::class , 'subscriptionPlans' ] );
             Route::apiResource( 'tenants' , TenantController::class );
-
-            Route::prefix( 'frontend' )->name( 'frontend.' )->group( function () {
-
-                Route::prefix( 'setting' )->name( 'setting.' )->group( function () {
-                    Route::get( '/' , [ FrontendSettingController::class , 'index' ] );
-                } );
-
-                Route::prefix( 'language' )->name( 'language.' )->group( function () {
-                    Route::get( '/' , [ FrontendLanguageController::class , 'index' ] );
-                    Route::get( '/show/{language}' , [ FrontendLanguageController::class , 'show' ] );
-                } );
-            } );
         } );
     }
 
