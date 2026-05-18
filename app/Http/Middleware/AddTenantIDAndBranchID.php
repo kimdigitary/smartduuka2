@@ -10,9 +10,7 @@
     {
         public function handle(Request $request , Closure $next) : Response
         {
-//            if ( Str::contains( $request->url() , 'branches' )  ) {
-//                info($request->method() . ' ' . $request->headers );
-//            }
+
             $tenantId = $request->header( 'X-TenantId' );
             $branchId = $request->header( 'X-BranchId' );
 
