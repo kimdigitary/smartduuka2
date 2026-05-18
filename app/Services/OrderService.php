@@ -52,7 +52,6 @@
     use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
-    use Illuminate\Routing\Attributes\Controllers\Middleware;
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Log;
@@ -120,7 +119,8 @@
                                    $q->where( 'status' , $status );
                                } )
                                ->when( ( $report == 'sales' ) , function (Builder $q) {
-                                   $q->where( 'status' , '<>' , OrderStatus::CANCELED );
+//                                   $q->where( 'status' , '<>' , OrderStatus::CANCELED );
+                                   $q->active();
                                } )
                                ->when( ( $start && ! $end ) , function (Builder $q) use ($start) {
                                    $q->whereBetween( 'created_at' , [ $start->copy()->startOfDay() , $start->copy()->endOfDay() ] );

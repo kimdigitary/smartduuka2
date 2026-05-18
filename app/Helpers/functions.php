@@ -269,12 +269,12 @@
         return (int) request()->header( 'X-BranchId' );
     }
 
-    function tenantId()
+    function tenantId() :  string | null
     {
         return request()->header( 'X-TenantId' );
     }
 
-    function addPayment(Order $order = NULL , int $amount = 0 , int $payment_method = 0 , string $reference = NULL , PosPaymentType $pos_payment_type =
+    function addPayment(?Order $order = NULL , int $amount = 0 , int $payment_method = 0 , ?string $reference = NULL , PosPaymentType $pos_payment_type =
     PosPaymentType::SALE) : void
     {
         $p = PosPayment::create( [
@@ -285,7 +285,11 @@
             'pos_payment_type'  => $pos_payment_type ,
             'register_id'       => register()?->id
         ] );
+
+        $p->update( [ 'reference_no' => recordId( 'PP' , $p ) ] );
+
         if ( $order ) $p->update( [ 'order_id' => $order->id ] );
+
         $pmt = PaymentMethodTransaction::create( [
             'amount'            => $amount ,
             'charge'            => 0 ,

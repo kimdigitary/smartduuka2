@@ -12,7 +12,9 @@
 
         public function apply(Builder $builder , Model $model) : void
         {
-            $builder->where( 'branch_id' , request( 'branch_id' ) );
+            $field = sprintf( '%s.%s' , $builder->getQuery()->from , 'branch_id' );
+            $builder->where( $field , request( 'branch_id' ) );
+
 //            if ( ! App::runningInConsole() && Auth::check() ) {
 //                $field = sprintf( '%s.%s' , $builder->getQuery()->from , 'branch_id' );
 //                $builder->where( $field , '=' , $this->branch() )->orWhere( $field , '=' , 0 );

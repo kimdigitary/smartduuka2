@@ -16,6 +16,7 @@
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Notification;
+    use Smartisan\Settings\Facades\Settings;
 
     class CreditDepositPurchaseController extends Controller
     {
@@ -63,6 +64,7 @@
                             'date'              => now() ,
                             'reference_no'      => $p[ 'reference' ] ?? time() ,
                             'amount'            => $net_amount ,
+                            'pos_payment_type'  => PosPaymentType::DEBT ,
                             'payment_method_id' => $p[ 'id' ] ,
                             'register_id'       => auth()->user()?->openRegister()->id
                         ] );
@@ -93,66 +95,22 @@
                 $order->loadMissing( 'user' );
 
                 $notificationSettings = Settings::group( 'notification' )->all();
-                $adminEmail           = $notificationSettings[ 'admin_email' ] ?? null;
-                $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? null;
+                $adminEmail           = $notificationSettings[ 'admin_email' ] ?? NULL;
+                $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? NULL;
 
                 Notification::route( 'mail' , $adminEmail )
                             ->route( 'sms' , $adminPhone )
                             ->route( 'whatsapp' , $adminPhone )
                             ->notify( new CreditPaymentReceived(
-                                title            : 'Credit Payment Received' ,
-                                message          : "A credit payment has been made against order #{$order->order_serial_no}." ,
-                                orderNo          : $order->order_serial_no ,
-                                customerName     : $order->user?->name ?? 'Unknown Customer' ,
-                                amountPaid       : $totalAmountPaid ,
-                                remainingBalance : max( 0 , $order->balance ) ,
-                                fullySettled     : $fullySettled ,
+                                title: 'Credit Payment Received' ,
+                                message: "A credit payment has been made against order #{$order->order_serial_no}." ,
+                                orderNo: $order->order_serial_no ,
+                                customerName: $order->user?->name ?? 'Unknown Customer' ,
+                                amountPaid: $totalAmountPaid ,
+                                remainingBalance: max( 0 , $order->balance ) ,
+                                fullySettled: $fullySettled ,
                             ) );
                 // --------------------------------------------
-
-                return new OrderResource( $order );
-            } );
-        }
-
-        public function updateBalance1(Request $request , Order $order)
-        {
-            return DB::transaction( function () use ($order , $request) {
-                $change = $request->integer( 'change' );
-
-                $payments = json_decode( $request->payments , TRUE );
-                foreach ( $payments as $p ) {
-                    $amount     = $p[ 'amount' ];
-                    $net_amount = $amount - $change;
-                    if ( $amount > 0 ) {
-                        $payment = PaymentMethod::find( $p[ 'id' ] );
-
-                        PosPayment::create( [
-                            'order_id'          => $order->id ,
-                            'date'              => now() ,
-                            'reference_no'      => $p[ 'reference' ] ?? time() ,
-                            'amount'            => $net_amount ,
-                            'payment_method_id' => $p[ 'id' ] ,
-                            'register_id'       => auth()->user()?->openRegister()->id
-                        ] );
-
-                        PaymentMethodTransaction::create( [
-                            'amount'            => $net_amount ,
-                            'charge'            => 0 ,
-                            'description'       => 'Order Payment #' . $order->order_serial_no ,
-                            'payment_method_id' => $payment->id ,
-                            'item_type'         => Order::class ,
-                            'item_id'           => $order->id
-                        ] );
-                    }
-                }
-//                $balance = $order->total- $order->net_paid;
-
-                if ( $order->balance <= 0 ) {
-                    $order->update( [
-                        'payment_status' => PaymentStatus::PAID ,
-                        'payment_type'   => PaymentType::CASH ,
-                    ] );
-                }
 
                 return new OrderResource( $order );
             } );
@@ -176,7 +134,7 @@
                 if ( $amount > 0 ) {
                     $payment = PaymentMethod::find( $request->integer( 'payment_method' ) );
 
-                    PosPayment::create( [
+                    $p = PosPayment::create( [
                         'order_id'          => $order->id ,
                         'date'              => now() ,
                         'reference_no'      => time() ,
@@ -185,6 +143,7 @@
                         'payment_method_id' => $payment->id ,
                         'register_id'       => auth()->user()?->openRegister()->id
                     ] );
+                    $p->update( [ 'reference_no' => recordId( 'PP' , $p ) ] );
 
                     PaymentMethodTransaction::create( [
                         'amount'            => $net_amount ,
@@ -195,7 +154,6 @@
                         'item_id'           => $order->id
                     ] );
                 }
-
 
                 if ( $order->balance <= 0 ) {
                     $order->update( [

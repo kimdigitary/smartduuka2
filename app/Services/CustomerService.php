@@ -184,10 +184,13 @@
                                 );
                                 $amount         -= $debtAmount;
                                 $runningBalance -= $debtAmount;
+
+                                addPayment( amount: $amount, payment_method: $payment_method , pos_payment_type:  PosPaymentType::DEBT );
                             }
                             else {
                                 $debt->decrement( 'amount' , $amount );
                                 $debt->update( [ 'payment_status' => PaymentStatus::PARTIALLY_PAID ] );
+                                addPayment( amount: $amount, payment_method: $payment_method , pos_payment_type:  PosPaymentType::DEBT );
                                 $runningBalance -= $amount;
 
                                 CustomerLedger::create( [

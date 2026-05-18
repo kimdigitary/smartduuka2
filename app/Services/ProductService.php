@@ -22,7 +22,6 @@
     use App\Models\Warehouse;
     use App\Models\WholeSalePrice;
     use App\Traits\SaveMedia;
-    use Carbon\Carbon;
     use Exception;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Auth;
@@ -95,7 +94,6 @@
                 $products = $per_page
                     ? $products_query->paginate( $per_page , [ '*' ] , 'page' , $page )
                     : $products_query->get();
-
                 return $products;
 
             } catch ( Exception $exception ) {
