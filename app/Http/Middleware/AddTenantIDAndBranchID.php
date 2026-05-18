@@ -10,7 +10,6 @@
     {
         public function handle(Request $request , Closure $next) : Response
         {
-
             $tenantId = $request->header( 'X-TenantId' );
             $branchId = $request->header( 'X-BranchId' );
 
