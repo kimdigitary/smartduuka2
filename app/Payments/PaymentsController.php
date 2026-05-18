@@ -29,6 +29,7 @@
             $gateway     = $this->payments->gateway( $gatewayName );
 
             $transactionId  = Str::uuid()->getHex();
+
             $paymentRequest = new PaymentRequest(
                 phone: $tenantSubscription->phone ,
                 amount: isDev() ? 1000 : $tenantSubscription->amount ,
