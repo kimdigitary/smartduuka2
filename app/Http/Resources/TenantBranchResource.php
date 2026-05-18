@@ -27,6 +27,7 @@
                 'status'     => $this->status ,
                 'tenant_id'  => $this->tenant_id ,
                 'can_delete' => $this->can_delete ,
+                'token'      => $this->token ,
                 'created_at' => $this->created_at ,
                 'updated_at' => $this->updated_at ,
 

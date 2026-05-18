@@ -11,7 +11,6 @@
     use Spatie\MediaLibrary\HasMedia;
     use Spatie\MediaLibrary\InteractsWithMedia;
 
-    #[ScopedBy( [ BranchScope::class ] )]
     class Supplier extends Model implements HasMedia
     {
         use HasFactory;

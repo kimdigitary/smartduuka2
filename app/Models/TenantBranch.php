@@ -3,7 +3,9 @@
     namespace App\Models;
 
     use App\Enums\Status;
+    use App\Helpers\JwtHelper;
     use Illuminate\Database\Eloquent\Builder;
+    use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -42,5 +44,10 @@
         public function scopeForTenant(Builder $query , string $tenantId) : Builder
         {
             return $query->where( 'tenant_id' , $tenantId );
+        }
+
+        public function token() : Attribute
+        {
+            return new Attribute( get: fn() => JwtHelper::sign( [ 'branchId' => $this->id ] ) );
         }
     }

@@ -4,13 +4,15 @@
 
     use App\Enums\ServiceType;
     use App\Enums\Status;
+    use App\Models\Scopes\BranchScope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
     use Illuminate\Database\Eloquent\Relations\HasMany;
     use Illuminate\Database\Eloquent\Relations\HasOne;
     use Illuminate\Database\Eloquent\Relations\MorphMany;
-
+    #[ScopedBy( [ BranchScope::class ] )]
     class Service extends Model
     {
         protected $fillable = [

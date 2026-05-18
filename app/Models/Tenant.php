@@ -4,6 +4,8 @@
 
     use App\Enums\Status;
     use App\Enums\SubscriptionPaymentStatus;
+    use App\Helpers\JwtHelper;
+    use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Relations\BelongsToMany;
     use Illuminate\Database\Eloquent\Relations\HasMany;
     use Stancl\Tenancy\Contracts\TenantWithDatabase;
@@ -53,5 +55,10 @@
         public function branches() : HasMany
         {
             return $this->hasMany( TenantBranch::class , 'tenant_id' , 'id' );
+        }
+
+        public function token() : Attribute
+        {
+            return new Attribute( get: fn() => JwtHelper::sign( [ 'tenantId' => $this->id ] ) );
         }
     }

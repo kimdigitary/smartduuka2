@@ -4,13 +4,15 @@ namespace App\Models;
 
 
 use App\Enums\Status;
+use App\Models\Scopes\BranchScope;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Spatie\MediaLibrary\HasMedia;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
 
-
+#[ScopedBy( [ BranchScope::class ] )]
 class ProductCategory extends Model implements HasMedia
 {
     use InteractsWithMedia;

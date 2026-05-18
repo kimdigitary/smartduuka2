@@ -2,11 +2,13 @@
 
     namespace App\Models;
 
+    use App\Models\Scopes\BranchScope;
     use Illuminate\Database\Eloquent\Attributes\Scope;
+    use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+    #[ScopedBy( [ BranchScope::class ] )]
     class PurchaseReturn extends Model
     {
         protected $fillable = [

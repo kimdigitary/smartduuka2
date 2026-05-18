@@ -61,6 +61,7 @@
                         'redirect_url' => $user->tenant->frontend_url . '/auto-login?token=' . $token ,
                         'tenant_url'   => $user->tenant->frontend_url ,
                         'tenant'       => $user->tenant->id ,
+                        'tenant_token' => $user->tenant->token ,
                     ] );
                 }
             } );

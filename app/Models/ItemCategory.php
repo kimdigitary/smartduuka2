@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Enums\Status;
+use App\Models\Scopes\BranchScope;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
-
+#[ScopedBy( [ BranchScope::class ] )]
 class ItemCategory extends Model implements HasMedia
 {
     use InteractsWithMedia;

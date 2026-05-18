@@ -19,11 +19,13 @@
             $per_page = $request->integer( 'per_page' );
             $tenant   = $request->string( 'tenant' );
 
-            $subscriptions = TenantSubscription::with( [ 'billingCycle' , 'subscriptionPlan' ] )
-                                               ->where( 'tenant_id' , $tenant )
-                                               ->where( 'branch_id' , branchId() )
-                                               ->latest()
-                                               ->paginate( $per_page , [ '*' ] , 'page' , $page );
+            $query = TenantSubscription::with( [ 'billingCycle' , 'subscriptionPlan' ] )
+                                       ->where( 'tenant_id' , $tenant )
+//                                               ->where( 'branch_id' , branchId() )
+                                       ->latest();
+//            info($query->toRawSql());
+
+            $subscriptions = $query->paginate( $per_page , [ '*' ] , 'page' , $page );
             return TenantSubscriptionResource::collection( $subscriptions );
         }
 

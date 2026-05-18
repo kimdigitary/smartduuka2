@@ -55,10 +55,11 @@
                               'sales.limit'     => CheckSalesLimit::class ,
                               'users.limit'     => CheckUsersLimit::class ,
                               'items.limit'     => CheckProductLimit::class ,
+                              'verify.branchid' => AddTenantIDAndBranchID::class ,
                           ] );
                           $middleware->append( [
                               AddCurrencySymbol::class ,
-                              AfterMiddleware::class,
+                              AfterMiddleware::class ,
                               AddTenantIDAndBranchID::class
                           ] );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
