@@ -8,16 +8,15 @@
 
     class BranchScope implements Scope
     {
-//        use DefaultAccessModelTrait;
-
-        public function apply(Builder $builder , Model $model) : void
+        public function apply(Builder $builder, Model $model): void
         {
-            $field = sprintf( '%s.%s' , $builder->getQuery()->from , 'branch_id' );
-            $builder->where( $field , request( 'branch_id' ) );
+            $branch_id = request('branch_id');
 
-//            if ( ! App::runningInConsole() && Auth::check() ) {
-//                $field = sprintf( '%s.%s' , $builder->getQuery()->from , 'branch_id' );
-//                $builder->where( $field , '=' , $this->branch() )->orWhere( $field , '=' , 0 );
-//            }
+            if (!$branch_id || $branch_id == 0) {
+                return;
+            }
+
+            $field = sprintf('%s.%s', $builder->getQuery()->from, 'branch_id');
+            $builder->where($field, $branch_id);
         }
     }
