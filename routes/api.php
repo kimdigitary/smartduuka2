@@ -6,6 +6,7 @@
     use App\Http\Controllers\IotecController;
     use App\Http\Controllers\SubscriptionController;
     use App\Http\Controllers\SubscriptionPlanController;
+    use App\Http\Controllers\TenantBranchController;
     use App\Http\Controllers\TenantController;
     use App\Http\Controllers\TenantSubscriptionController;
     use App\Http\Controllers\WhatsAppController;
@@ -33,4 +34,7 @@
         Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
         Route::post( 'store-tenant' , [ TenantController::class , 'store' ] );
         Route::get( 'billingCycles' , [ SubscriptionPlanController::class , 'billingCycles' ] );
+
+        Route::apiResource( 'branches' , TenantBranchController::class )->except( 'destroy' );
+        Route::delete( 'branches/delete' , [ TenantBranchController::class , 'destroy' ] )->name( 'branches.destroy' );
     } );

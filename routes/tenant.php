@@ -224,11 +224,6 @@
 //                } );
 //            } );
 
-            Route::prefix( 'branches' )->name( 'branches.' )->group( function () {
-                Route::apiResource( '/' , TenantBranchController::class )->except( 'destroy' );
-                Route::delete( '/delete' , [ TenantBranchController::class , 'destroy' ] );
-            } );
-
 //            Route::prefix( 'branches' )->name( 'branches.' )->group( function () {
 //                Route::get( '/' , [ BranchController::class , 'branches' ] );
 //                Route::post( '/' , [ BranchController::class , 'store' ] );

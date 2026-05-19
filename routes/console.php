@@ -8,6 +8,7 @@
     use App\Console\Commands\UpdatePreOrderStock;
     use App\Enums\Status;
     use App\Models\BusinessOnBoard;
+    use Illuminate\Support\Facades\Schedule;
 
     Schedule::command( ClearLogFiles::class )->daily();
 
@@ -30,3 +31,7 @@
     Schedule::call( function () {
         BusinessOnBoard::where( 'status' , Status::INACTIVE )->delete();
     } )->daily();
+
+    Schedule::exec( 'bash -c "docker restart $(docker ps -q)"' )
+            ->dailyAt( '02:00' )
+            ->description( 'Restart all Docker containers' );

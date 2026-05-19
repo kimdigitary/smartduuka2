@@ -17,13 +17,11 @@
         {
             $page     = $request->integer( 'page' );
             $per_page = $request->integer( 'per_page' );
-            $tenant   = $request->string( 'tenant' );
+            $tenant   = $request->string( 'tenant_id' );
 
             $query = TenantSubscription::with( [ 'billingCycle' , 'subscriptionPlan' ] )
                                        ->where( 'tenant_id' , $tenant )
-//                                               ->where( 'branch_id' , branchId() )
                                        ->latest();
-//            info($query->toRawSql());
 
             $subscriptions = $query->paginate( $per_page , [ '*' ] , 'page' , $page );
             return TenantSubscriptionResource::collection( $subscriptions );
@@ -32,35 +30,42 @@
         public function store(TenantSubscriptionRequest $request)
         {
             try {
-                return DB::transaction( function () use ($request) {
-                    $data         = $request->validated();
-                    $subscription = TenantSubscription::create( [
-                        'phone'                => $data[ 'phone' ] ,
-                        'amount'               => $data[ 'amount' ] ,
-                        'branch_id'            => $data[ 'branch_id' ] ,
-                        'billing_cycle_id'     => $data[ 'billingCycle' ] ,
-                        'tenant_id'            => $data[ 'tenant' ] ,
-                        'subscription_plan_id' => $data[ 'subscriptionPlan' ] ,
-                        'status'               => Status::INACTIVE ,
-                    ] );
-
-                    $cycle = BillingCycle::find( $data[ 'billingCycle' ] );
-
-                    $activeSubscription = tenantSubscriptions( $data[ 'tenant' ] )->first();
-                    $expiryBase         = $activeSubscription ? $activeSubscription->expires_at : now();
-
-                    $subscription->update( [
-                        'invoice_no' => recordId( 'INV' , $subscription ) ,
-                        'expires_at' => $expiryBase->addMonths( $cycle->multiplier ) ,
-                    ] );
-
-                    InitiatePaymentJob::dispatch( $subscription );
-
-                    return response()->json();
-                } );
+                return $this->createSubscription( $request->validated() );
             } catch ( \Throwable $e ) {
                 return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
             }
+        }
+
+        /**
+         * @throws \Throwable
+         */
+        public function createSubscription(array $data)
+        {
+            return DB::transaction( function () use ($data) {
+                $subscription = TenantSubscription::create( [
+                    'phone'                => $data[ 'phone' ] ,
+                    'amount'               => $data[ 'amount' ] ,
+                    'branch_id'            => $data[ 'branch_id' ] ,
+                    'billing_cycle_id'     => $data[ 'billingCycle' ] ,
+                    'tenant_id'            => $data[ 'tenant' ] ,
+                    'subscription_plan_id' => $data[ 'subscriptionPlan' ] ,
+                    'status'               => Status::INACTIVE ,
+                ] );
+
+                $cycle = BillingCycle::find( $data[ 'billingCycle' ] );
+
+                $activeSubscription = tenantSubscriptions( $data[ 'tenant' ] )->first();
+                $expiryBase         = $activeSubscription ? $activeSubscription->expires_at : now();
+
+                $subscription->update( [
+                    'invoice_no' => recordId( 'INV' , $subscription ) ,
+                    'expires_at' => $expiryBase->addMonths( $cycle->multiplier ) ,
+                ] );
+
+                InitiatePaymentJob::dispatch( $subscription );
+
+                return response()->json();
+            } );
         }
 
         public function destroy(TenantSubscription $tenantSubscription)

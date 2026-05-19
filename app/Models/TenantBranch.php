@@ -23,11 +23,18 @@
             'phone' ,
             'phone2' ,
             'code' ,
-            'status' , 'can_delete' , 'state'
+            'status' , 'can_delete' , 'state' , 'share_customers' , 'share_wallets' , 'share_loyalty' , 'share_accounting' , 'share_reports' , 'share_procurement'
         ];
 
         protected $casts = [
-            'status' => Status::class , 'can_delete' => 'boolean'
+            'status'            => Status::class ,
+            'can_delete'        => 'boolean' ,
+            'share_customers'   => 'boolean' ,
+            'share_wallets'     => 'boolean' ,
+            'share_loyalty'     => 'boolean' ,
+            'share_accounting'  => 'boolean' ,
+            'share_reports'     => 'boolean' ,
+            'share_procurement' => 'boolean' ,
         ];
 
         public function tenant() : BelongsTo
