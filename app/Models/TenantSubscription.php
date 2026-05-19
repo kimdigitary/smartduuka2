@@ -33,4 +33,9 @@
         {
             return $this->belongsTo( SubscriptionPlan::class );
         }
+
+        public function branch() : BelongsTo
+        {
+            return $this->belongsTo( TenantBranch::class,'branch_id' );
+        }
     }

@@ -28,7 +28,7 @@
             $gatewayName = config( 'payments.default' , 'yo_uganda' );
             $gateway     = $this->payments->gateway( $gatewayName );
 
-            $transactionId  = Str::uuid()->getHex();
+            $transactionId = Str::uuid()->getHex();
 
             $paymentRequest = new PaymentRequest(
                 phone: $tenantSubscription->phone ,
@@ -82,6 +82,8 @@
                         'transaction_id' => $payload->gatewayRef ,
                         'payer_name'     => $payload->payerName ,
                     ] );
+
+                    $subscription->branch->update( [ 'status' => Status::ACTIVE ] );
 
                     // Deactivate any other active subscriptions for this tenant
                     TenantSubscription::where( 'tenant_id' , $subscription->tenant_id )
