@@ -38,6 +38,7 @@
 
         public function destroy(Request $request)
         {
+            info($request->all());
             tenancy()->central( fn() => TenantBranch::destroy( $request->ids ) );
 
             return response()->json();
