@@ -26,6 +26,7 @@
             Route::get( 'subscriptionPlans' , [ SubscriptionController::class , 'subscriptionPlans' ] );
             Route::apiResource( 'tenants' , TenantController::class );
         } );
+
     }
 
     Route::middleware( [ 'api' ] )->group( function () {

@@ -22,5 +22,6 @@
             $this->call( PrintTemplateSeeder::class );
             $this->call( PrinterTemplatesSeeder::class );
             $this->call( TenantBranchSeeder::class );
+            $this->call( SystemModuleSeeder::class );
         }
     }

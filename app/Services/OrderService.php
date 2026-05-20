@@ -482,8 +482,8 @@
         {
             try {
                 DB::transaction( function () use ($request) {
-                    $current_total_sales = Order::count();
-                    $tenantId            = tenant( 'id' );
+//                    $current_total_sales = Order::count();
+//                    $tenantId            = tenant( 'id' );
 //                      starter( $tenantId )
 
                     $status           = $request->integer( 'status' );
@@ -799,6 +799,8 @@
                     $itemId      = $variation->id;
                 }
             }
+
+            info('stock ' . $targetModel->stock);
 
             if ( $targetModel->stock < $product[ 'quantity' ] && ! $is_preorder ) {
                 $name = $is_variation ? $p->name . ' (' . $variation?->productAttributeOption?->name . ')' : $p->name;

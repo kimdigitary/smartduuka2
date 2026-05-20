@@ -21,6 +21,7 @@
                 $user->unsetRelation( 'permissions' );
                 $user->setAttribute( 'permissions' , $permissions );
                 $user->setAttribute( 'tenants' , TenantResource::collection( $centralUser->tenants ) );
+
                 return $user;
             } catch ( \Exception $e ) {
                 throw new \Exception( $e->getMessage() , 422 );
