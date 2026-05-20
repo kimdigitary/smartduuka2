@@ -3,10 +3,12 @@
     namespace App\Http\Controllers;
 
     use App\Enums\Status;
+    use App\Enums\SystemPaymentType;
     use App\Http\Requests\TenantSubscriptionRequest;
     use App\Http\Resources\TenantSubscriptionResource;
     use App\Jobs\InitiatePaymentJob;
     use App\Models\BillingCycle;
+    use App\Models\PaymentTransaction;
     use App\Models\TenantSubscription;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\DB;
@@ -42,6 +44,12 @@
         public function createSubscription(array $data)
         {
             return DB::transaction( function () use ($data) {
+                $transaction = PaymentTransaction::create( [
+                    'amount'         => $data[ 'amount' ] ,
+                    'transaction_id' => $data[ 'transaction_id' ] ,
+                    'payment_type'   => SystemPaymentType::SUBSCRIPTION ,
+                ] );
+
                 $subscription = TenantSubscription::create( [
                     'phone'                => $data[ 'phone' ] ,
                     'amount'               => $data[ 'amount' ] ,
@@ -62,7 +70,7 @@
                     'expires_at' => $expiryBase->addMonths( $cycle->multiplier ) ,
                 ] );
 
-                InitiatePaymentJob::dispatch( $subscription );
+                InitiatePaymentJob::dispatch( $transaction );
 
                 return response()->json();
             } );

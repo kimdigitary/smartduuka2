@@ -1,0 +1,29 @@
+<?php
+
+    namespace App\Http\Resources;
+
+    use Illuminate\Http\Request;
+    use Illuminate\Http\Resources\Json\JsonResource;
+
+    class SystemModuleResource extends JsonResource
+    {
+        /**
+         * Transform the resource into an array.
+         *
+         * @param Request $request
+         *
+         * @return array
+         */
+        public function toArray($request) : array
+        {
+            return [
+                'id'          => $this->id ,
+                'name'        => $this->name ,
+                'description' => $this->description ,
+                'icon'        => $this->icon ,
+                'enabled'     => $this->enabled ,
+                'category'    => ModuleCategoryResource::make( $this->whenLoaded( 'moduleCategory' ) ) ,
+                'features'    => SystemModuleFeatureResource::collection( $this->whenLoaded( 'features' ) ) ,
+            ];
+        }
+    }

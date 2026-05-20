@@ -31,7 +31,3 @@
     Schedule::call( function () {
         BusinessOnBoard::where( 'status' , Status::INACTIVE )->delete();
     } )->daily();
-
-    Schedule::exec( 'bash -c "docker restart $(docker ps -q)"' )
-            ->dailyAt( '02:00' )
-            ->description( 'Restart all Docker containers' );

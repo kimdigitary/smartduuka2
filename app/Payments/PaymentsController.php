@@ -8,6 +8,7 @@
     use App\Http\Controllers\Controller;
     use App\Jobs\SendEmailsJob;
     use App\Models\BusinessOnBoard;
+    use App\Models\PaymentTransaction;
     use App\Models\SubscriptionPlan;
     use App\Models\Tenant;
     use App\Models\TenantSubscription;
@@ -23,7 +24,7 @@
     {
         public function __construct(private readonly PaymentManager $payments) {}
 
-        public function charge(TenantSubscription $tenantSubscription) : void
+        public function charge(PaymentTransaction $payment_transaction) : void
         {
             $gatewayName = config( 'payments.default' , 'yo_uganda' );
             $gateway     = $this->payments->gateway( $gatewayName );
@@ -31,15 +32,15 @@
             $transactionId = Str::uuid()->getHex();
 
             $paymentRequest = new PaymentRequest(
-                phone: $tenantSubscription->phone ,
-                amount: isDev() ? 1000 : $tenantSubscription->amount ,
+                phone: $payment_transaction->phone ,
+                amount: isDev() ? 1000 : $payment_transaction->amount ,
                 description: 'Smart Duuka Payments' ,
                 transactionId: $transactionId ,
                 notificationUrl: $this->webhookUrl( $gatewayName ) ,
                 failureUrl: $this->webhookUrl( $gatewayName ) ,
             );
 
-            $tenantSubscription->update( [ 'transaction_id' => $transactionId ] );
+            $payment_transaction->update( [ 'transaction_id' => $transactionId ] );
             $gateway->charge( $paymentRequest );
         }
 
