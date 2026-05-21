@@ -42,10 +42,36 @@
     use Illuminate\Support\Facades\Cache;
     use Illuminate\Support\Str;
     use Smartisan\Settings\Facades\Settings;
+    use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedById;
 
     function project()
     {
         return Settings::group( 'site' )->get( 'project' );
+    }
+
+    function tenantContext(callable $callback) : mixed
+    {
+        try {
+            tenancy()->initialize( tenantId() );
+            return $callback();
+        } catch ( TenantCouldNotBeIdentifiedById $exception ) {
+            info( $exception->getMessage() );
+            return NULL;
+        } finally {
+            tenancy()->end();
+        }
+    }
+
+    function centralContext(callable $callback) : mixed
+    {
+        try {
+            return tenancy()->central( $callback );
+        } catch ( Exception $exception ) {
+            info( $exception->getMessage() );
+            return NULL;
+        } finally {
+            tenancy()->end();
+        }
     }
 
     function numericToAssociativeArrayBuilder($array) : array
@@ -269,7 +295,7 @@
         return (int) request()->header( 'X-BranchId' );
     }
 
-    function tenantId() :  string | null
+    function tenantId() : string | null
     {
         return request()->header( 'X-TenantId' );
     }

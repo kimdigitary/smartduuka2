@@ -2,6 +2,7 @@
 
     namespace App\Models;
 
+    use App\Enums\SystemPaymentType;
     use App\Enums\TransactionPaymentStatus;
     use Illuminate\Database\Eloquent\Model;
 
@@ -11,12 +12,13 @@
             'transaction_id' ,
             'status' ,
             'vendor_transaction_id' ,
-            'payment_type' ,
+            'payment_type' , 'payment_type_id' ,
             'amount' ,
             'phone' ,
             'card' ,
             'status_message' ,
-            'currency' ,
+            'currency' , 'tenant_branch_id' , 'tenant_id' , 'data'
         ];
-        protected $casts    = [ 'status' => TransactionPaymentStatus::class ];
+
+        protected $casts = [ 'status' => TransactionPaymentStatus::class , 'payment_type' => SystemPaymentType::class , 'data' => 'array' ];
     }

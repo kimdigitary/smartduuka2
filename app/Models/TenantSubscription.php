@@ -4,12 +4,12 @@
 
     use App\Enums\Status;
     use App\Enums\SubscriptionPaymentStatus;
-    use App\Models\Scopes\BranchScope;
+    use App\Models\Scopes\TenantBranchScope;
     use Illuminate\Database\Eloquent\Attributes\ScopedBy;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-    #[ScopedBy( [ BranchScope::class ] )]
+    #[ScopedBy( [ TenantBranchScope::class ] )]
     class TenantSubscription extends Model
     {
         protected $fillable = [
@@ -36,6 +36,6 @@
 
         public function branch() : BelongsTo
         {
-            return $this->belongsTo( TenantBranch::class,'branch_id' );
+            return $this->belongsTo( TenantBranch::class , 'branch_id' );
         }
     }

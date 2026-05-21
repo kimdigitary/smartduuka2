@@ -3,18 +3,17 @@
     namespace App\Models;
 
     use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
     class ModuleFeature extends Model
     {
         protected $fillable = [
             'name' ,
-            'enabled' ,
+            'system_module_id' ,
         ];
 
-        protected function casts() : array
+        public function systemModule() : BelongsTo
         {
-            return [
-                'enabled' => 'boolean' ,
-            ];
+            return $this->belongsTo( SystemModule::class );
         }
     }

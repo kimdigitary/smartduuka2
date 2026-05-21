@@ -12,6 +12,7 @@
     use App\Models\TenantSubscription;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\DB;
+    use Smartisan\Settings\Facades\Settings;
 
     class TenantSubscriptionController extends Controller
     {
@@ -44,11 +45,6 @@
         public function createSubscription(array $data)
         {
             return DB::transaction( function () use ($data) {
-                $transaction = PaymentTransaction::create( [
-                    'amount'         => $data[ 'amount' ] ,
-                    'transaction_id' => $data[ 'transaction_id' ] ,
-                    'payment_type'   => SystemPaymentType::SUBSCRIPTION ,
-                ] );
 
                 $subscription = TenantSubscription::create( [
                     'phone'                => $data[ 'phone' ] ,
@@ -58,6 +54,19 @@
                     'tenant_id'            => $data[ 'tenant' ] ,
                     'subscription_plan_id' => $data[ 'subscriptionPlan' ] ,
                     'status'               => Status::INACTIVE ,
+                ] );
+                $company      = tenantContext( fn() => Settings::group( 'company' ) );
+                $transaction  = PaymentTransaction::create( [
+                    'amount'           => $data[ 'amount' ] ,
+                    'phone'            => $data[ 'phone' ] ,
+                    'data'             => [
+                        'email'         => $data[ 'email' ] ,
+                        'business_name' => data_get( $company , 'company_name' )
+                    ] ,
+                    'payment_type'     => SystemPaymentType::SUBSCRIPTION ,
+                    'payment_type_id'  => $subscription->id ,
+                    'tenant_branch_id' => branchId() ,
+                    'tenant_id'        => tenantId() ,
                 ] );
 
                 $cycle = BillingCycle::find( $data[ 'billingCycle' ] );

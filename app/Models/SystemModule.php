@@ -1,35 +1,30 @@
 <?php
 
-namespace App\Models;
+    namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+    use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Database\Eloquent\Relations\BelongsTo;
+    use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class SystemModule extends Model
-{
-    protected $fillable = [
-        'name',
-        'description',
-        'icon',
-        'module_category_id',
-        'enabled',
-    ];
-    protected function casts() : array
+    class SystemModule extends Model
     {
-        return [
-            'enabled' => 'boolean' ,
+        protected $fillable = [
+            'name' ,
+            'description' ,
+            'icon' ,
+            'price' ,
+            'module_category_id' ,
         ];
-    }
 
-    public function moduleCategory(): BelongsTo
-    {
-        return $this->belongsTo(ModuleCategory::class);
-    }
+        // Removed the casts() method for 'enabled' as it no longer exists on this table
 
-    public function features(): HasMany
-    {
-        return $this->hasMany(SystemModuleFeature::class);
-    }
+        public function moduleCategory() : BelongsTo
+        {
+            return $this->belongsTo( ModuleCategory::class );
+        }
 
-}
+        public function features() : HasMany
+        {
+            return $this->hasMany( ModuleFeature::class );
+        }
+    }

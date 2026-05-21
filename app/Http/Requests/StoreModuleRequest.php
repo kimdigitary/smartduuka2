@@ -15,6 +15,7 @@
         {
             return [
                 'modules' => [ 'required' , 'string' ] ,
+                'payment' => [ 'sometimes' , 'string' ] ,
             ];
         }
     }
