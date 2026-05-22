@@ -17,14 +17,5 @@
             ResetPassword::createUrlUsing( function (object $notifiable , string $token) {
                 return config( 'app.frontend_url' ) . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
             } );
-
-            $origin = $request->header( 'Origin' );
-            $host   = parse_url( $origin , PHP_URL_HOST );
-
-            // If the request comes from your root domain, trust it as stateful
-            if ( $host && str_ends_with( $host , config( 'session.domain' ) ) ) {
-                $existing = config( 'sanctum.stateful' , [] );
-                config( [ 'sanctum.stateful' => array_merge( $existing , [ $host ] ) ] );
-            }
         }
     }
