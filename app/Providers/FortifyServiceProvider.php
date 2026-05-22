@@ -17,6 +17,7 @@
     use App\Models\User;
     use App\Services\PinService;
     use Illuminate\Cache\RateLimiting\Limit;
+    use Illuminate\Database\Eloquent\Relations\Pivot;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Hash;
@@ -54,14 +55,23 @@
 
                     $user->tokens()->where( 'name' , $tokenName )->delete();
 
-                    $rawToken = \Illuminate\Support\Str::random( 40 );
-                    $globalId = (string) \Illuminate\Support\Str::uuid();
+                    $rawToken = Str::random( 40 );
+                    $globalId = (string) Str::uuid();
 
-                    /** @var \App\Models\TenantPersonalAccessToken $tenantToken */
-                    $tenantToken = \App\Models\TenantPersonalAccessToken::withoutEvents( function () use (
+                    dd([
+                        'is_tenancy_initialized' => tenancy()->initialized,
+                        'default_connection'     => \Illuminate\Support\Facades\DB::getDefaultConnection(),
+                        'default_db_name'        => \Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
+                        'tenant_db_name'         => tenancy()->initialized
+                            ? \Illuminate\Support\Facades\DB::connection('tenant')->getDatabaseName()
+                            : 'N/A',
+                    ]);
+
+                    /** @var TenantPersonalAccessToken $tenantToken */
+                    $tenantToken = TenantPersonalAccessToken::withoutEvents( function () use (
                         $user , $tokenName , $rawToken , $globalId
                     ) {
-                        $token = new \App\Models\TenantPersonalAccessToken();
+                        $token = new TenantPersonalAccessToken();
                         $token->forceFill( [
                             'tokenable_type' => get_class( $user ) ,
                             'tokenable_id'   => $user->getKey() ,
@@ -135,13 +145,12 @@
                                                    ->where( 'tenants.id' , $currentTenantId )
                                                    ->exists();
                         if ( ! $alreadyAttached ) {
-                            \Illuminate\Database\Eloquent\Relations\Pivot::withoutEvents(
+                            Pivot::withoutEvents(
                                 fn() => $central->tenants()->attach( $currentTenantId )
                             );
                         }
                     } );
                 }
-
             } );
         }
 
