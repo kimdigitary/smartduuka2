@@ -36,6 +36,7 @@
     use App\Models\User;
     use App\Support\PlanFeatureMap;
     use Carbon\Carbon;
+    use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Notifications\AnonymousNotifiable;
     use Illuminate\Support\Facades\Auth;
@@ -53,7 +54,6 @@
     function tenantContext(callable $callback , int | Tenant | string | null $tenant = NULL) : mixed
     {
         try {
-
             tenancy()->initialize( $tenant ?? tenantId() );
             return $callback();
         } catch ( TenantCouldNotBeIdentifiedById $exception ) {
@@ -272,24 +272,20 @@
         return ThemeSetting::where( [ 'key' => 'theme_logo' ] )?->first()?->logo ?? asset( 'logo.png' );
     }
 
-    function tenantSubscriptions(string $tenantId)
+    function tenantSubscriptions(string $tenantId) : Builder
     {
-        return tenancy()->central(
-            fn() => TenantSubscription::with( 'subscriptionPlan' )
-                                      ->where( 'expires_at' , '>=' , now() )
-                                      ->where( 'payment_status' , SubscriptionPaymentStatus::Paid )
-                                      ->where( 'status' , Status::ACTIVE )
-                                      ->where( 'tenant_id' , $tenantId )
-//                                      ->where( 'branch_id' , branchId() )
-                                      ->latest()
+        return centralContext( fn() => TenantSubscription::with( 'subscriptionPlan' )
+                                                         ->where( 'expires_at' , '>=' , now() )
+                                                         ->where( 'payment_status' , SubscriptionPaymentStatus::Paid )
+                                                         ->where( 'status' , Status::ACTIVE )
+                                                         ->where( 'tenant_id' , $tenantId )
+                                                         ->latest()
         );
     }
 
     function activeSubscription(string $tenantId) : ?SubscriptionPlan
     {
-        return tenancy()->central(
-            fn() => tenantSubscriptions( $tenantId )?->first()?->subscriptionPlan
-        );
+        return centralContext( fn() => tenantSubscriptions( $tenantId )?->first()?->subscriptionPlan );
     }
 
     function branchId() : int

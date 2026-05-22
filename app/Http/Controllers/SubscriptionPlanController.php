@@ -55,7 +55,7 @@
             $cacheKey  = "tenant_subscription_{$tenantId}_{$branch_id}";
             Cache::forget( $cacheKey );
 
-            $subscribed = tenancy()->central( fn() => tenantSubscriptions( $tenantId )->exists() );
+            $subscribed = tenantSubscriptions( $tenantId )->exists();
 
             if ( ! $subscribed ) {
                 return response()->json( [

@@ -14,16 +14,10 @@
 
             $tenantId  = tenant( 'id' );
             $branch_id = branchId();
-            $cacheKey = "tenant_subscription_{$tenantId}_{$branch_id}";
+            $cacheKey  = "tenant_subscription_{$tenantId}_{$branch_id}";
 
             $subscription = Cache::remember( $cacheKey , now()->addMinutes( 10 ) , function () use ($tenantId) {
-                $result = FALSE;
-
-                tenancy()->central( function () use ($tenantId , &$result) {
-                    $result = tenantSubscriptions( $tenantId )->exists();
-                } );
-
-                return $result;
+                return tenantSubscriptions( $tenantId )->exists();
             } );
 
             if ( ! $subscription ) {

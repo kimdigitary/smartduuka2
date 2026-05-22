@@ -8,6 +8,7 @@
     use App\Http\Resources\TenantSubscriptionResource;
     use App\Jobs\InitiatePaymentJob;
     use App\Models\BillingCycle;
+    use App\Models\BranchModule;
     use App\Models\PaymentTransaction;
     use App\Models\TenantSubscription;
     use Illuminate\Http\Request;
@@ -63,6 +64,7 @@
                     'phone'            => $data[ 'phone' ] ,
                     'data'             => [
                         'email'         => $data[ 'email' ] ,
+                        'modules'       => $data[ 'modules' ] ,
                         'business_name' => data_get( $company , 'company_name' )
                     ] ,
                     'payment_type'     => $data[ 'type' ] ,

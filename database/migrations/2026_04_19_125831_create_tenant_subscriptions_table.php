@@ -13,9 +13,9 @@
                 $table->foreign( 'tenant_id' )->references( 'id' )->on( 'tenants' )->nullOnDelete();
                 $table->unsignedTinyInteger( 'duration' );
                 $table->unsignedTinyInteger( 'plan' );
-                $table->decimal( 'setup' );
+                $table->decimal( 'setup' , 20 );
                 $table->unsignedTinyInteger( 'status' );
-                $table->decimal( 'amount' );
+                $table->decimal( 'amount' , 20 );
                 $table->dateTime( 'expires_at' );
                 $table->timestamps();
             } );

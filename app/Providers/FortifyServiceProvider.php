@@ -59,15 +59,6 @@
                     $rawToken = Str::random( 40 );
                     $globalId = (string) Str::uuid();
 
-                    info( [
-                        'is_tenancy_initialized' => tenancy()->initialized ,
-                        'default_connection'     => DB::getDefaultConnection() ,
-                        'default_db_name'        => DB::connection()->getDatabaseName() ,
-                        'tenant_db_name'         => tenancy()->initialized
-                            ? DB::connection( 'tenant' )->getDatabaseName()
-                            : 'N/A' ,
-                    ] );
-
                     /** @var TenantPersonalAccessToken $tenantToken */
                     $tenantToken = TenantPersonalAccessToken::withoutEvents( function () use (
                         $user , $tokenName , $rawToken , $globalId
@@ -107,17 +98,13 @@
                     User $tenantUser
                 ) : void
                 {
-                    // We need the central user's ID for the tokenable_id column so that
-                    // Sanctum resolves the correct CentralUser when authenticating on
-                    // central routes.
+
                     $centralUser = CentralUser::where( 'global_id' , $tenantUser->global_id )->first();
                     if ( ! $centralUser ) {
-                        // Fallback: match by email (handles edge-cases before global_id is set)
                         $centralUser = CentralUser::where( 'email' , $tenantUser->email )->first();
                     }
 
                     if ( ! $centralUser ) {
-                        // Cannot sync without a matching central user — token will only work on tenant
                         return;
                     }
 
@@ -134,17 +121,16 @@
                                     'tokenable_id'   => $centralUser->id ,
                                     'name'           => $tenantToken->name ,
                                     'token'          => $tenantToken->token ,
-                                    // FIX: Removed json_encode() to prevent double-encoding the JSON array
                                     'abilities'      => $tenantToken->abilities ?? [ '*' ] ,
                                     'expires_at'     => $tenantToken->expires_at ,
                                 ]
                             )
                         );
 
-                        // Attach pivot if not already present
                         $alreadyAttached = $central->tenants()
                                                    ->where( 'tenants.id' , $currentTenantId )
                                                    ->exists();
+
                         if ( ! $alreadyAttached ) {
                             Pivot::withoutEvents(
                                 fn() => $central->tenants()->attach( $currentTenantId )
@@ -216,10 +202,6 @@
                 }
 
                 if ( ! $tenant ) return NULL;
-
-//                $tenant = Tenant::where( 'id' , $tenantSlug )
-//                                ->orWhere( 'id' , $centralUser->tenant_id )
-//                                ->first();
 
                 if ( ! tenancy()->initialized || tenancy()->tenant->id !== $tenant->id ) {
                     tenancy()->initialize( $tenant );

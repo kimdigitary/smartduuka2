@@ -142,6 +142,23 @@
                 'payer_name'     => $payload->payerName ,
             ] );
 
+            $modules = $payment_transaction->data[ 'modules' ];
+
+            if ( ! empty( $modules ) ) {
+                foreach ( json_decode( $modules , TRUE ) as $module ) {
+                    tenantContext( fn() => BranchModule::updateOrInsert(
+                        [
+                            'branch_id'        => $payment_transaction->tenant_branch_id ,
+                            'system_module_id' => $module[ 'id' ] ,
+                        ] ,
+                        [
+                            'enabled' => $module[ 'enabled' ] ,
+                        ]
+                    ) , $payment_transaction->tenant_id
+                    );
+                }
+            }
+
             $subscription->branch->update( [ 'status' => Status::ACTIVE ] );
 
             TenantSubscription::where( 'tenant_id' , $subscription->tenant_id )

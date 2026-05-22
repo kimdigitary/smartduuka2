@@ -11,6 +11,7 @@
             return [
                 'phone'            => [ 'required' , 'string' ] ,
                 'tenant'           => [ 'required' , 'string' ] ,
+                'modules'          => [ 'required' , 'string' ] ,
                 'amount'           => [ 'required' , 'numeric:' ] ,
                 'email'            => [ 'required' , 'email' ] ,
                 'branch_id'        => [ 'required' , 'numeric:' ] ,
