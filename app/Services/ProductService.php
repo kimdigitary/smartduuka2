@@ -922,7 +922,7 @@
                               ->with( 'prices' )
                               ->with( 'productTaxes' )
                               ->with( 'variations' )
-                              ->where( 'can_purchasable' , ASK::YES )
+                              ->where( 'can_purchasable' , Ask::YES )
                               ->where( 'status' , Status::ACTIVE )
                               ->orderBy( 'name' )
                               ->get();

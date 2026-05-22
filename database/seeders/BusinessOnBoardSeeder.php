@@ -23,7 +23,7 @@
 
                 $admin = User::role( Role::ADMIN )
                              ->when( app()->isProduction() , fn($q) => $q
-                                 ->whereNotIn( 'email' , [ 'support12@smartduuka.com' , 'support@smartduuka.com' ] )
+                                 ->whereNotIn( 'email' , [ 'support12@smartduuka.com' , config( 'app.demo_email' ) ] )
                              )
                              ->where( 'status' , Status::ACTIVE )
                              ->first();

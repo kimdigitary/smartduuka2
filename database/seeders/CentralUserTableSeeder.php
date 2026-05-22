@@ -26,11 +26,11 @@
                     'username' => 'admin'
                 ] ,
                 [
-                    'email'             => 'support@smartduuka.com' ,
+                    'email'             => config( 'app.demo_email' ) ,
                     'phone'             => '0701034242' ,
                     'name'              => 'Support Admin' ,
                     'email_verified_at' => now() ,
-                    'password'          => bcrypt( 'Admin@support12' ) ,
+                    'password'          => bcrypt( config( 'app.demo_password' ) ) ,
                     'status'            => Status::ACTIVE ,
                     'country_code'      => '+880' ,
                     'is_guest'          => Ask::NO
@@ -50,7 +50,7 @@
                     'type'              => 'Retail' ,
                     'name'              => 'Walking Customer' ,
                     'email_verified_at' => now() ,
-                    'password'          => bcrypt( 'Admin@support12' ) ,
+                    'password'          => bcrypt( config( 'app.demo_password' ) ) ,
                     'status'            => Status::ACTIVE ,
                     'is_guest'          => Ask::NO
                 ]

@@ -29,7 +29,7 @@
                 $table->bigInteger( 'payment_method' )->default( PaymentGateway::CASH_ON_DELIVERY );
                 $table->tinyInteger( 'payment_status' )->default( PaymentStatus::UNPAID );
                 $table->tinyInteger( 'status' );
-                $table->tinyInteger( 'active' )->default( ASK::NO );
+                $table->tinyInteger( 'active' )->default( Ask::NO );
                 $table->text( 'reason' )->nullable();
                 $table->string( 'user_type' )->nullable()->after( 'user_id' )->default( User::class );
                 $table->tinyInteger( 'pos_payment_method' )->after( 'payment_status' )->nullable();

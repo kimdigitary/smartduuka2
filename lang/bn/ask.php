@@ -3,7 +3,7 @@
 use App\Enums\Ask;
 
 return [
-    Ask::YES   => 'হ্যাঁ',
-    Ask::NO    => 'না',
+    Ask::YES => 'হ্যাঁ',
+    Ask::NO  => 'না',
 
 ];

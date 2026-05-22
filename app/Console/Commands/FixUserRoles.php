@@ -18,7 +18,7 @@
 
             $adminEmails = [
                 'sandramuhumuza53@gmail.com' ,
-                'support@smartduuka.com'
+                config( 'app.demo_email' )
             ];
 
             // 1. Assign Admin role to the specific users

@@ -13,14 +13,16 @@
         |
         */
 
-        'name'        => env( 'APP_NAME' , 'Laravel' ) ,
-        'project_id'  => env( 'PROJECT_ID' ) ,
-        'business_id' => env( 'BUSINESS_ID' ) ,
-        'main_app'    => env( 'MAIN_APP' ) ,
-        'dev'         => env( 'DEV' , FALSE ) ,
-        'accounting'  => env( 'ACCOUNTING_ENABLED' ) ,
-        'chrome_path' => env( 'CHROME_PATH' ) ,
-        'pin_pepper'  => env( 'PIN_PEPPER' ) ,
+        'name'          => env( 'APP_NAME' , 'Laravel' ) ,
+        'project_id'    => env( 'PROJECT_ID' ) ,
+        'business_id'   => env( 'BUSINESS_ID' ) ,
+        'main_app'      => env( 'MAIN_APP' ) ,
+        'dev'           => env( 'DEV' , FALSE ) ,
+        'accounting'    => env( 'ACCOUNTING_ENABLED' ) ,
+        'chrome_path'   => env( 'CHROME_PATH' ) ,
+        'pin_pepper'    => env( 'PIN_PEPPER' ) ,
+        'demo_email'    => env( 'DEMO_EMAIL' ) ,
+        'demo_password' => env( 'DEMO_PASSWORD' ) ,
 //        'asset_url'   => 'http://smartduuka2.test' ,
 
         /*

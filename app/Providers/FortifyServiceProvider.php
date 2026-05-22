@@ -211,7 +211,7 @@
 
                 $tenant = Tenant::find( $tenantSlug );
 
-                if ( ! $tenant && $request->email != 'support@smartduuka.com' ) {
+                if ( ! $tenant && $request->email != config( 'app.demo_email' ) ) {
                     $tenant = Tenant::find( $centralUser->tenant_id );
                 }
 
