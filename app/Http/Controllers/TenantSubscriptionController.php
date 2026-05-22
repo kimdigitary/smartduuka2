@@ -33,7 +33,7 @@
         public function store(TenantSubscriptionRequest $request)
         {
             try {
-                return $this->createSubscription( $request->validated() );
+                return $this->createSubscription( array_merge( $request->validated() , [ 'type' => SystemPaymentType::SUBSCRIPTION ] ) );
             } catch ( \Throwable $e ) {
                 return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
             }
@@ -55,17 +55,19 @@
                     'subscription_plan_id' => $data[ 'subscriptionPlan' ] ,
                     'status'               => Status::INACTIVE ,
                 ] );
-                $company      = tenantContext( fn() => Settings::group( 'company' ) );
-                $transaction  = PaymentTransaction::create( [
+
+                $company = tenantContext( fn() => Settings::group( 'company' ) );
+
+                $transaction = PaymentTransaction::create( [
                     'amount'           => $data[ 'amount' ] ,
                     'phone'            => $data[ 'phone' ] ,
                     'data'             => [
                         'email'         => $data[ 'email' ] ,
                         'business_name' => data_get( $company , 'company_name' )
                     ] ,
-                    'payment_type'     => SystemPaymentType::SUBSCRIPTION ,
+                    'payment_type'     => $data[ 'type' ] ,
                     'payment_type_id'  => $subscription->id ,
-                    'tenant_branch_id' => branchId() ,
+                    'tenant_branch_id' => $data[ 'branch_id' ] ,
                     'tenant_id'        => tenantId() ,
                 ] );
 

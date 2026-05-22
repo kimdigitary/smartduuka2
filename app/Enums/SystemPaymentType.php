@@ -8,12 +8,14 @@
     {
         case SUBSCRIPTION = 1;
         case MODULE       = 2;
+        case BRANCH       = 3;
 
         public function label() : string
         {
             return match ( $this ) {
                 self::SUBSCRIPTION => 'Subscription' ,
                 self::MODULE       => 'Module' ,
+                self::BRANCH       => 'Branch' ,
             };
         }
 

@@ -42,6 +42,7 @@
     use Illuminate\Support\Facades\Cache;
     use Illuminate\Support\Str;
     use Smartisan\Settings\Facades\Settings;
+    use Stancl\Tenancy\Database\Models\Tenant;
     use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedById;
 
     function project()
@@ -49,10 +50,11 @@
         return Settings::group( 'site' )->get( 'project' );
     }
 
-    function tenantContext(callable $callback) : mixed
+    function tenantContext(callable $callback , int | Tenant | string | null $tenant = NULL) : mixed
     {
         try {
-            tenancy()->initialize( tenantId() );
+
+            tenancy()->initialize( $tenant ?? tenantId() );
             return $callback();
         } catch ( TenantCouldNotBeIdentifiedById $exception ) {
             info( $exception->getMessage() );

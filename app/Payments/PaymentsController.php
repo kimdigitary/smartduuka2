@@ -16,6 +16,7 @@
     use App\Models\TenantSubscription;
     use App\Payments\DTOs\PaymentRequest;
     use App\Payments\DTOs\WebhookPayload;
+    use Database\Seeders\SystemModuleSeeder;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Artisan;
@@ -78,6 +79,9 @@
 
                     if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
                         $this->tenantSubscriptionSuccessful( $payload , $transaction );
+                    }
+                    if ( $transaction->payment_type == SystemPaymentType::BRANCH ) {
+                        $this->newBranchPaymentSuccessful( $payload , $transaction );
                     }
                     if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
                         $this->modulePaymentSuccessful( $transaction );
@@ -168,6 +172,48 @@
             }
         }
 
+        private function newBranchPaymentSuccessful(WebhookPayload $payload , PaymentTransaction $payment_transaction) : void
+        {
+            $subscription = TenantSubscription::find( $payment_transaction->payment_type_id );
+
+            $subscription?->update( [
+                'payment_status' => SubscriptionPaymentStatus::Paid ,
+                'status'         => Status::ACTIVE ,
+                'transaction_id' => $payload->gatewayRef ,
+                'payer_name'     => $payload->payerName ,
+            ] );
+
+            $subscription->branch->update( [ 'status' => Status::ACTIVE ] );
+
+            $plan = SubscriptionPlan::find( $subscription->subscription_plan_id );
+
+            if ( $plan?->type === SubscriptionPlanType::Starter ) {
+                $onboard = BusinessOnBoard::where( 'tenant' , $subscription?->tenant_id )->latest()->first();
+                $onboard->update( [ 'status' => Status::ACTIVE ] );
+                SendEmailsJob::dispatch(
+                    $onboard->admin_email ,
+                    'Payment Successful - Smart Duuka' ,
+                    'tenants.paymentsuccess' ,
+                    [
+                        'username'        => $payload->raw[ 'payer_names' ] ?? '' ,
+                        'business_name'   => $onboard->name ,
+                        'dashboard_link'  => $onboard->domain ,
+                        'amount_paid'     => number_format( $subscription->amount ) ,
+                        'txn_id'          => $payload->gatewayRef ,
+                        'new_expiry_date' => $subscription->expires_at ,
+                        'payment_method'  => 'Mobile Money' ,
+                    ] ,
+                );
+                Artisan::call( 'create-tenant' , [ 'id' => $subscription->tenant_id ] );
+            }
+            else {
+                tenantContext( function () use ($payment_transaction) {
+                    $seeder = new SystemModuleSeeder();
+                    $seeder->run( $payment_transaction->tenant_branch_id );
+                } , $payment_transaction->tenant_id );
+            }
+        }
+
         private function failedSubscriptionPayment(WebhookPayload $payload , PaymentTransaction $payment_transaction) : void
         {
             try {
@@ -236,8 +282,7 @@
         private function webhookUrl(string $gateway) : string
         {
             if ( app()->isLocal() ) {
-                $url = rtrim( config( 'payments.local_tunnel_url' , '' ) , '/' ) . "/api/webhook/{$gateway}";
-                return $url;
+                return rtrim( config( 'payments.local_tunnel_url' , '' ) , '/' ) . "/api/webhook/{$gateway}";
             }
 
             return route( 'webhook.gateway' , [ 'gateway' => $gateway ] );

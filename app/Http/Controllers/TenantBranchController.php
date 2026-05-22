@@ -2,6 +2,7 @@
 
     namespace App\Http\Controllers;
 
+    use App\Enums\SystemPaymentType;
     use App\Http\Requests\TenantBranchRequest;
     use App\Http\Resources\TenantBranchResource;
     use App\Models\TenantBranch;
@@ -13,7 +14,7 @@
         public function index(Request $request)
         {
             $status = $request->integer( 'status' );
-            return TenantBranchResource::collection( TenantBranch::when( $status, fn($q) => $q->where( 'status' , $status ) )
+            return TenantBranchResource::collection( TenantBranch::when( $status , fn($q) => $q->where( 'status' , $status ) )
                                                                  ->latest()->get() );
         }
 
@@ -27,6 +28,7 @@
                     $branch->update( [ 'code' => recordId( 'BR' , $branch , 3 ) ] );
 
                     $payment[ 'branch_id' ] = $branch->id;
+                    $payment[ 'type' ]      = SystemPaymentType::BRANCH;
 
                     return $tenantSubscriptionController->createSubscription( $payment );
                 } );

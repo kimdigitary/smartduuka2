@@ -8,13 +8,17 @@
     use App\Listeners\CreateAdminUserForTenant;
     use App\Listeners\CustomUpdateSyncedResource;
     use App\Listeners\SyncNonCustomerUser;
+    use App\Models\CentralPersonalAccessToken;
+    use App\Models\TenantPersonalAccessToken;
     use Illuminate\Contracts\Http\Kernel;
     use Illuminate\Support\Facades\Event;
     use Illuminate\Support\Facades\Route;
     use Illuminate\Support\ServiceProvider;
+    use Laravel\Sanctum\Sanctum;
     use Spatie\Permission\PermissionRegistrar;
     use Stancl\JobPipeline\JobPipeline;
     use Stancl\Tenancy\Events;
+    use Stancl\Tenancy\Events\TenancyInitialized;
     use Stancl\Tenancy\Features\TenantConfig;
     use Stancl\Tenancy\Jobs;
     use Stancl\Tenancy\Listeners;
@@ -85,8 +89,11 @@
 
                 // Tenancy events
                 Events\InitializingTenancy::class => [] ,
-                Events\TenancyInitialized::class  => [
+                TenancyInitialized::class  => [
                     Listeners\BootstrapTenancy::class ,
+                    function (TenancyInitialized $event) {
+                        Sanctum::usePersonalAccessTokenModel( TenantPersonalAccessToken::class);
+                    }
                 ] ,
 
                 Events\EndingTenancy::class => [] ,
@@ -95,6 +102,8 @@
                     function (Events\TenancyEnded $event) {
                         $permissionRegistrar           = app( PermissionRegistrar::class );
                         $permissionRegistrar->cacheKey = 'spatie.permission.cache';
+
+                        Sanctum::usePersonalAccessTokenModel( CentralPersonalAccessToken::class);
                     }
                 ] ,
 
@@ -110,7 +119,6 @@
 
                 // Resource syncing
                 Events\SyncedResourceSaved::class                    => [
-//                    SyncNonCustomerUser::class ,
                     CustomUpdateSyncedResource::class ,
                     SyncNonCustomerUser::class
                 ] ,
@@ -129,23 +137,13 @@
 
             UpdateSyncedResource::$shouldQueue = TRUE;
 
+            Sanctum::usePersonalAccessTokenModel( CentralPersonalAccessToken::class );
+
             $this->makeTenancyMiddlewareHighestPriority();
-            InitializeTenancyByDomain::$onFail                 = function ($exception , $request) {
-//                Log::warning( 'Tenancy identification failed!' , [
-//                    'host'       => $request->inputHost() ,
-//                    'url'        => $request->fullUrl() ,
-//                    'ip'         => $request->ip() ,
-//                    'user_agent' => $request->userAgent() ,
-//                ] );
-            };
-            Middleware\InitializeTenancyByRequestData::$onFail = function ($exception , $request) {
-//                Log::warning( 'Tenancy identification failed!' , [
-//                    'host'       => $request->inputHost() ,
-//                    'url'        => $request->fullUrl() ,
-//                    'ip'         => $request->ip() ,
-//                    'user_agent' => $request->userAgent() ,
-//                ] );
-            };
+
+            $this->makeTenancyMiddlewareHighestPriority();
+            InitializeTenancyByDomain::$onFail                 = function ($exception , $request) {};
+            Middleware\InitializeTenancyByRequestData::$onFail = function ($exception , $request) {};
 
             TenantConfig::$storageToConfigMap = [
                 // From app.php
@@ -191,7 +189,6 @@
                     if ( $listener instanceof JobPipeline ) {
                         $listener = $listener->toListener();
                     }
-
                     Event::listen( $event , $listener );
                 }
             }

@@ -7,6 +7,7 @@
     use App\Http\Middleware\CheckProductLimit;
     use App\Http\Middleware\CheckSalesLimit;
     use App\Http\Middleware\CheckUsersLimit;
+    use App\Http\Middleware\ConfigureSanctumTokenModel;
     use App\Http\Middleware\DetectUnusualLogin;
     use App\Http\Middleware\ForceAdminLogin;
     use App\Http\Middleware\PermissionMiddleware;
@@ -62,6 +63,7 @@
                               AfterMiddleware::class ,
                               AddTenantIDAndBranchID::class
                           ] );
+//                          $middleware->prependToGroup( 'api' , ConfigureSanctumTokenModel::class );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
                       } )
                       ->withExceptions( function (Exceptions $exceptions) : void {

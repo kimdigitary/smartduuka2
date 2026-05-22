@@ -1,6 +1,7 @@
 <?php
 
     use App\Http\Controllers\Admin\BranchController;
+    use App\Http\Controllers\Auth\Apps\AuthenticatedSessionController;
     use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
     use App\Http\Controllers\Frontend\SettingController as FrontendSettingController;
     use App\Http\Controllers\IotecController;
@@ -9,6 +10,7 @@
     use App\Http\Controllers\TenantBranchController;
     use App\Http\Controllers\TenantController;
     use App\Http\Controllers\TenantSubscriptionController;
+    use App\Http\Controllers\UserController;
     use App\Http\Controllers\WhatsAppController;
     use App\Payments\PaymentsController;
     use Illuminate\Support\Facades\Route;
@@ -35,6 +37,11 @@
         Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
         Route::post( 'store-tenant' , [ TenantController::class , 'store' ] );
         Route::get( 'billingCycles' , [ SubscriptionPlanController::class , 'billingCycles' ] );
+
+        Route::middleware( [ 'auth:sanctum' ] )->group( function () {
+            Route::post( 'logout' , [ AuthenticatedSessionController::class , 'destroy' ] );
+            Route::get( '/user' , [ UserController::class , 'user' ] );
+        } );
 
         Route::apiResource( 'branches' , TenantBranchController::class )->except( 'destroy' );
         Route::delete( 'branches/delete' , [ TenantBranchController::class , 'destroy' ] )->name( 'branches.destroy' );

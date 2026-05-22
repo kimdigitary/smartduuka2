@@ -9,14 +9,10 @@
     use App\Models\SystemModule;
     use Illuminate\Database\Seeder;
     use Illuminate\Support\Facades\DB;
+    use Illuminate\Support\Facades\Log;
 
     class SystemModuleSeeder extends Seeder
     {
-        /**
-         * The branch to seed per-feature enablement for.
-         * Only seeds if no records exist for this branch yet.
-         */
-
         public function run(int $branchId = 1) : void
         {
             // Guard: skip entirely if this branch already has feature records seeded
@@ -25,7 +21,7 @@
                                ->exists();
 
             if ( $alreadySeeded ) {
-                $this->command->info( "SystemModuleSeeder: branch_id={$branchId} already seeded. Skipping." );
+                Log::info( "SystemModuleSeeder: branch_id={$branchId} already seeded. Skipping." );
                 return;
             }
 
@@ -85,7 +81,7 @@
                     'description' => 'Manage customers, quotations, and returns.' ,
                     'icon'        => 'FaChartLine' ,
                     'category'    => 'Operations' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                     'subFeatures' => [
                         [ 'name' => 'POS' , 'enabled' => TRUE ] ,
@@ -103,7 +99,7 @@
                     'description' => 'Client profiles and loyalty programs.' ,
                     'icon'        => 'FaUsers' ,
                     'category'    => 'Operations' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                     'subFeatures' => [
                         [ 'name' => 'Customer List' , 'enabled' => TRUE ] ,
@@ -123,7 +119,7 @@
                     'description' => 'Item tracking and variants.' ,
                     'icon'        => 'FaBoxes' ,
                     'category'    => 'Operations' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                 ] ,
                 [
@@ -139,7 +135,7 @@
                     'description' => 'Stock counts and adjustments.' ,
                     'icon'        => 'FaLayerGroup' ,
                     'category'    => 'Operations' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                 ] ,
                 [
@@ -155,7 +151,7 @@
                     'description' => 'Purchase customers and suppliers.' ,
                     'icon'        => 'FaTruckLoading' ,
                     'category'    => 'Operations' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                 ] ,
                 [
@@ -202,7 +198,7 @@
                     'description' => 'Operational costs.' ,
                     'icon'        => 'FaFileInvoiceDollar' ,
                     'category'    => 'Finance' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                 ] ,
                 [
@@ -275,7 +271,7 @@
                     'description' => 'Manage billing plans.' ,
                     'icon'        => 'FaCreditCard' ,
                     'category'    => 'HR & Admin' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                 ] ,
                 [
@@ -283,7 +279,7 @@
                     'description' => 'Track system usage and audit trails.' ,
                     'icon'        => 'FaHistory' ,
                     'category'    => 'HR & Admin' ,
-                    'enabled'     => FALSE ,
+                    'enabled'     => TRUE ,
                     'price'       => 0 ,
                     'subFeatures' => [
                         [ 'name' => 'Audit Trails' , 'enabled' => TRUE ] ,
@@ -337,6 +333,6 @@
                 }
             }
 
-            $this->command->info( "SystemModuleSeeder: seeded successfully for branch_id={$branchId}." );
+            Log::info( "SystemModuleSeeder: seeded successfully for branch_id={$branchId}." );
         }
     }
