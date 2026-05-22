@@ -20,6 +20,7 @@
     use Illuminate\Database\Eloquent\Relations\Pivot;
     use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Hash;
     use Illuminate\Support\Facades\RateLimiter;
     use Illuminate\Support\Facades\Validator;
@@ -60,10 +61,10 @@
 
                     info( [
                         'is_tenancy_initialized' => tenancy()->initialized ,
-                        'default_connection'     => \Illuminate\Support\Facades\DB::getDefaultConnection() ,
-                        'default_db_name'        => \Illuminate\Support\Facades\DB::connection()->getDatabaseName() ,
+                        'default_connection'     => DB::getDefaultConnection() ,
+                        'default_db_name'        => DB::connection()->getDatabaseName() ,
                         'tenant_db_name'         => tenancy()->initialized
-                            ? \Illuminate\Support\Facades\DB::connection( 'tenant' )->getDatabaseName()
+                            ? DB::connection( 'tenant' )->getDatabaseName()
                             : 'N/A' ,
                     ] );
 
@@ -208,13 +209,21 @@
                 $subdomain  = explode( '.' , $host )[ 0 ];
                 $tenantSlug = Str::before( $subdomain , '-api' );
 
-                $tenant = Tenant::where( 'id' , $tenantSlug )
-                                ->orWhere( 'id' , $centralUser->tenant_id )
-                                ->first();
+                $tenant = Tenant::find($tenantSlug);
+
+                if ( ! $tenant ) {
+                    $tenant = Tenant::find($centralUser->tenant_id);
+                }
 
                 if ( ! $tenant ) return NULL;
 
-                tenancy()->initialize( $tenant );
+//                $tenant = Tenant::where( 'id' , $tenantSlug )
+//                                ->orWhere( 'id' , $centralUser->tenant_id )
+//                                ->first();
+
+                if ( ! tenancy()->initialized || tenancy()->tenant->id !== $tenant->id ) {
+                    tenancy()->initialize( $tenant );
+                }
 
                 $app_id = $request->header( 'X-App-Id' );
 
