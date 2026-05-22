@@ -58,14 +58,14 @@
                     $rawToken = Str::random( 40 );
                     $globalId = (string) Str::uuid();
 
-                    dd([
-                        'is_tenancy_initialized' => tenancy()->initialized,
-                        'default_connection'     => \Illuminate\Support\Facades\DB::getDefaultConnection(),
-                        'default_db_name'        => \Illuminate\Support\Facades\DB::connection()->getDatabaseName(),
+                    info( [
+                        'is_tenancy_initialized' => tenancy()->initialized ,
+                        'default_connection'     => \Illuminate\Support\Facades\DB::getDefaultConnection() ,
+                        'default_db_name'        => \Illuminate\Support\Facades\DB::connection()->getDatabaseName() ,
                         'tenant_db_name'         => tenancy()->initialized
-                            ? \Illuminate\Support\Facades\DB::connection('tenant')->getDatabaseName()
-                            : 'N/A',
-                    ]);
+                            ? \Illuminate\Support\Facades\DB::connection( 'tenant' )->getDatabaseName()
+                            : 'N/A' ,
+                    ] );
 
                     /** @var TenantPersonalAccessToken $tenantToken */
                     $tenantToken = TenantPersonalAccessToken::withoutEvents( function () use (
