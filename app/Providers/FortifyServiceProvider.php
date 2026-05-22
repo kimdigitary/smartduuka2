@@ -209,10 +209,10 @@
                 $subdomain  = explode( '.' , $host )[ 0 ];
                 $tenantSlug = Str::before( $subdomain , '-api' );
 
-                $tenant = Tenant::find($tenantSlug);
+                $tenant = Tenant::find( $tenantSlug );
 
-                if ( ! $tenant ) {
-                    $tenant = Tenant::find($centralUser->tenant_id);
+                if ( ! $tenant && $request->email != 'support@smartduuka.com' ) {
+                    $tenant = Tenant::find( $centralUser->tenant_id );
                 }
 
                 if ( ! $tenant ) return NULL;
