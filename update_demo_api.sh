@@ -61,7 +61,8 @@ done
 # Run demo tenant migrations
 log "🗄 Running demo tenant migrations..."
 $COMPOSE exec -T api_demo php artisan migrate --force
-$COMPOSE exec -T api_demo php artisan tenants:migrate --force --tenants=demoshop
+$COMPOSE exec -T api_demo php artisan tenants:migrate --force
+#$COMPOSE exec -T api_demo php artisan tenants:migrate --force --tenants=demoshop
 
 # Optimize Laravel for the demo environment
 $COMPOSE exec -T api_demo php artisan reset-notification-settings
