@@ -9,13 +9,14 @@
 
     class CreateTenant extends Command
     {
-        protected $signature = 'create-tenant {id}';
+        protected $signature = 'create-tenant {id} {branch_id}';
 
         protected $description = 'Create a new tenant with the given ID. Domain will be {id}.smartduuka2.test';
 
         public function handle() : int
         {
-            $id = $this->argument( 'id' );
+            $id        = $this->argument( 'id' );
+            $branch_id = $this->argument( 'branch_id' );
 
             if ( Tenant::where( 'id' , $id )->exists() ) {
                 $this->error( "A tenant with the ID '{$id}' already exists. Aborting." );
@@ -25,13 +26,14 @@
             $root_domain = config( 'session.domain' );
             $domain      = "$id-api$root_domain";
 
-            $this->info( "Creating tenant {$id} with domain {$domain}..." );
+            $this->info( "Creating tenant {$id} with domain {$domain} and branch_id {$branch_id}..." );
 
             $tenant = Tenant::create( [
-                'id'           => $id ,
-                'business_id'  => time() + rand( 1 , 1000000000 ) ,
-                'pin_pepper'   => Str::uuid()->getHex() ,
-                'frontend_url' => $id . config( 'session.domain' )
+                'id'                => $id ,
+                'initial_branch_id' => $branch_id ,
+                'business_id'       => time() + rand( 1 , 1000000000 ) ,
+                'pin_pepper'        => Str::uuid()->getHex() ,
+                'frontend_url'      => $id . config( 'session.domain' )
             ] );
 
             $tenant->domains()->create( [ 'domain' => $domain ] );

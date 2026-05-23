@@ -4,6 +4,7 @@
 
     namespace App\Providers;
 
+    use App\Jobs\DeleteTenantMediaDirectory;
     use App\Jobs\SendTenantCreatedMailsJob;
     use App\Listeners\CreateAdminUserForTenant;
     use App\Listeners\CustomUpdateSyncedResource;
@@ -59,6 +60,7 @@
                 Events\DeletingTenant::class      => [] ,
                 Events\TenantDeleted::class       => [
                     JobPipeline::make( [
+                        DeleteTenantMediaDirectory::class,
                         Jobs\DeleteDatabase::class ,
                     ] )->send( function (Events\TenantDeleted $event) {
                         return $event->tenant;

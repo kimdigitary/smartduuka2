@@ -13,6 +13,7 @@
     use App\Models\PaymentTransaction;
     use App\Models\SubscriptionPlan;
     use App\Models\Tenant;
+    use App\Models\TenantBranch;
     use App\Models\TenantSubscription;
     use App\Payments\DTOs\PaymentRequest;
     use App\Payments\DTOs\WebhookPayload;
@@ -49,7 +50,7 @@
 
         public function webhook(Request $request , string $gateway) : JsonResponse
         {
-            try {
+//            try {
                 $handler = $this->payments->gateway( $gateway );
                 $payload = $handler->parseWebhook( $request );
 
@@ -59,17 +60,17 @@
                 elseif ( $handler->isFailureWebhook( $request ) ) {
                     return $this->handleFailure( $payload );
                 }
-            } catch ( \Exception $e ) {
-                info( $e->getMessage() );
-                return response()->json();
-            }
+//            } catch ( \Exception $e ) {
+//                info( $e->getMessage() );
+//                return response()->json();
+//            }
 
             return response()->json();
         }
 
         private function handleSuccess(WebhookPayload $payload)
         {
-            try {
+//            try {
                 return DB::transaction( function () use ($payload) {
 
                     $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
@@ -101,10 +102,10 @@
                     );
                     return response()->json();
                 } );
-            } catch ( \Throwable $e ) {
-                info( $e->getMessage() );
-                return response()->json();
-            }
+//            } catch ( \Throwable $e ) {
+//                info( $e->getMessage() );
+//                return response()->json();
+//            }
         }
 
         private function modulePaymentSuccessful(PaymentTransaction $payment_transaction) : void
@@ -142,7 +143,7 @@
                 'payer_name'     => $payload->payerName ,
             ] );
 
-            $modules = $payment_transaction->data[ 'modules' ];
+            $modules = $payment_transaction->data[ 'modules' ] ?? [];
 
             if ( ! empty( $modules ) ) {
                 foreach ( json_decode( $modules , TRUE ) as $module ) {
@@ -159,8 +160,6 @@
                 }
             }
 
-            $subscription->branch->update( [ 'status' => Status::ACTIVE ] );
-
             TenantSubscription::where( 'tenant_id' , $subscription->tenant_id )
                               ->where( 'id' , '!=' , $subscription->id )
                               ->where( 'status' , Status::ACTIVE )
@@ -169,23 +168,10 @@
             $plan = SubscriptionPlan::find( $subscription->subscription_plan_id );
 
             if ( $plan?->type === SubscriptionPlanType::Starter ) {
-                $onboard = BusinessOnBoard::where( 'tenant' , $subscription?->tenant_id )->latest()->first();
-                $onboard->update( [ 'status' => Status::ACTIVE ] );
-                SendEmailsJob::dispatch(
-                    $onboard->admin_email ,
-                    'Payment Successful - Smart Duuka' ,
-                    'tenants.paymentsuccess' ,
-                    [
-                        'username'        => $payload->raw[ 'payer_names' ] ?? '' ,
-                        'business_name'   => $onboard->name ,
-                        'dashboard_link'  => $onboard->domain ,
-                        'amount_paid'     => number_format( $subscription->amount ) ,
-                        'txn_id'          => $payload->gatewayRef ,
-                        'new_expiry_date' => $subscription->expires_at ,
-                        'payment_method'  => 'Mobile Money' ,
-                    ] ,
-                );
-                Artisan::call( 'create-tenant' , [ 'id' => $subscription->tenant_id ] );
+                $this->setupOnboarding( $subscription , $payload );
+            }
+            else {
+                $subscription->branch->update( [ 'status' => Status::ACTIVE ] );
             }
         }
 
@@ -205,23 +191,7 @@
             $plan = SubscriptionPlan::find( $subscription->subscription_plan_id );
 
             if ( $plan?->type === SubscriptionPlanType::Starter ) {
-                $onboard = BusinessOnBoard::where( 'tenant' , $subscription?->tenant_id )->latest()->first();
-                $onboard->update( [ 'status' => Status::ACTIVE ] );
-                SendEmailsJob::dispatch(
-                    $onboard->admin_email ,
-                    'Payment Successful - Smart Duuka' ,
-                    'tenants.paymentsuccess' ,
-                    [
-                        'username'        => $payload->raw[ 'payer_names' ] ?? '' ,
-                        'business_name'   => $onboard->name ,
-                        'dashboard_link'  => $onboard->domain ,
-                        'amount_paid'     => number_format( $subscription->amount ) ,
-                        'txn_id'          => $payload->gatewayRef ,
-                        'new_expiry_date' => $subscription->expires_at ,
-                        'payment_method'  => 'Mobile Money' ,
-                    ] ,
-                );
-                Artisan::call( 'create-tenant' , [ 'id' => $subscription->tenant_id ] );
+                $this->setupOnboarding( $subscription , $payload );
             }
             else {
                 tenantContext( function () use ($payment_transaction) {
@@ -249,6 +219,9 @@
 
                     if ( $starter ) {
                         $onboard = BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )->latest()->first();
+                        Artisan::call( 'delete-tenant' , [ 'id' => $subscription->tenant_id ] );
+                        BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )?->delete();
+                        TenantBranch::where( 'tenant_id' , $subscription->tenant_id )?->delete();
                         SendEmailsJob::dispatch(
                             $onboard->admin_email ,
                             'Payment Failed - Smart Duuka' ,
@@ -303,5 +276,32 @@
             }
 
             return route( 'webhook.gateway' , [ 'gateway' => $gateway ] );
+        }
+
+        /**
+         * @param \LaravelIdea\Helper\App\Models\_IH_TenantSubscription_C|array|TenantSubscription|null $subscription
+         * @param WebhookPayload                                                                        $payload
+         *
+         * @return void
+         */
+        private function setupOnboarding(TenantSubscription | null $subscription , WebhookPayload $payload) : void
+        {
+            $onboard = BusinessOnBoard::where( 'tenant' , $subscription?->tenant_id )->latest()->first();
+            $onboard->update( [ 'status' => Status::ACTIVE ] );
+            Artisan::call( 'create-tenant' , [ 'id' => $subscription->tenant_id , 'branch_id' => $subscription->branch_id ] );
+            SendEmailsJob::dispatch(
+                $onboard->admin_email ,
+                'Payment Successful - Smart Duuka' ,
+                'tenants.paymentsuccess' ,
+                [
+                    'username'        => $payload->raw[ 'payer_names' ] ?? '' ,
+                    'business_name'   => $onboard->name ,
+                    'dashboard_link'  => $onboard->domain ,
+                    'amount_paid'     => number_format( $subscription->amount ) ,
+                    'txn_id'          => $payload->gatewayRef ,
+                    'new_expiry_date' => $subscription->expires_at ,
+                    'payment_method'  => 'Mobile Money' ,
+                ] ,
+            );
         }
     }

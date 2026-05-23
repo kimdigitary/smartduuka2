@@ -17,9 +17,13 @@
             $tableNames = config( 'permission.table_names' );
 
             if ( ! Schema::hasTable( $tableNames[ 'roles' ] ) ) {
-                Artisan::call( 'tenants:migrate');
+                Artisan::call( 'tenants:migrate' );
                 Log::warning( "Skipping RoleTableSeeder: Table {$tableNames['roles']} does not exist." );
-//                return;
+            }
+
+            // 1. Check if the roles table already has data.
+            if ( DB::table( $tableNames[ 'roles' ] )->count() > 0 ) {
+                return;
             }
 
             // 2. Clear the Spatie cache to ensure we aren't using stale central data
@@ -34,25 +38,7 @@
                 [ 'name' => EnumRole::DISTRIBUTOR , 'guard_name' => 'sanctum' , 'created_at' => now() , 'updated_at' => now() ] ,
             ];
 
-            $definedRoleNames = array_column( $roles , 'name' );
-
-            // 3. Use DB::table to check for existing roles (bypasses Eloquent issues)
-            $existingRoleNames = DB::table( $tableNames[ 'roles' ] )
-                                   ->where( 'guard_name' , 'sanctum' )
-                                   ->pluck( 'name' )
-                                   ->toArray();
-
-            $missingRoleNames = array_diff( $definedRoleNames , $existingRoleNames );
-
-            if ( empty( $missingRoleNames ) ) {
-                return;
-            }
-
-            $rolesToInsert = array_filter( $roles , function ($role) use ($missingRoleNames) {
-                return in_array( $role[ 'name' ] , $missingRoleNames );
-            } );
-
-            // 4. Perform a bulk insert
-            DB::table( $tableNames[ 'roles' ] )->insert( array_values( $rolesToInsert ) );
+            // 3. Perform a bulk insert
+            DB::table( $tableNames[ 'roles' ] )->insert( $roles );
         }
     }

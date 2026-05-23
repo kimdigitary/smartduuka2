@@ -8,6 +8,8 @@
     use App\Models\Tenant;
     use App\Services\AdministratorService;
     use App\Services\PinService;
+    use Database\Seeders\SystemModuleSeeder;
+    use Illuminate\Support\Facades\Artisan;
     use Illuminate\Support\Facades\DB;
 
     class CreateAdminUserForTenant
@@ -34,6 +36,8 @@
                             'emailCredentials' => TRUE ,
                         ] );
                         $administrator_service->store( $admin_request , $pin_service );
+                        $seeder = new SystemModuleSeeder();
+                        $seeder->run( $this->tenant->initial_branch_id );
                     }
                 } );
                 tenancy()->end();

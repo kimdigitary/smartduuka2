@@ -15,6 +15,7 @@
         {
             $status = $request->integer( 'status' );
             return TenantBranchResource::collection( TenantBranch::when( $status , fn($q) => $q->where( 'status' , $status ) )
+                                                                 ->where( 'tenant_id' , tenantId() )
                                                                  ->latest()->get() );
         }
 
@@ -44,7 +45,6 @@
 
         public function update(TenantBranchRequest $request , TenantBranch $tenantBranch)
         {
-            //            tenancy()->central( fn() => $tenantBranch->update( $request->validated() ) );
             $tenantBranch->update( $request->validated() );
 
             return response()->json();

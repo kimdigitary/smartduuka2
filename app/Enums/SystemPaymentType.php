@@ -9,6 +9,7 @@
         case SUBSCRIPTION = 1;
         case MODULE       = 2;
         case BRANCH       = 3;
+        case NEW_CLIENT   = 4;
 
         public function label() : string
         {
@@ -16,6 +17,7 @@
                 self::SUBSCRIPTION => 'Subscription' ,
                 self::MODULE       => 'Module' ,
                 self::BRANCH       => 'Branch' ,
+                self::NEW_CLIENT   => 'New Client' ,
             };
         }
 

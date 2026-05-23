@@ -23,10 +23,7 @@
     class EmployeeService
     {
         public $user;
-        public $phoneFilter = [ 'phone' ];
-        public $roleFilter  = [ 'role_id' ];
-        public $userFilter  = [ 'name' , 'email' , 'username' , 'status' , 'phone' ];
-        public $blockRoles  = [ EnumRole::ADMIN , EnumRole::CUSTOMER ];
+        public $blockRoles = [ EnumRole::ADMIN , EnumRole::CUSTOMER ];
 
 
         /**
@@ -35,10 +32,15 @@
         public function list(PaginateRequest $request)
         {
             try {
-                $per_page      = $request->integer( 'per_page' , 10000 );
+                $per_page    = $request->integer( 'per_page' , 10000 );
                 $page        = $request->integer( 'page' , 1 );
                 $orderColumn = $request->input( 'order_column' ) ?? 'id';
                 $orderType   = $request->input( 'order_type' ) ?? 'desc';
+
+                $con = DB::connection();
+                info( [
+                    'db' => $con->getDatabaseName()
+                ] );
 
                 $query = User::with( [ 'media' , 'addresses' ] )
                              ->withoutRole( $this->blockRoles );
@@ -72,6 +74,11 @@
                         'raw_pin'           => $pin ,
                         'pin'               => $pin_service->hashPin( $pin ) ,
                         'force_reset'       => $request->boolean( 'forceReset' ) ,
+                    ] );
+
+                    $con = DB::connection();
+                    info( [
+                        'db' => $con->getDatabaseName()
                     ] );
 
                     $this->user->save();

@@ -66,8 +66,7 @@ $COMPOSE exec -T api_demo php artisan tenants:migrate --force
 
 # Optimize Laravel for the demo environment
 $COMPOSE exec -T api_demo php artisan reset-notification-settings
-#$COMPOSE exec -T api_demo php artisan add-branch-id-to-all-central-tables
-#$COMPOSE exec -T api_demo php artisan add-branch-id-to-all-tables
+
 #$COMPOSE exec -T api_demo php artisan  seed-branches
 $COMPOSE exec -T api_demo php artisan optimize:clear
 $COMPOSE exec -T api_demo php artisan config:cache
@@ -76,6 +75,7 @@ $COMPOSE exec -T api_demo php artisan db:seed --force --class=SubscriptionPlanSe
 $COMPOSE exec -T api_demo php artisan db:seed --force --class=BusinessOnBoardSeeder
 #$COMPOSE exec -T api_demo php artisan tenants:seed --class=BillingCycleSeeder
 $COMPOSE exec -T api_demo php artisan tenants:seed --class=SystemModuleSeeder
+$COMPOSE exec -T api_demo php artisan tenants:seed --class=RoleTableSeeder
 $COMPOSE exec -T api_demo php artisan route:cache
 $COMPOSE exec -T api_demo php artisan view:cache
 

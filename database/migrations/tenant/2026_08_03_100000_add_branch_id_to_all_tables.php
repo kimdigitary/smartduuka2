@@ -1,19 +1,12 @@
 <?php
 
-    namespace App\Console\Commands;
-
-    use Illuminate\Console\Attributes\Description;
-    use Illuminate\Console\Attributes\Signature;
-    use Illuminate\Console\Command;
+    use Illuminate\Database\Migrations\Migration;
     use Illuminate\Database\Schema\Blueprint;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Facades\Schema;
 
-    #[Signature( 'add-branch-id-to-all-central-tables' )]
-    #[Description( 'Add a branch_id column to all tenant tables' )]
-    class AddBranchIdToAllCentralTables extends Command
-    {
-        public function handle() : void
+    return new class extends Migration {
+        public function up() : void
         {
             $excludedTables = [
                 'branches' ,
@@ -26,21 +19,24 @@
                 'cache' ,
                 'cache_locks' ,
                 'jobs' ,
-                'job_batches'
+                'job_batches' ,
+                'tenants' ,
+                'domains' ,
+                'subscriptions' ,
+                'tenant_subscriptions' ,
+                'business_on_boards' ,
+                'payment_transactions' ,
+                'activity_log' ,
             ];
 
-            // Fetch tables exclusively for PostgreSQL
+            // This logic is for PostgreSQL.
             $tables = array_map(
                 fn($table) => $table->tablename ,
                 DB::select( "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'" )
             );
 
-            $this->info( 'Found ' . count( $tables ) . ' tables in the database.' );
-            $this->newLine();
-
             foreach ( $tables as $table ) {
-                if ( in_array( $table , $excludedTables ) ) {
-                    $this->line( "<fg=yellow>Skipping excluded table:</> {$table}" );
+                if ( in_array( $table , $excludedTables , TRUE ) ) {
                     continue;
                 }
 
@@ -48,15 +44,7 @@
                     Schema::table( $table , function (Blueprint $tableBlueprint) {
                         $tableBlueprint->unsignedBigInteger( 'branch_id' )->default( 1 );
                     } );
-
-                    $this->info( "✔ Added branch_id to: {$table}" );
-                }
-                else {
-                    $this->line( "<fg=cyan>Column already exists in:</> {$table}" );
                 }
             }
-
-            $this->newLine();
-            $this->info( 'Process completed successfully.' );
         }
-    }
+    };

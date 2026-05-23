@@ -53,6 +53,7 @@
 
     function tenantContext(callable $callback , int | Tenant | string | null $tenant = NULL) : mixed
     {
+        $previousTenant = tenancy()->tenant;
         try {
             tenancy()->initialize( $tenant ?? tenantId() );
             return $callback();
@@ -60,19 +61,35 @@
             info( $exception->getMessage() );
             return NULL;
         } finally {
-            tenancy()->end();
+            if ( $previousTenant ) {
+                try {
+                    tenancy()->initialize( $previousTenant );
+                } catch ( TenantCouldNotBeIdentifiedById $e ) {
+                    info( $e->getMessage() );
+                }
+            }
+            else {
+                tenancy()->end();
+            }
         }
     }
 
     function centralContext(callable $callback) : mixed
     {
+        $previousTenant = tenancy()->tenant;
         try {
             return tenancy()->central( $callback );
         } catch ( Exception $exception ) {
             info( $exception->getMessage() );
             return NULL;
         } finally {
-            tenancy()->end();
+            try {
+                if ( $previousTenant ) {
+                    tenancy()->initialize( $previousTenant );
+                }
+            } catch ( TenantCouldNotBeIdentifiedById $e ) {
+                info( $e->getMessage() );
+            }
         }
     }
 

@@ -28,7 +28,7 @@
                 default                                           => 0 ,
             };
 
-            $used = $this->countActiveUsers( $tenantId );
+            $used = $this->countActiveUsers();
 
             if ( $used >= $limit ) {
                 return $this->deny(
@@ -39,7 +39,7 @@
             return $next( $request );
         }
 
-        private function countActiveUsers(string $tenantId) : int
+        private function countActiveUsers() : int
         {
             return User::withoutRole( [ Role::CUSTOMER ] )
                        ->where( 'status' , Status::ACTIVE )
