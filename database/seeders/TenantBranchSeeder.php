@@ -22,6 +22,25 @@
 
                 $company = tenantContext( fn() => Settings::group( 'company' ) );
 
+                $ids = [
+                    'digivolvetech' ,
+                    'glowcitybeauty' ,
+                    'ajmalcollections' ,
+                    'demoshop' ,
+                    'oaklandpeakltd' ,
+                    'timzclassic' ,
+                    'jibinicreamaries' ,
+                    'techpulsespares' ,
+                    'zakayoproduce' ,
+                ];
+
+                $expiry_date = match ( $tenant->id ) {
+                    'glowcitybeauty' , 'ajmalcollections' , 'oaklandpeakltd' , 'timzclassic' , 'jibinicreamaries' => '2026-06-15 23:59:59' ,
+                    'techpulsespares' , 'zakayoproduce' , 'digivolvetech' , 'demoshop'                            => '2027-03-15 23:59:59' ,
+                    default                                                                                       => now()->addMonth()
+
+                };
+
                 TenantSubscription::firstOrCreate(
                     [ 'branch_id' => $branch->id , 'tenant_id' => $tenant->id ] ,
                     [
@@ -32,7 +51,7 @@
                         'tenant_id'            => $tenant->id ,
                         'subscription_plan_id' => 1 ,
                         'status'               => Status::ACTIVE ,
-                        'expires_at'           => now()->addMonths() ,
+                        'expires_at'           => $expiry_date ,
                     ] );
             } );
         }
