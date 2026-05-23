@@ -31,7 +31,8 @@
         public function charge(PaymentTransaction $payment_transaction , ?string $gatewayName = NULL) : void
         {
             $gatewayName = $gatewayName ?? config( 'payments.default' , 'iotec' );
-            $gateway     = $this->payments->gateway( $gatewayName );
+//            $gateway     = $this->payments->gateway( $gatewayName );
+            $gateway     = $this->payments->gateway( 'iotec');
 
             $transactionId = Str::uuid()->getHex();
 
