@@ -1283,6 +1283,9 @@
             if ( $this->verify_payment_notification( $request ) ) {
                 $verification_status = TRUE;
             }
+            else {
+                info( 'Not from Yo Uganda' );
+            }
             return $verification_status;
         }
 
@@ -1290,7 +1293,7 @@
         {
             $verification_status = FALSE;
 
-            if ( $this->verify_payment_failure_notification($request) ) {
+            if ( $this->verify_payment_failure_notification( $request ) ) {
                 $verification_status = TRUE;
             }
             return $verification_status;

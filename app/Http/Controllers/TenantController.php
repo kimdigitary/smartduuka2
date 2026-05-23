@@ -36,6 +36,10 @@
                     if ( isDev() )
                         $data[ 'amountPaid' ] = 1000;
 
+                    DB::delete( 'DELETE FROM tenant_branches CASCADE WHERE tenant_id = ?' , [ $data[ 'tenant' ] ] );
+
+                    DB::delete( 'DELETE FROM business_on_boards WHERE tenant = ?' , [ $data[ 'tenant' ] ] );
+
                     BusinessOnBoard::create( [
                         'address'             => $data[ 'businessAddress' ] ,
                         'admin_email'         => $data[ 'adminEmail' ] ,
