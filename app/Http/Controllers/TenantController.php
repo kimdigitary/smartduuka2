@@ -33,6 +33,9 @@
                 return DB::transaction( function () use ($request) {
                     $data = $request->validated();
 
+                    if ( isDev() )
+                        $data[ 'amountPaid' ] = 1000;
+
                     BusinessOnBoard::create( [
                         'address'             => $data[ 'businessAddress' ] ,
                         'admin_email'         => $data[ 'adminEmail' ] ,
