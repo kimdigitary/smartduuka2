@@ -30,7 +30,7 @@
 
         public function charge(PaymentTransaction $payment_transaction , ?string $gatewayName = NULL) : void
         {
-            $gatewayName = $gatewayName ?? config( 'payments.default' , 'yo_uganda' );
+            $gatewayName = $gatewayName ?? config( 'payments.default' , 'iotec' );
             $gateway     = $this->payments->gateway( $gatewayName );
 
             $transactionId = Str::uuid()->getHex();
