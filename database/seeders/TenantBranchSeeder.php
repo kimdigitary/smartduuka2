@@ -8,13 +8,11 @@
 
     class TenantBranchSeeder extends Seeder
     {
-
         public function run() : void
         {
             $tenant = tenant();
             centralContext( function () use ($tenant) {
-                $branch = TenantBranch::firstOrCreate( [ 'name' => 'Main Branch' ] , [
-                    'tenant_id'  => $tenant->id ,
+                $branch = TenantBranch::firstOrCreate( [ 'name' => 'Main Branch' , 'tenant_id' => $tenant->id ] , [
                     'can_delete' => FALSE ,
                     'status'     => Status::ACTIVE
                 ] );
