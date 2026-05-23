@@ -132,7 +132,7 @@
                         'branch_id'        => $payment_transaction->tenant_branch_id ,
                         'system_module_id' => $id ,
                     ] )?->update( [ 'enabled' => $enabled ] );
-                } );
+                }, $payment_transaction->tenant_id );
             }
         }
 

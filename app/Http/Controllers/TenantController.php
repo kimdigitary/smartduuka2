@@ -105,7 +105,7 @@
                         'expires_at' => now()->addMonths( $cycle->multiplier )
                     ] );
 
-                    info( $transaction );
+                    info( 'Dispatching payment...' );
 
                     InitiatePaymentJob::dispatch( $transaction );
 

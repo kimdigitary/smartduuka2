@@ -8,7 +8,6 @@
     use App\Http\Resources\TenantSubscriptionResource;
     use App\Jobs\InitiatePaymentJob;
     use App\Models\BillingCycle;
-    use App\Models\BranchModule;
     use App\Models\PaymentTransaction;
     use App\Models\TenantSubscription;
     use Illuminate\Http\Request;
@@ -57,7 +56,7 @@
                     'status'               => Status::INACTIVE ,
                 ] );
 
-                $company = tenantContext( fn() => Settings::group( 'company' ) );
+                $company = tenantContext( fn() => Settings::group( 'company' ) , tenantId() );
 
                 $transaction = PaymentTransaction::create( [
                     'amount'           => $data[ 'amount' ] ,
