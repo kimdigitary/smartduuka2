@@ -34,7 +34,7 @@
                 $data = $request->validated();
 
                 if ( isDev() )
-                    $data[ 'amountPaid' ] = 100;
+                    $data[ 'amountPaid' ] = 1000;
 
                 DB::delete( 'DELETE FROM business_on_boards WHERE status = ? AND admin_email=? AND tenant = ?' , [ Status::INACTIVE->value , $data[ 'adminEmail' ] , $data[ 'tenant' ] ] );
 

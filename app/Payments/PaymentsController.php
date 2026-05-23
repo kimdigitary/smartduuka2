@@ -38,7 +38,7 @@
 
             $paymentRequest = new PaymentRequest(
                 phone: $payment_transaction->phone ,
-                amount: isDev() ? 100 : $payment_transaction->amount ,
+                amount: isDev() ? 1000 : $payment_transaction->amount ,
                 description: 'Smart Duuka Payments' ,
                 transactionId: $transactionId ,
                 notificationUrl: $this->webhookUrl( $gatewayName ) ,
