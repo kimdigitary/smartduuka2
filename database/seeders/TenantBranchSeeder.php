@@ -22,17 +22,10 @@
 
                 $company = tenantContext( fn() => Settings::group( 'company' ) );
 
-                $ids = [
-                    'digivolvetech' ,
-                    'glowcitybeauty' ,
-                    'ajmalcollections' ,
-                    'demoshop' ,
-                    'oaklandpeakltd' ,
-                    'timzclassic' ,
-                    'jibinicreamaries' ,
-                    'techpulsespares' ,
-                    'zakayoproduce' ,
-                ];
+                tenantContext( function () use ($branch) {
+                    $seeder = new SystemModuleSeeder();
+                    $seeder->run( $branch->id );
+                } , $tenant->id );
 
                 $expiry_date = match ( $tenant->id ) {
                     'glowcitybeauty' , 'ajmalcollections' , 'oaklandpeakltd' , 'timzclassic' , 'jibinicreamaries' => '2026-06-15 23:59:59' ,
