@@ -34,11 +34,11 @@
                     $data = $request->validated();
 
                     if ( isDev() )
-                        $data[ 'amountPaid' ] = 1000;
+                        $data[ 'amountPaid' ] = 100;
 
-                    DB::delete( 'DELETE FROM tenant_branches CASCADE WHERE tenant_id = ?' , [ $data[ 'tenant' ] ] );
+                    DB::delete( 'DELETE FROM tenant_branches WHERE status = ? AND tenant_id = ?' , [ Status::INACTIVE , $data[ 'tenant' ] ] );
 
-                    DB::delete( 'DELETE FROM business_on_boards WHERE tenant = ?' , [ $data[ 'tenant' ] ] );
+                    DB::delete( 'DELETE FROM business_on_boards WHERE status = ? AND admin_email=? AND tenant = ?' , [ Status::INACTIVE , $data[ 'adminEmail' ] , $data[ 'tenant' ] ] );
 
                     BusinessOnBoard::create( [
                         'address'             => $data[ 'businessAddress' ] ,
@@ -104,6 +104,8 @@
                         'invoice_no' => recordId( 'INV' , $subscription ) ,
                         'expires_at' => now()->addMonths( $cycle->multiplier )
                     ] );
+
+                    info( $transaction );
 
                     InitiatePaymentJob::dispatch( $transaction );
 

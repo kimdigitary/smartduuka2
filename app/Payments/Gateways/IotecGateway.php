@@ -29,6 +29,8 @@
                                 'walletId'   => config( 'payments.iotec.iotec_wallet_id' ) ,
                             ] );
 
+            info($response);
+
             $body = $response->json();
 
             if ( isset( $body[ 'status' ] ) && strtolower( $body[ 'status' ] ) === 'pending' ) {

@@ -32,18 +32,20 @@
         {
             $gatewayName = $gatewayName ?? config( 'payments.default' , 'iotec' );
 //            $gateway     = $this->payments->gateway( $gatewayName );
-            $gateway     = $this->payments->gateway( 'iotec');
+            $gateway = $this->payments->gateway( 'iotec' );
 
             $transactionId = Str::uuid()->getHex();
 
             $paymentRequest = new PaymentRequest(
                 phone: $payment_transaction->phone ,
-                amount: isDev() ? 1000 : $payment_transaction->amount ,
+                amount: isDev() ? 100 : $payment_transaction->amount ,
                 description: 'Smart Duuka Payments' ,
                 transactionId: $transactionId ,
                 notificationUrl: $this->webhookUrl( $gatewayName ) ,
                 failureUrl: $this->webhookUrl( $gatewayName ) ,
             );
+
+            info( $paymentRequest );
 
             $payment_transaction->update( [ 'transaction_id' => $transactionId ] );
             $gateway->charge( $paymentRequest );
@@ -52,15 +54,16 @@
         public function webhook(Request $request , string $gateway) : JsonResponse
         {
 //            try {
-                $handler = $this->payments->gateway( $gateway );
-                $payload = $handler->parseWebhook( $request );
+            info( $request );
+            $handler = $this->payments->gateway( $gateway );
+            $payload = $handler->parseWebhook( $request );
 
-                if ( $handler->isSuccessWebhook( $request ) ) {
-                    return $this->handleSuccess( $payload );
-                }
-                elseif ( $handler->isFailureWebhook( $request ) ) {
-                    return $this->handleFailure( $payload );
-                }
+            if ( $handler->isSuccessWebhook( $request ) ) {
+                return $this->handleSuccess( $payload );
+            }
+            elseif ( $handler->isFailureWebhook( $request ) ) {
+                return $this->handleFailure( $payload );
+            }
 //            } catch ( \Exception $e ) {
 //                info( $e->getMessage() );
 //                return response()->json();
@@ -72,37 +75,37 @@
         private function handleSuccess(WebhookPayload $payload)
         {
 //            try {
-                return DB::transaction( function () use ($payload) {
+            return DB::transaction( function () use ($payload) {
 
-                    $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
-                    if ( ! $transaction ) {
-                        return response()->json();
-                    }
-
-                    if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
-                        $this->tenantSubscriptionSuccessful( $payload , $transaction );
-                    }
-                    if ( $transaction->payment_type == SystemPaymentType::BRANCH ) {
-                        $this->newBranchPaymentSuccessful( $payload , $transaction );
-                    }
-                    if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
-                        $this->modulePaymentSuccessful( $transaction );
-                    }
-
-                    SendEmailsJob::dispatch(
-                        $transaction->data[ 'email' ] ,
-                        'Payment Successful - Smart Duuka' ,
-                        'payments.paymentsuccess' ,
-                        [
-                            'username'       => $payload->raw[ 'payer_names' ] ?? '' ,
-                            'business_name'  => $transaction->data[ 'business_name' ] ,
-                            'amount_paid'    => number_format( $transaction->amount ) ,
-                            'txn_id'         => $payload->gatewayRef ,
-                            'payment_method' => 'Mobile Money' ,
-                        ] ,
-                    );
+                $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
+                if ( ! $transaction ) {
                     return response()->json();
-                } );
+                }
+
+                if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
+                    $this->tenantSubscriptionSuccessful( $payload , $transaction );
+                }
+                if ( $transaction->payment_type == SystemPaymentType::BRANCH ) {
+                    $this->newBranchPaymentSuccessful( $payload , $transaction );
+                }
+                if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
+                    $this->modulePaymentSuccessful( $transaction );
+                }
+
+                SendEmailsJob::dispatch(
+                    $transaction->data[ 'email' ] ,
+                    'Payment Successful - Smart Duuka' ,
+                    'payments.paymentsuccess' ,
+                    [
+                        'username'       => $payload->raw[ 'payer_names' ] ?? '' ,
+                        'business_name'  => $transaction->data[ 'business_name' ] ,
+                        'amount_paid'    => number_format( $transaction->amount ) ,
+                        'txn_id'         => $payload->gatewayRef ,
+                        'payment_method' => 'Mobile Money' ,
+                    ] ,
+                );
+                return response()->json();
+            } );
 //            } catch ( \Throwable $e ) {
 //                info( $e->getMessage() );
 //                return response()->json();
