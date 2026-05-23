@@ -4,6 +4,7 @@
 
     use App\Models\Tenant;
     use Illuminate\Console\Command;
+    use Illuminate\Support\Facades\DB;
 
     class DeleteTenant extends Command
     {
@@ -23,9 +24,15 @@
                 $this->info( "Deleting tenant {$id}..." );
                 $tenant->delete();
                 $this->info( "Tenant {$id} deleted successfully." );
+
+//                DB::delete( 'DELETE FROM tenant_branches CASCADE WHERE tenant_id = ?' , [ $id ] );
+
+                DB::delete( 'DELETE FROM business_on_boards WHERE tenant = ?' , [ $id ] );
+
             }
             else {
                 $this->error( "Tenant {$id} not found." );
             }
+
         }
     }
