@@ -36,9 +36,9 @@
                     if ( isDev() )
                         $data[ 'amountPaid' ] = 100;
 
-                    DB::delete( 'DELETE FROM tenant_branches WHERE status = ? AND tenant_id = ?' , [ Status::INACTIVE , $data[ 'tenant' ] ] );
+                    DB::delete( 'DELETE FROM tenant_branches WHERE status = ? AND tenant_id = ?' , [ Status::INACTIVE->value , $data[ 'tenant' ] ] );
 
-                    DB::delete( 'DELETE FROM business_on_boards WHERE status = ? AND admin_email=? AND tenant = ?' , [ Status::INACTIVE , $data[ 'adminEmail' ] , $data[ 'tenant' ] ] );
+                    DB::delete( 'DELETE FROM business_on_boards WHERE status = ? AND admin_email=? AND tenant = ?' , [ Status::INACTIVE->value , $data[ 'adminEmail' ] , $data[ 'tenant' ] ] );
 
                     BusinessOnBoard::create( [
                         'address'             => $data[ 'businessAddress' ] ,
