@@ -29,7 +29,7 @@
 
         public function store(TenantRequest $request)
         {
-            try {
+//            try {
                 return DB::transaction( function () use ($request) {
                     $data = $request->validated();
 
@@ -112,9 +112,9 @@
                     return response()->json();
                 } );
 
-            } catch ( \Throwable $e ) {
-                return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
-            }
+//            } catch ( \Throwable $e ) {
+//                return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
+//            }
 
         }
 
