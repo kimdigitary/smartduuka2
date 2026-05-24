@@ -4,45 +4,49 @@
 
     use Illuminate\Log\Logger;
     use Monolog\Formatter\LineFormatter;
-    use Monolog\Level;
-    use Monolog\Processor\IntrospectionProcessor;
 
     class FormatLogLocation
     {
-        /**
-         * Customize the given logger instance.
-         */
         public function __invoke(Logger $logger) : void
         {
-            // 1. Set up the Introspection Processor
-            $introspectionProcessor = new IntrospectionProcessor( Level::Debug , [ 'Illuminate\\' ] );
-
-            // 2. Define the log structure
+            // Define the log structure
             $format = "[%datetime%] %channel%.%level_name%: [%extra.file%:%extra.line%] %message% %context%\n";
 
             $formatter = new LineFormatter( $format , NULL , TRUE , TRUE );
             $formatter->addJsonEncodeOption( JSON_PRETTY_PRINT );
             $formatter->addJsonEncodeOption( JSON_UNESCAPED_SLASHES );
 
-            // 3. Apply everything to the handlers
             foreach ( $logger->getHandlers() as $handler ) {
 
-                // Pushed FIRST, so it executes LAST (after the file path is generated)
+                // Custom trace processor to completely ignore all vendor files
                 $handler->pushProcessor( function ($record) {
-                    $extra = $record->extra;
+                    $trace = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS );
+                    $file  = 'Unknown';
+                    $line  = 0;
 
-                    if ( isset( $extra[ 'file' ] ) ) {
-                        // Strip the absolute base path off the string, leaving a relative path
-                        $basePath        = base_path() . DIRECTORY_SEPARATOR;
-                        $extra[ 'file' ] = str_replace( $basePath , '' , $extra[ 'file' ] );
+                    $basePath = base_path() . DIRECTORY_SEPARATOR;
+
+                    foreach ( $trace as $frame ) {
+                        if ( isset( $frame[ 'file' ] ) ) {
+                            // Skip Laravel framework and Monolog files entirely
+                            $isFramework = str_contains( $frame[ 'file' ] , 'vendor' . DIRECTORY_SEPARATOR . 'laravel' );
+                            $isMonolog   = str_contains( $frame[ 'file' ] , 'vendor' . DIRECTORY_SEPARATOR . 'monolog' );
+
+                            // The moment we hit a file outside of the vendor/laravel and monolog folders, we grab it.
+                            if ( ! $isFramework && ! $isMonolog ) {
+                                $file = str_replace( $basePath , '' , $frame[ 'file' ] );
+                                $line = $frame[ 'line' ] ?? 0;
+                                break;
+                            }
+                        }
                     }
 
-                    // Return the updated LogRecord (Required for modern Monolog versions)
+                    $extra           = $record->extra;
+                    $extra[ 'file' ] = $file;
+                    $extra[ 'line' ] = $line;
+
                     return $record->with( extra: $extra );
                 } );
-
-                // Pushed SECOND, so it executes FIRST (generating the file and line data)
-                $handler->pushProcessor( $introspectionProcessor );
 
                 $handler->setFormatter( $formatter );
             }

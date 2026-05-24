@@ -51,16 +51,6 @@
         return Settings::group( 'site' )->get( 'project' );
     }
 
-    function debug(string $message , array $context = []) : void
-    {
-        $caller = debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS , 1 )[ 0 ];
-
-        $context[ '_file' ] = str_replace( base_path() . DIRECTORY_SEPARATOR , '' , $caller[ 'file' ] ?? 'unknown' );
-        $context[ '_line' ] = $caller[ 'line' ] ?? 'unknown';
-
-        info( $message , $context );
-    }
-
     function tenantContext(callable $callback , int | Tenant | string | null $tenant = NULL) : mixed
     {
         $previousTenant = tenancy()->tenant;
