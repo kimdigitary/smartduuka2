@@ -45,8 +45,6 @@
                 failureUrl: $this->webhookUrl( $gatewayName ) ,
             );
 
-            info($paymentRequest);
-
             $payment_transaction->update( [ 'transaction_id' => $transactionId ] );
             $gateway->charge( $paymentRequest );
         }
