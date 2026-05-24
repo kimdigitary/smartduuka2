@@ -18,8 +18,8 @@
     use App\Payments\DTOs\PaymentRequest;
     use App\Payments\DTOs\WebhookPayload;
     use Database\Seeders\SystemModuleSeeder;
-    use Illuminate\Http\JsonResponse;
     use Illuminate\Http\Request;
+    use Illuminate\Http\Response;
     use Illuminate\Support\Facades\Artisan;
     use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Str;
@@ -31,8 +31,7 @@
         public function charge(PaymentTransaction $payment_transaction , ?string $gatewayName = NULL) : void
         {
             $gatewayName = $gatewayName ?? config( 'payments.default' , 'iotec' );
-//            $gateway     = $this->payments->gateway( $gatewayName );
-            $gateway = $this->payments->gateway( 'iotec' );
+            $gateway     = $this->payments->gateway( $gatewayName );
 
             $transactionId = Str::uuid()->getHex();
 
@@ -49,65 +48,97 @@
             $gateway->charge( $paymentRequest );
         }
 
-        public function webhook(Request $request , string $gateway) : JsonResponse
+        public function webhook(Request $request , string $gateway) : Response
         {
-//            try {
-            info( $request );
-            $handler = $this->payments->gateway( $gateway );
-            $payload = $handler->parseWebhook( $request );
+            try {
+                $handler = $this->payments->gateway( $gateway );
+                $payload = $handler->parseWebhook( $request );
 
-            if ( $handler->isSuccessWebhook( $request ) ) {
-                return $this->handleSuccess( $payload );
-            }
-            elseif ( $handler->isFailureWebhook( $request ) ) {
-                return $this->handleFailure( $payload );
-            }
-//            } catch ( \Exception $e ) {
-//                info( $e->getMessage() );
-//                return response()->json();
-//            }
+                if ( $handler->isSuccessWebhook( $request ) ) {
+                    $this->handleSuccess( $payload );
+                }
+                elseif ( $handler->isFailureWebhook( $request ) ) {
+                    $this->handleFailure( $payload );
+                }
 
-            return response()->json();
+                return response()->noContent();
+            } catch ( \Exception $e ) {
+                info( $e->getMessage() );
+                return response()->noContent();
+            }
         }
 
-        private function handleSuccess(WebhookPayload $payload)
+        private function handleSuccess(WebhookPayload $payload) : void
         {
-//            try {
-            return DB::transaction( function () use ($payload) {
+            try {
+                DB::transaction( function () use ($payload) {
+                    $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
 
-                $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
-                if ( ! $transaction ) {
-                    return response()->json();
-                }
+                    if ( $transaction ) {
+                        if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
+                            $this->tenantSubscriptionSuccessful( $payload , $transaction );
+                        }
+                        if ( $transaction->payment_type == SystemPaymentType::BRANCH ) {
+                            $this->newBranchPaymentSuccessful( $payload , $transaction );
+                        }
+                        if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
+                            $this->modulePaymentSuccessful( $transaction );
+                        }
 
-                if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
-                    $this->tenantSubscriptionSuccessful( $payload , $transaction );
-                }
-                if ( $transaction->payment_type == SystemPaymentType::BRANCH ) {
-                    $this->newBranchPaymentSuccessful( $payload , $transaction );
-                }
-                if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
-                    $this->modulePaymentSuccessful( $transaction );
-                }
+                        SendEmailsJob::dispatch(
+                            $transaction->data[ 'email' ] ,
+                            'Payment Successful - Smart Duuka' ,
+                            'payments.paymentsuccess' ,
+                            [
+                                'username'       => $payload->raw[ 'payer_names' ] ?? '' ,
+                                'business_name'  => $transaction->data[ 'business_name' ] ,
+                                'amount_paid'    => number_format( $transaction->amount ) ,
+                                'txn_id'         => $payload->gatewayRef ,
+                                'payment_method' => 'Mobile Money' ,
+                            ] ,
+                        );
+                    }
+                } );
+            } catch ( \Throwable $e ) {
+                info( $e->getMessage() );
+            }
+        }
 
-                SendEmailsJob::dispatch(
-                    $transaction->data[ 'email' ] ,
-                    'Payment Successful - Smart Duuka' ,
-                    'payments.paymentsuccess' ,
-                    [
-                        'username'       => $payload->raw[ 'payer_names' ] ?? '' ,
-                        'business_name'  => $transaction->data[ 'business_name' ] ,
-                        'amount_paid'    => number_format( $transaction->amount ) ,
-                        'txn_id'         => $payload->gatewayRef ,
-                        'payment_method' => 'Mobile Money' ,
-                    ] ,
-                );
-                return response()->json();
-            } );
-//            } catch ( \Throwable $e ) {
-//                info( $e->getMessage() );
-//                return response()->json();
-//            }
+        private function handleFailure(WebhookPayload $payload) : void
+        {
+            try {
+                DB::transaction( function () use ($payload) {
+                    $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
+
+                    if ( ! $transaction ) {
+                        return;
+                    }
+
+                    if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
+                        $this->failedSubscriptionPayment( $payload , $transaction );
+                    }
+
+                    if ( $transaction->payment_type == SystemPaymentType::BRANCH ) {
+                        $this->failedBranchPayment( $payload , $transaction );
+                    }
+
+                    if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
+                        $this->failedModulePayment( $transaction );
+                    }
+
+                    SendEmailsJob::dispatch(
+                        $transaction->data[ 'email' ] ,
+                        'Payment Failed - Smart Duuka' ,
+                        'payments.paymentfailed' ,
+                        [
+                            'username'    => $payload->raw[ 'payer_names' ] ?? '' ,
+                            'amount_paid' => number_format( $transaction->amount ) ,
+                        ] ,
+                    );
+                } );
+            } catch ( \Throwable $e ) {
+                info( $e->getMessage() );
+            }
         }
 
         private function modulePaymentSuccessful(PaymentTransaction $payment_transaction) : void
@@ -124,13 +155,18 @@
         {
             $ids = json_decode( $payment_transaction->payment_type_id );
 
+            if ( ! is_array( $ids ) ) {
+                info( "updateModules: invalid payment_type_id for transaction {$payment_transaction->id}" );
+                return;
+            }
+
             foreach ( $ids as $id ) {
                 tenantContext( function () use ($payment_transaction , $id , $enabled) {
                     BranchModule::where( [
                         'branch_id'        => $payment_transaction->tenant_branch_id ,
                         'system_module_id' => $id ,
                     ] )?->update( [ 'enabled' => $enabled ] );
-                }, $payment_transaction->tenant_id );
+                } , $payment_transaction->tenant_id );
             }
         }
 
@@ -157,8 +193,7 @@
                         [
                             'enabled' => $module[ 'enabled' ] ,
                         ]
-                    ) , $payment_transaction->tenant_id
-                    );
+                    ) , $payment_transaction->tenant_id );
                 }
             }
 
@@ -205,70 +240,57 @@
 
         private function failedSubscriptionPayment(WebhookPayload $payload , PaymentTransaction $payment_transaction) : void
         {
-            try {
-                DB::transaction( function () use ($payload , $payment_transaction) {
-                    $subscription = TenantSubscription::find( $payment_transaction->payment_type_id );
+            $subscription = TenantSubscription::find( $payment_transaction->payment_type_id );
 
-                    $subscription?->update( [ 'payment_status' => SubscriptionPaymentStatus::Failed ] );
+            $subscription?->update( [ 'payment_status' => SubscriptionPaymentStatus::Failed ] );
 
-                    $tenant_url = Tenant::find( $subscription->tenant_id )?->frontend_url;
-                    $plan       = SubscriptionPlan::find( $subscription->subscription_plan_id );
+            $tenant_url = Tenant::find( $subscription->tenant_id )?->frontend_url;
+            $plan       = SubscriptionPlan::find( $subscription->subscription_plan_id );
+            $starter    = $plan?->type === SubscriptionPlanType::Starter;
+            $retryLink  = $starter ? 'https://smartduuka.com/pricing' : "$tenant_url/subscriptions";
 
-                    $starter = $plan?->type === SubscriptionPlanType::Starter;
+            if ( $starter ) {
+                $onboard = BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )->latest()->first();
 
+                Artisan::call( 'delete-tenant' , [ 'id' => $subscription->tenant_id ] );
+                BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )?->delete();
+                TenantBranch::where( 'tenant_id' , $subscription->tenant_id )?->delete();
 
-                    $retryLink = $starter ? 'https://smartduuka.com/pricing' : "$tenant_url/subscriptions";
-
-                    if ( $starter ) {
-                        $onboard = BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )->latest()->first();
-                        Artisan::call( 'delete-tenant' , [ 'id' => $subscription->tenant_id ] );
-                        BusinessOnBoard::where( 'tenant' , $subscription->tenant_id )?->delete();
-                        TenantBranch::where( 'tenant_id' , $subscription->tenant_id )?->delete();
-                        SendEmailsJob::dispatch(
-                            $onboard->admin_email ,
-                            'Payment Failed - Smart Duuka' ,
-                            'tenants.paymentfailed' ,
-                            [
-                                'username'           => $payload->raw[ 'payer_names' ] ?? '' ,
-                                'business_name'      => $onboard->name ,
-                                'dashboard_link'     => $onboard->domain ,
-                                'amount_paid'        => number_format( $subscription->amount ) ,
-                                'retry_payment_link' => $retryLink ,
-                            ] ,
-                        );
-                    }
-                    return response()->json();
-                } );
-                return;
-            } catch ( \Throwable $e ) {
-                info( $e->getMessage() );
-                response()->json();
-                return;
+                if ( $onboard ) {
+                    SendEmailsJob::dispatch(
+                        $onboard->admin_email ,
+                        'Payment Failed - Smart Duuka' ,
+                        'tenants.paymentfailed' ,
+                        [
+                            'username'           => $payload->raw[ 'payer_names' ] ?? '' ,
+                            'business_name'      => $onboard->name ,
+                            'dashboard_link'     => $onboard->domain ,
+                            'amount_paid'        => number_format( $subscription->amount ) ,
+                            'retry_payment_link' => $retryLink ,
+                        ] ,
+                    );
+                }
             }
         }
 
-        private function handleFailure(WebhookPayload $payload , PaymentTransaction $payment_transaction) : JsonResponse
+        private function failedBranchPayment(WebhookPayload $payload , PaymentTransaction $payment_transaction) : void
         {
-            $transaction = PaymentTransaction::where( 'transaction_id' , $payload->transactionId )->first();
-            if ( ! $transaction ) {
-                return response()->json();
-            }
-            if ( $transaction->payment_type == SystemPaymentType::SUBSCRIPTION ) {
-                $this->failedSubscriptionPayment( $transaction->payment_type_id , $payload );
-            }
-            if ( $transaction->payment_type == SystemPaymentType::MODULE ) {
-                $this->failedModulePayment( $transaction->payment_type_id );
-            }
+            $subscription = TenantSubscription::find( $payment_transaction->payment_type_id );
+
+            $subscription?->update( [ 'payment_status' => SubscriptionPaymentStatus::Failed ] );
+
+            $tenant_url = Tenant::find( $subscription->tenant_id )?->frontend_url;
+
             SendEmailsJob::dispatch(
-                $transaction->data[ 'email' ] ,
+                $payment_transaction->data[ 'email' ] ,
                 'Payment Failed - Smart Duuka' ,
                 'payments.paymentfailed' ,
                 [
-                    'username'    => $payload->raw[ 'payer_names' ] ?? '' ,
-                    'amount_paid' => number_format( $transaction->amount ) ,
+                    'username'           => $payload->raw[ 'payer_names' ] ?? '' ,
+                    'amount_paid'        => number_format( $payment_transaction->amount ) ,
+                    'retry_payment_link' => "$tenant_url/subscriptions" ,
                 ] ,
             );
-            return response()->json();
         }
 
         private function webhookUrl(string $gateway) : string
@@ -290,7 +312,9 @@
         {
             $onboard = BusinessOnBoard::where( 'tenant' , $subscription?->tenant_id )->latest()->first();
             $onboard->update( [ 'status' => Status::ACTIVE ] );
+
             Artisan::call( 'create-tenant' , [ 'id' => $subscription->tenant_id , 'branch_id' => $subscription->branch_id ] );
+
             SendEmailsJob::dispatch(
                 $onboard->admin_email ,
                 'Payment Successful - Smart Duuka' ,
