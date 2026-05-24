@@ -108,6 +108,8 @@
                         'expires_at' => now()->addMonths( $cycle->multiplier )
                     ] );
 
+                    info( $transaction );
+
                     InitiatePaymentJob::dispatch( $transaction );
 
                     return response()->json();
