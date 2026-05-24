@@ -62,10 +62,30 @@
                               AfterMiddleware::class ,
                               AddTenantIDAndBranchID::class
                           ] );
-//                          $middleware->prependToGroup( 'api' , ConfigureSanctumTokenModel::class );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
                       } )
                       ->withExceptions( function (Exceptions $exceptions) : void {
+
+                          $exceptions->report( function (Throwable $e) {
+                              $trace = collect( $e->getTrace() )
+                                  ->filter( fn($frame) => isset( $frame[ 'file' ] ) &&
+                                      str_starts_with( $frame[ 'file' ] , base_path( 'app' ) )
+                                  )
+                                  ->map( fn($frame) => [
+                                      'file'     => str_replace( base_path() . DIRECTORY_SEPARATOR , '' , $frame[ 'file' ] ) ,
+                                      'line'     => $frame[ 'line' ] ,
+                                      'function' => $frame[ 'function' ] ,
+                                  ] )
+                                  ->values()
+                                  ->toArray();
+
+                              \Illuminate\Support\Facades\Log::error( $e->getMessage() , [
+                                  'exception' => get_class( $e ) ,
+                                  'trace'     => $trace ,
+                              ] );
+
+                              return FALSE;
+                          } );
 
                           $exceptions->render( function (Illuminate\Auth\Access\AuthorizationException $e , $request) {
                               return response()->json( [
