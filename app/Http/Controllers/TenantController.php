@@ -29,92 +29,93 @@
 
         public function store(TenantRequest $request)
         {
-//            try {
-            return DB::transaction( function () use ($request) {
-                $data = $request->validated();
+            try {
+                return DB::transaction( function () use ($request) {
+                    $data = $request->validated();
 
-                if ( isDev() )
-                    $data[ 'amountPaid' ] = 1000;
+                    if ( isDev() )
+                        $data[ 'amountPaid' ] = 1000;
 
-                DB::delete( 'DELETE FROM business_on_boards WHERE status = ? AND admin_email=? AND tenant = ?' , [ Status::INACTIVE->value , $data[ 'adminEmail' ] , $data[ 'tenant' ] ] );
+                    BusinessOnBoard::updateOrCreate(
+                        [
+                            'status'      => Status::INACTIVE->value ,
+                            'admin_email' => $data[ 'adminEmail' ] ,
+                            'tenant'      => $data[ 'tenant' ]
+                        ] ,
+                        [
+                            'address'             => $data[ 'businessAddress' ] ,
+                            'admin_email'         => $data[ 'adminEmail' ] ,
+                            'admin_name'          => $data[ 'adminName' ] ,
+                            'admin_password'      => $data[ 'adminPassword' ] ,
+                            'admin_pin'           => $data[ 'adminPin' ] ?? 123456 ,
+                            'amount'              => $data[ 'amountPaid' ] ,
+                            'cycle_id'            => $data[ 'billingCycleId' ] ,
+                            'email'               => $data[ 'businessEmail' ] ,
+                            'mobile_phone_number' => $data[ 'mobileMoneyNumber' ] ,
+                            'name'                => $data[ 'businessName' ] ,
+                            'payment_method'      => $data[ 'paymentMethod' ] ,
+                            'phone'               => $data[ 'businessPhone' ] ,
+                            'plan_id'             => $data[ 'subscriptionPlanId' ] ,
+                            'tenant'              => $data[ 'tenant' ] ,
+                        ] );
 
-                BusinessOnBoard::create( [
-                    'address'             => $data[ 'businessAddress' ] ,
-                    'admin_email'         => $data[ 'adminEmail' ] ,
-                    'admin_name'          => $data[ 'adminName' ] ,
-                    'admin_password'      => $data[ 'adminPassword' ] ,
-                    'admin_pin'           => $data[ 'adminPin' ] ?? 123456 ,
-                    'amount'              => $data[ 'amountPaid' ] ,
-                    'cycle_id'            => $data[ 'billingCycleId' ] ,
-                    'email'               => $data[ 'businessEmail' ] ,
-                    'mobile_phone_number' => $data[ 'mobileMoneyNumber' ] ,
-                    'name'                => $data[ 'businessName' ] ,
-                    'payment_method'      => $data[ 'paymentMethod' ] ,
-                    'phone'               => $data[ 'businessPhone' ] ,
-                    'plan_id'             => $data[ 'subscriptionPlanId' ] ,
-                    'tenant'              => $data[ 'tenant' ] ,
-                ] );
 
+                    $tenant_id = $data[ 'tenant' ];
 
-                $tenant_id = $data[ 'tenant' ];
+                    $branch = TenantBranch::updateOrCreate(
+                        [
+                            'tenant_id' => $tenant_id ,
+                            'name'      => 'Main Branch' ,
+                        ] ,
+                        [
+                            'email'      => $data[ 'businessEmail' ] ,
+                            'address'    => $data[ 'businessAddress' ] ,
+                            'phone'      => $data[ 'businessPhone' ] ,
+                            'phone2'     => $data[ 'phone2' ] ?? NULL ,
+                            'can_delete' => FALSE ,
+                            'status'     => Status::ACTIVE
+                        ] );
 
-                $branch = centralContext( function () use ($tenant_id , $data) {
-                    $branch = TenantBranch::create( [
-                        'tenant_id'  => $tenant_id ,
-                        'email'      => $data[ 'businessEmail' ] ,
-                        'address'    => $data[ 'businessAddress' ] ,
-                        'phone'      => $data[ 'businessPhone' ] ,
-                        'phone2'     => $data[ 'phone2' ] ?? NULL ,
-                        'name'       => 'Main Branch' ,
-                        'can_delete' => FALSE ,
-                        'status'     => Status::ACTIVE
-                    ] );
                     $branch->update( [ 'code' => recordId( 'BR' , $branch , 3 ) ] );
-                    return $branch;
+
+                    $subscription = TenantSubscription::create( [
+                        'phone'                => $data[ 'mobileMoneyNumber' ] ,
+                        'branch_id'            => $branch->id ,
+                        'amount'               => $data[ 'amountPaid' ] ,
+                        'billing_cycle_id'     => $data[ 'billingCycleId' ] ,
+                        'tenant_id'            => $data[ 'tenant' ] ,
+                        'subscription_plan_id' => $data[ 'subscriptionPlanId' ] ,
+                        'status'               => Status::INACTIVE ,
+                    ] );
+
+                    $transaction = PaymentTransaction::create( [
+                        'amount'           => $data[ 'amountPaid' ] ,
+                        'phone'            => $data[ 'mobileMoneyNumber' ] ,
+                        'data'             => [
+                            'email'         => $data[ 'adminEmail' ] ,
+                            'business_name' => $data[ 'businessName' ]
+                        ] ,
+                        'payment_type'     => SystemPaymentType::SUBSCRIPTION ,
+                        'payment_type_id'  => $subscription->id ,
+                        'tenant_branch_id' => $branch->id ,
+                        'tenant_id'        => $data[ 'tenant' ] ,
+                    ] );
+
+                    $cycle = BillingCycle::find( $data[ 'billingCycleId' ] );
+
+                    $subscription->update( [
+                        'invoice_no' => recordId( 'INV' , $subscription ) ,
+                        'expires_at' => now()->addMonths( $cycle->multiplier )
+                    ] );
+
+                    InitiatePaymentJob::dispatch( $transaction );
+
+                    return response()->json();
                 } );
 
-                DB::delete( 'DELETE FROM tenant_branches WHERE branch_id=? AND tenant_id = ?' , [  $branch->id , $data[ 'tenant' ] ] );
-
-                $subscription = TenantSubscription::create( [
-                    'phone'                => $data[ 'mobileMoneyNumber' ] ,
-                    'branch_id'            => $branch->id ,
-                    'amount'               => $data[ 'amountPaid' ] ,
-                    'billing_cycle_id'     => $data[ 'billingCycleId' ] ,
-                    'tenant_id'            => $data[ 'tenant' ] ,
-                    'subscription_plan_id' => $data[ 'subscriptionPlanId' ] ,
-                    'status'               => Status::INACTIVE ,
-                ] );
-
-                $transaction = PaymentTransaction::create( [
-                    'amount'           => $data[ 'amountPaid' ] ,
-                    'phone'            => $data[ 'mobileMoneyNumber' ] ,
-                    'data'             => [
-                        'email'         => $data[ 'adminEmail' ] ,
-                        'business_name' => $data[ 'businessName' ]
-                    ] ,
-                    'payment_type'     => SystemPaymentType::SUBSCRIPTION ,
-                    'payment_type_id'  => $subscription->id ,
-                    'tenant_branch_id' => $branch->id ,
-                    'tenant_id'        => $data[ 'tenant' ] ,
-                ] );
-
-                $cycle = BillingCycle::find( $data[ 'billingCycleId' ] );
-
-                $subscription->update( [
-                    'invoice_no' => recordId( 'INV' , $subscription ) ,
-                    'expires_at' => now()->addMonths( $cycle->multiplier )
-                ] );
-
-                info( 'Dispatching payment...' );
-
-                InitiatePaymentJob::dispatch( $transaction );
-
-                return response()->json();
-            } );
-
-//            } catch ( \Throwable $e ) {
-//                return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
-//            }
+            } catch ( \Throwable $e ) {
+                return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
+            }
 
         }
 
