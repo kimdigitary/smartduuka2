@@ -23,6 +23,7 @@
                 return;
             }
 
+            info( "Initiating payment for transaction: {$this->payment_transaction->id}" );
             $payments_controller->charge( $this->payment_transaction );
         }
     }
