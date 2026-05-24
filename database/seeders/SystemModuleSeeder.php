@@ -15,13 +15,11 @@
     {
         public function run(int $branchId = 1) : void
         {
-            // Guard: skip entirely if this branch already has feature records seeded
             $alreadySeeded = DB::table( 'branch_modules' )
                                ->where( 'branch_id' , $branchId )
                                ->exists();
 
             if ( $alreadySeeded ) {
-                Log::info( "SystemModuleSeeder: branch_id={$branchId} already seeded. Skipping." );
                 return;
             }
 
@@ -332,7 +330,5 @@
                     }
                 }
             }
-
-            Log::info( "SystemModuleSeeder: seeded successfully for branch_id={$branchId}." );
         }
     }

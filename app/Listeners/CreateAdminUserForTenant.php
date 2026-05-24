@@ -21,7 +21,7 @@
             try {
                 $tenant   = $this->tenant->getTenantKey();
                 $on_board = BusinessOnBoard::where( 'tenant' , $tenant )->latest()->first();
-                tenancy()->initialize( $tenant );
+                tenancy()->initialize( $on_board->tenant );
                 DB::transaction( function () use ($on_board , $administrator_service , $pin_service) {
                     if ( $on_board ) {
                         $admin_request = new AdministratorRequest();

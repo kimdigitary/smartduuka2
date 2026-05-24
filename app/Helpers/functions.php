@@ -58,14 +58,14 @@
             tenancy()->initialize( $tenant ?? tenantId() );
             return $callback();
         } catch ( TenantCouldNotBeIdentifiedById $exception ) {
-            info( $exception->getMessage() );
+            info( 'Functions.php: ' . $exception->getMessage() );
             return NULL;
         } finally {
             if ( $previousTenant ) {
                 try {
                     tenancy()->initialize( $previousTenant );
                 } catch ( TenantCouldNotBeIdentifiedById $e ) {
-                    info( $e->getMessage() );
+                    info( 'Functions.php: ' . $e->getMessage() );
                 }
             }
             else {
