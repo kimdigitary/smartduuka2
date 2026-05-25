@@ -66,6 +66,10 @@ RUN git config --global --add safe.directory /app && \
     php artisan storage:link || true && \
     chown -R www-data:www-data /app/bootstrap/cache
 
+# Add alias to .bashrc for www-data user
+RUN printf '#!/bin/sh\ncd /app/storage/logs && exec /bin/bash\n' > /usr/local/bin/logs \
+    && chmod +x /usr/local/bin/logs
+
 # 10. Configurations
 RUN rm -f /usr/local/etc/php-fpm.d/www.conf.default && \
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
