@@ -3,6 +3,8 @@
     namespace Database\Seeders;
 
     use App\Enums\Status;
+    use App\Models\BranchModule;
+    use App\Models\BranchModuleFeature;
     use App\Models\Tenant;
     use App\Models\TenantBranch;
     use App\Models\TenantSubscription;
@@ -17,7 +19,8 @@
         public function run() : void
         {
             Tenant::all()->runForEach( function (Tenant $tenant) {
-
+                BranchModule::truncate();
+                BranchModuleFeature::truncate();
                 $branch = centralContext( function () use ($tenant) {
                     $branch = TenantBranch::updateOrCreate( [ 'name' => 'Main Branch' , 'tenant_id' => $tenant->id ] , [
                         'can_delete' => FALSE ,
