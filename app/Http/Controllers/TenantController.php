@@ -113,7 +113,6 @@
                     return $transaction;
                 } );
 
-                info( $transaction );
                 InitiatePaymentJob::dispatch( $transaction );
 
                 // FIX #1: Return response outside the transaction
