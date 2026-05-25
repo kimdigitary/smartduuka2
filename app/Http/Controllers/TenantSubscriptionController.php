@@ -56,7 +56,7 @@
                     'status'               => Status::INACTIVE ,
                 ] );
 
-                $company = tenantContext( fn() => Settings::group( 'company' ) , tenantId() );
+                $company = tenantContext( fn() => Settings::group( 'company' )->get() , tenantId() );
 
                 $transaction = PaymentTransaction::create( [
                     'amount'           => $data[ 'amount' ] ,

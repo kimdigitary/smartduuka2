@@ -30,7 +30,7 @@
                     return $branch;
                 } );
 
-                $company = Settings::group( 'company' );
+                $company = Settings::group( 'company' )->get();
 
                 $excludedTables = [
                     'branches' ,

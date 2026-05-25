@@ -99,7 +99,7 @@
                             'phone'            => $payment[ 'phone' ] ,
                             'data'             => [
                                 'email'         => auth()->user()->email ,
-                                'business_name' => data_get( Settings::group( 'company' ) , 'company_name' )
+                                'business_name' => data_get( Settings::group( 'company' )->get()  , 'company_name' )
                             ] ,
                             'payment_type'     => SystemPaymentType::MODULE ,
                             'payment_type_id'  => json_encode( $idsForPayment ) ,
