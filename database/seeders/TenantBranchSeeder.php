@@ -18,57 +18,58 @@
         {
             Tenant::all()->runForEach( function (Tenant $tenant) {
 
-                $branch = TenantBranch::updateOrCreate( [ 'name' => 'Main Branch' , 'tenant_id' => $tenant->id ] , [
-                    'can_delete' => FALSE ,
-                    'status'     => Status::ACTIVE ,
-                ] );
+                $branch = centralContext( function () use ($tenant) {
+                    $branch = TenantBranch::updateOrCreate( [ 'name' => 'Main Branch' , 'tenant_id' => $tenant->id ] , [
+                        'can_delete' => FALSE ,
+                        'status'     => Status::ACTIVE ,
+                    ] );
+                    $branch->update( [ 'code' => recordId( 'BR' , $branch , 3 ) ] );
+                    return $branch;
+                } );
 
-                $branch->update( [ 'code' => recordId( 'BR' , $branch , 3 ) ] );
-                $company = tenantContext( fn() => Settings::group( 'company' ) , $tenant->id );
+                $company = Settings::group( 'company' );
 
-                tenantContext( function () use ($branch , $tenant) {
-                    $excludedTables = [
-                        'branches' ,
-                        'migrations' ,
-                        'failed_jobs' ,
-                        'password_resets' ,
-                        'password_reset_tokens' ,
-                        'personal_access_tokens' ,
-                        'sessions' ,
-                        'cache' ,
-                        'cache_locks' ,
-                        'jobs' ,
-                        'job_batches' ,
-                        'tenant_subscriptions' ,
-                    ];
+                $excludedTables = [
+                    'branches' ,
+                    'migrations' ,
+                    'failed_jobs' ,
+                    'password_resets' ,
+                    'password_reset_tokens' ,
+                    'personal_access_tokens' ,
+                    'sessions' ,
+                    'cache' ,
+                    'cache_locks' ,
+                    'jobs' ,
+                    'job_batches' ,
+                    'tenant_subscriptions' ,
+                ];
 
-                    // Fetch tables exclusively for PostgreSQL
-                    $tables = array_map(
-                        fn($table) => $table->tablename ,
-                        DB::select( "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'" )
-                    );
+                // Fetch tables exclusively for PostgreSQL
+                $tables = array_map(
+                    fn($table) => $table->tablename ,
+                    DB::select( "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'" )
+                );
 
-                    foreach ( $tables as $table ) {
-                        if ( in_array( $table , $excludedTables ) ) {
-                            continue;
-                        }
-
-                        if ( ! Schema::hasColumn( $table , 'branch_id' ) ) {
-                            Schema::table( $table , function (Blueprint $tableBlueprint) {
-                                $tableBlueprint->unsignedBigInteger( 'branch_id' )->nullable();
-                            } );
-                        }
-                        if ( $tenant->id == 'demoshop' ) {
-                            DB::table( $table )->update( [ 'branch_id' => 1 ] );
-                        }
-                        else {
-                            DB::table( $table )->update( [ 'branch_id' => $branch->id ] );
-                        }
+                foreach ( $tables as $table ) {
+                    if ( in_array( $table , $excludedTables ) ) {
+                        continue;
                     }
 
-                    $seeder = new SystemModuleSeeder();
-                    $seeder->run( $branch->id );
-                } , $tenant->id );
+                    if ( ! Schema::hasColumn( $table , 'branch_id' ) ) {
+                        Schema::table( $table , function (Blueprint $tableBlueprint) {
+                            $tableBlueprint->unsignedBigInteger( 'branch_id' )->nullable();
+                        } );
+                    }
+                    if ( $tenant->id == 'demoshop' ) {
+                        DB::table( $table )->update( [ 'branch_id' => 1 ] );
+                    }
+                    else {
+                        DB::table( $table )->update( [ 'branch_id' => $branch->id ] );
+                    }
+                }
+
+                $seeder = new SystemModuleSeeder();
+                $seeder->run( $branch->id );
 
                 $expiry_date = match ( $tenant->id ) {
                     'glowcitybeauty' , 'ajmalcollections' , 'oaklandpeakltd' , 'timzclassic' , 'jibinicreamaries' => '2026-06-15 23:59:59' ,
@@ -76,7 +77,7 @@
                     default                                                                                       => now()->addMonth()
                 };
 
-                TenantSubscription::updateOrCreate(
+                centralContext( fn() => TenantSubscription::updateOrCreate(
                     [ 'branch_id' => $branch->id , 'tenant_id' => $tenant->id ] ,
                     [
                         'phone'                => $company[ 'company_phone' ] ,
@@ -88,7 +89,7 @@
                         'status'               => Status::ACTIVE ,
                         'expires_at'           => $expiry_date ,
                     ]
-                );
+                ) );
             } );
         }
     }
