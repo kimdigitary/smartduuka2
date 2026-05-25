@@ -8,14 +8,19 @@
     use App\Models\ModuleFeature;
     use App\Models\SystemModule;
     use Illuminate\Database\Seeder;
+    use Illuminate\Support\Facades\DB;
 
     class SystemModuleSeeder extends Seeder
     {
         public function run(int $branchId = 1) : void
         {
-            // Clear existing module and feature associations for this branch to ensure a clean seed.
-            BranchModuleFeature::where( 'branch_id' , $branchId )->delete();
-            BranchModule::where( 'branch_id' , $branchId )->delete();
+            $alreadySeeded = DB::table( 'branch_modules' )
+                               ->where( 'branch_id' , $branchId )
+                               ->exists();
+
+            if ( $alreadySeeded ) {
+                return;
+            }
 
             $mockModules = [
                 // --- CORE & SYSTEM ---
@@ -295,7 +300,7 @@
                     ]
                 );
 
-                BranchModule::updateOrInsert(
+                BranchModule:: updateOrInsert(
                     [
                         'branch_id'        => $branchId ,
                         'system_module_id' => $module->id ,
