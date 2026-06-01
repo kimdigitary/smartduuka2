@@ -3,6 +3,7 @@
     namespace App\Http\Requests;
 
     use Illuminate\Foundation\Http\FormRequest;
+    use Illuminate\Validation\Rule;
     use Illuminate\Validation\Rules\Password;
 
     class TenantRequest extends FormRequest
@@ -16,7 +17,13 @@
         {
             return [
                 'businessName'       => [ 'required' , 'string' , 'max:255' ] ,
-                'tenant'             => [ 'required' , 'string' , 'max:255' , 'unique:tenants,id' ] ,
+                'tenant'             => [
+                    'required' ,
+                    'string' ,
+                    'max:255' ,
+                    Rule::unique( 'tenants' , 'id' ) ,
+                    Rule::notIn( [ 'app' , 'admin' , 'api' ] ) ,
+                ] ,
                 'businessEmail'      => [ 'required' , 'email' , 'max:255' ] ,
                 'businessPhone'      => [ 'required' , 'string' , 'max:255' ] ,
                 'phone2'             => [ 'sometimes' , 'string' , 'max:255' ] ,
@@ -24,7 +31,7 @@
                 'businessAddress'    => [ 'required' , 'string' , 'max:255' ] ,
                 'businessType'       => [ 'required' , 'string' , 'max:255' ] ,
                 'adminName'          => [ 'required' , 'string' , 'max:255' ] ,
-                'adminEmail'         => [ 'required' , 'email' , 'max:255'  ] ,
+                'adminEmail'         => [ 'required' , 'email' , 'max:255' ] ,
                 'adminPassword'      => [ 'required' , 'string' , Password::defaults() ] ,
                 'adminPin'           => [ 'sometimes' , 'numeric' , 'digits:5' ] ,
                 'paymentMethod'      => [ 'required' , 'string' ] ,
