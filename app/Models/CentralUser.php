@@ -3,17 +3,20 @@
     namespace App\Models;
 
     use App\Enums\Status;
-    use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+    use Illuminate\Foundation\Auth\User as Authenticatable;
+    use Laravel\Sanctum\HasApiTokens;
     use Stancl\Tenancy\Contracts\SyncMaster;
     use Stancl\Tenancy\Database\Concerns\CentralConnection;
     use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
     use Stancl\Tenancy\Database\Models\TenantPivot;
 
-    class CentralUser extends Model implements SyncMaster
+    class CentralUser extends Authenticatable implements SyncMaster
     {
         // Note that we force the central connection on this model
-        use ResourceSyncing , CentralConnection;
+        use ResourceSyncing , CentralConnection , HasApiTokens;
+
+//        use InteractsWithMedia , HasApiTokens , HasFactory , HasRoles , Notifiable , ResourceSyncing , ForgetsCacheOnCRUD;
 
         protected $guarded    = [];
         public    $timestamps = FALSE;

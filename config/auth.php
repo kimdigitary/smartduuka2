@@ -44,10 +44,14 @@
                 'driver'   => 'sanctum' ,
                 'provider' => 'users' ,
             ] ,
-            'api' => [
-                'driver' => 'sanctum',
-                'provider' => 'users',
-            ],
+            'api'     => [
+                'driver'   => 'sanctum' ,
+                'provider' => 'users' ,
+            ] ,
+            'central' => [
+                'driver'   => 'session' ,
+                'provider' => 'central_users' ,
+            ] ,
         ] ,
 
         /*
@@ -68,9 +72,13 @@
         */
 
         'providers' => [
-            'users' => [
+            'users'         => [
                 'driver' => 'eloquent' ,
                 'model'  => env( 'AUTH_MODEL' , App\Models\User::class ) ,
+            ] ,
+            'central_users' => [
+                'driver' => 'eloquent' ,
+                'model'  => App\Models\CentralUser::class ,
             ] ,
 
             // 'users' => [

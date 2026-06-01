@@ -8,13 +8,12 @@
     use App\Actions\Fortify\UpdateUserPassword;
     use App\Actions\Fortify\UpdateUserProfileInformation;
     use App\Enums\AppID;
+    use App\Enums\ReservedTenantNames;
     use App\Enums\Role;
     use App\Enums\Status;
     use App\Http\Requests\LoginValidationRequest;
-    use App\Models\CentralPersonalAccessToken;
     use App\Models\CentralUser;
     use App\Models\Tenant;
-    use App\Models\TenantPersonalAccessToken;
     use App\Models\User;
     use App\Services\PinService;
     use Illuminate\Cache\RateLimiting\Limit;
@@ -34,10 +33,8 @@
     {
         public function register() : void
         {
-            $this->app->bind(
-                LoginRequest::class ,
-                LoginValidationRequest::class
-            );
+            $this->app->bind( LoginRequest::class , LoginValidationRequest::class );
+
             $this->app->instance( LoginResponse::class , new class implements LoginResponse {
                 public function toResponse($request) : JsonResponse
                 {
@@ -45,89 +42,45 @@
                     $deviceId  = $request->header( 'X-Device-Id' , $request->ip() );
                     $tokenName = 'auth_token_' . $deviceId;
 
-                    $user->tokens()->where( 'name' , $tokenName )->delete();
-
-                    $rawToken = Str::random( 40 );
-                    $globalId = (string) Str::uuid();
-
-                    /** @var TenantPersonalAccessToken $tenantToken */
-                    $tenantToken = TenantPersonalAccessToken::withoutEvents( function () use (
-                        $user , $tokenName , $rawToken , $globalId
-                    ) {
-                        $token = new TenantPersonalAccessToken();
-                        $token->forceFill( [
-                            'tokenable_type' => get_class( $user ) ,
-                            'tokenable_id'   => $user->getKey() ,
-                            'name'           => $tokenName ,
-                            'token'          => hash( 'sha256' , $rawToken ) ,
-                            'abilities'      => [ '*' ] ,
-                            'global_id'      => $globalId ,
-                        ] );
-                        $token->save();
-                        return $token;
-                    } );
-
-                    $plainText = $tenantToken->getKey() . '|' . $rawToken;
-
-                    $this->syncTokenToCentral( $tenantToken , $globalId , $user );
-
-                    return response()->json( [
-                        'two_factor'   => FALSE ,
-                        'token'        => $plainText ,
-                        'user'         => $user->toArray() ,
-                        'tenant_id'    => $user->tenant_id ,
-                        'redirect_url' => $user->tenant->frontend_url . '/auto-login?token=' . $plainText ,
-                        'tenant_url'   => $user->tenant->frontend_url ,
-                        'tenant'       => $user->tenant->id ,
-                        'tenant_token' => $user->tenant->token ,
-                    ] );
+                    if ( $user instanceof CentralUser ) {
+                        return $this->centralAppLoginResponse( $user , $tokenName );
+                    }
+                    return $this->tenantAppLoginResponse( $user , $tokenName );
                 }
 
-                private function syncTokenToCentral(
-                    TenantPersonalAccessToken $tenantToken ,
-                    string $globalId ,
-                    User $tenantUser
-                ) : void
+                private function centralAppLoginResponse(CentralUser $user , string $tokenName) : JsonResponse
                 {
+                    return centralContext( function () use ($user , $tokenName) {
+                        $user->tokens()->where( 'name' , $tokenName )->delete();
+                        $token = $user->createToken( $tokenName );
 
-                    $centralUser = CentralUser::where( 'global_id' , $tenantUser->global_id )->first();
-                    if ( ! $centralUser ) {
-                        $centralUser = CentralUser::where( 'email' , $tenantUser->email )->first();
-                    }
+                        tenancy()->end();
 
-                    if ( ! $centralUser ) {
-                        return;
-                    }
+                        return response()->json( [
+                            'two_factor' => FALSE ,
+                            'token'      => $token->plainTextToken ,
+                            'user'       => $user->toArray() ,
+                        ] );
 
-                    $currentTenantId = tenancy()->tenant->getTenantKey();
-
-                    tenancy()->central( function () use (
-                        $tenantToken , $globalId , $centralUser , $currentTenantId
-                    ) {
-                        $central = CentralPersonalAccessToken::withoutEvents(
-                            fn() => CentralPersonalAccessToken::updateOrCreate(
-                                [ 'global_id' => $globalId ] ,
-                                [
-                                    'tokenable_type' => CentralUser::class ,
-                                    'tokenable_id'   => $centralUser->id ,
-                                    'name'           => $tenantToken->name ,
-                                    'token'          => $tenantToken->token ,
-                                    'abilities'      => $tenantToken->abilities ?? [ '*' ] ,
-                                    'expires_at'     => $tenantToken->expires_at ,
-                                ]
-                            )
-                        );
-
-                        $alreadyAttached = $central->tenants()
-                                                   ->where( 'tenants.id' , $currentTenantId )
-                                                   ->exists();
-
-                        if ( ! $alreadyAttached ) {
-                            Pivot::withoutEvents(
-                                fn() => $central->tenants()->attach( $currentTenantId )
-                            );
-                        }
                     } );
+                }
+
+                private function tenantAppLoginResponse(User $user , string $tokenName) : JsonResponse
+                {
+                    return tenantContext( function () use ($user , $tokenName) {
+                        $user->tokens()->where( 'name' , $tokenName )->delete();
+                        $token = $user->createToken( $tokenName );
+                        tenancy()->end();
+                        return response()->json( [
+                            'two_factor'   => FALSE ,
+                            'token'        => $token->plainTextToken ,
+                            'user'         => $user->toArray() ,
+                            'tenant_id'    => $user->tenant_id ,
+                            'tenant_url'   => $user->tenant->frontend_url ,
+                            'tenant'       => $user->tenant->id ,
+                            'tenant_token' => $user->tenant->token ,
+                        ] );
+                    } , $user->tenant_id );
                 }
             } );
         }
@@ -141,8 +94,9 @@
             Fortify::redirectUserForTwoFactorAuthenticationUsing( RedirectIfTwoFactorAuthenticatable::class );
 
             RateLimiter::for( 'login' , function (Request $request) {
-                $throttleKey = Str::transliterate( Str::lower( $request->input( Fortify::username() ) ) . '|' . $request->ip() );
-
+                $throttleKey = Str::transliterate(
+                    Str::lower( $request->input( Fortify::username() ) ) . '|' . $request->ip()
+                );
                 return Limit::perMinute( 5 )->by( $throttleKey );
             } );
 
@@ -151,83 +105,221 @@
             } );
 
             Fortify::authenticateUsing( function (Request $request) use ($pinService) {
-                $centralUser = NULL;
 
-                if ( $request->filled( 'pin' ) ) {
-                    $pin         = $request->string( 'pin' );
-                    $centralUser = CentralUser::where( 'pin' , $pinService->hashPin( $pin ) )
-                                              ->orWhere( 'raw_pin' , $pin )
-                                              ->first();
+                // --------------------------------------------------------------
+                // Step 1: Verify credentials against the central users table.
+                //         Always the source of truth — pin or email/phone + password.
+                // --------------------------------------------------------------
+                $centralUser = $this->resolveCentralUser( $request , $pinService );
+                if ( ! $centralUser ) {
+                    return NULL;
+                }
+
+//                $host         = $request->getHost();
+//                $subdomain    = explode( '.' , $host )[ 0 ];
+//                $tenantSlug   = Str::before( $subdomain , '-api' );
+
+                $tenant_id    = $request->string( 'tenant_id' );
+                $isCentral    = in_array( $tenant_id , ReservedTenantNames::toArray() );
+                $appId        = $request->header( 'X-App-Id' );
+                $isSuperAdmin = $centralUser->email === config( 'app.demo_email' );
+
+                // --------------------------------------------------------------
+                //          Allowed:  super admin
+                //                    tenant admins
+                // --------------------------------------------------------------
+                if ( $isCentral ) {
+                    if ( ! $isSuperAdmin && ! $this->centralUserIsAdmin( $centralUser ) ) {
+                        return NULL;
+                    }
+                    return $centralUser;
+                }
+
+                if ( $isSuperAdmin ) {
+                    $tenant = Tenant::find( $tenant_id );
                 }
                 else {
-                    $loginField = filter_var( $request->email , FILTER_VALIDATE_EMAIL ) ? 'email' : 'phone';
-
-                    $user = CentralUser::where( $loginField , $request->email )
-                                       ->where( 'status' , Status::ACTIVE )
-                                       ->first();
-
-
-                    if ( $user && Hash::check( $request->password , $user->password ) ) {
-                        $centralUser = $user;
-                    }
+                    $tenant = Tenant::find( $tenant_id ) ?? Tenant::find( $centralUser->tenant_id );
                 }
-                info( $centralUser );
-
-                if ( ! $centralUser ) return NULL;
-
-                $host       = $request->getHost();
-                $subdomain  = explode( '.' , $host )[ 0 ];
-                $tenantSlug = Str::before( $subdomain , '-api' );
-
-                $tenant = Tenant::find( $tenantSlug );
-
-                if ( ! $tenant && $request->email != config( 'app.demo_email' ) ) {
-                    $tenant = Tenant::find( $centralUser->tenant_id );
+                if ( ! $tenant ) {
+                    return NULL;
                 }
-
-                if ( ! $tenant ) return NULL;
 
                 if ( ! tenancy()->initialized || tenancy()->tenant->id !== $tenant->id ) {
                     tenancy()->initialize( $tenant );
                 }
 
-                $app_id = $request->header( 'X-App-Id' );
+                // --------------------------------------------------------------
+                // Step 3: Find the matching tenant User and enforce app-level rules.
+                //
+                //         Super admin  → always allowed, skips all role checks
+                //         Tenant admin → allowed everywhere including cashflow
+                //         Regular user → allowed on tenant app, blocked on cashflow
+                // --------------------------------------------------------------
+                $tenantUser = $this->resolveTenantUser( $centralUser , $appId , $isSuperAdmin );
 
+                if ( ! $tenantUser ) {
+                    return NULL;
+                }
+
+                // --------------------------------------------------------------
+                // Step 4: Housekeeping — last login, clear raw pin, sync to central.
+                // --------------------------------------------------------------
+                $tenantUser->withoutEvents( function () use ($tenantUser , $tenant) {
+                    $updates = [
+                        'last_login_date' => now() ,
+                        'tenant_id'       => $tenant->id ,
+                    ];
+
+                    if ( ! $tenantUser->force_reset ) {
+                        $updates[ 'raw_pin' ] = NULL;
+                    }
+
+                    $tenantUser->update( $updates );
+                } );
+
+                activityLog( 'Logged in' , $appId , $tenantUser );
+                app( SyncTenantUsersToCentral::class )->sync();
+                return $tenantUser;
+            } );
+        }
+
+        // -------------------------------------------------------------------------
+        // Private helpers
+        // -------------------------------------------------------------------------
+
+        /**
+         * Authenticate against the central users table using pin or
+         * email/phone + password. Always the source of truth for credentials.
+         */
+        private function resolveCentralUser(Request $request , PinService $pinService) : ?CentralUser
+        {
+            if ( $request->filled( 'pin' ) ) {
+                $pin = $request->string( 'pin' );
+
+                return CentralUser::where( 'pin' , $pinService->hashPin( $pin ) )
+                                  ->orWhere( 'raw_pin' , $pin )
+                                  ->first();
+            }
+
+            $loginField = filter_var( $request->email , FILTER_VALIDATE_EMAIL ) ? 'email' : 'phone';
+
+            /** @var CentralUser|null $user */
+            $user = CentralUser::where( $loginField , $request->email )
+                               ->where( 'status' , Status::ACTIVE )
+                               ->first();
+
+            if ( $user && Hash::check( $request->password , $user->password ) ) {
+                return $user;
+            }
+
+            return NULL;
+        }
+
+        /**
+         * Check if a CentralUser holds Role::ADMIN in their home tenant.
+         *
+         * CentralUser is a plain Model with no Spatie roles — roles live on the
+         * tenant-side User. We briefly peek into their home tenant DB to check.
+         */
+        private function centralUserIsAdmin(CentralUser $centralUser) : bool
+        {
+            $homeTenant = Tenant::find( $centralUser->tenant_id );
+
+            if ( ! $homeTenant ) {
+                return FALSE;
+            }
+
+            return tenantContext(
+                fn() => $this->findTenantUserByCentralUser( $centralUser )?->hasRole( Role::ADMIN ) ?? FALSE ,
+                $homeTenant
+            );
+        }
+
+        /**
+         * Resolve the tenant-side User and enforce app-level role restrictions.
+         *
+         * Super admin  → always allowed, pivot attachment skipped (not tied to any tenant)
+         * Tenant admin → allowed everywhere including AppID::CASHFLOW
+         * Regular user → blocked from AppID::CASHFLOW
+         */
+        private function resolveTenantUser(CentralUser $centralUser , ?string $appId , bool $isSuperAdmin) : ?User
+        {
+            $tenantUser = $this->findTenantUserByCentralUser( $centralUser );
+
+            if ( ! $tenantUser ) {
+                return NULL;
+            }
+
+            $isAdmin = $isSuperAdmin || $tenantUser->hasRole( Role::ADMIN );
+
+            // Cashflow is admin-only — block regular tenant users
+            if ( $appId == AppID::CASHFLOW && ! $isAdmin ) {
+                return NULL;
+            }
+
+            // Record the central user ↔ tenant relationship in the pivot table.
+            // Skipped for super admin — they are not semantically tied to any tenant.
+            if ( ! $isSuperAdmin ) {
+                $this->attachCentralUserToTenant( $centralUser );
+            }
+
+            return $tenantUser;
+        }
+
+        /**
+         * Attach the CentralUser to the current tenant via the tenant_users pivot.
+         *
+         * The pivot table lives in the central DB, so we must switch context.
+         * Uses withoutEvents to avoid triggering a redundant ResourceSyncing cascade
+         * on every login — the user is already synced, we're only recording the link.
+         */
+        private function attachCentralUserToTenant(CentralUser $centralUser) : void
+        {
+            $currentTenantId = tenancy()->tenant->getTenantKey();
+
+            tenancy()->central( function () use ($centralUser , $currentTenantId) {
+                $alreadyAttached = $centralUser->tenants()
+                                               ->where( 'tenants.id' , $currentTenantId )
+                                               ->exists();
+
+                if ( ! $alreadyAttached ) {
+                    Pivot::withoutEvents(
+                        fn() => $centralUser->tenants()->attach( $currentTenantId )
+                    );
+                }
+            } );
+        }
+
+        /**
+         * Low-level lookup: find a tenant User by global_id, falling back to email.
+         * Repairs a missing global_id on the tenant record if the fallback is used.
+         *
+         * Must be called after tenancy is initialized for the target tenant.
+         */
+        private function findTenantUserByCentralUser(CentralUser $centralUser) : ?User
+        {
+            return tenantContext( function () use ($centralUser) {
                 $tenantUser = User::where(
                     $centralUser->getGlobalIdentifierKeyName() ,
                     $centralUser->getGlobalIdentifierKey()
-                )->when( $app_id == AppID::CASHFLOW , fn($q) => $q->role( Role::ADMIN ) )
-                                  ->first();
+                )->first();
 
-                if ( ! $tenantUser ) {
-                    $tenantUser = User::where( 'email' , $centralUser->email )->first();
-
-                    if ( $tenantUser ) {
-                        $tenantUser->withoutEvents( function () use ($tenantUser , $centralUser) {
-                            $tenantUser->update( [
-                                'global_id' => $centralUser->getGlobalIdentifierKey() ,
-                            ] );
-                        } );
-                        $tenantUser->refresh();
-                    }
+                if ( $tenantUser ) {
+                    return $tenantUser;
                 }
 
-                if ( ! $tenantUser ) return NULL;
+                $tenantUser = User::where( 'email' , $centralUser->email )->first();
 
-                $tenantUser->withoutEvents( function () use ($tenantUser , $tenant) {
-                    $tenantUser->update( [
-                        'last_login_date' => now() ,
-                        'tenant_id'       => $tenant->id ,
-                    ] );
-                    if ( ! $tenantUser->force_reset ) {
+                if ( $tenantUser ) {
+                    $tenantUser->withoutEvents( function () use ($tenantUser , $centralUser) {
                         $tenantUser->update( [
-                            'raw_pin' => NULL ,
+                            'global_id' => $centralUser->getGlobalIdentifierKey() ,
                         ] );
-                    }
-                } );
+                    } );
+                    $tenantUser->refresh();
+                }
 
-                activityLog( 'Logged in' , $app_id , $tenantUser );
-                app( SyncTenantUsersToCentral::class )->sync();
                 return $tenantUser;
             } );
         }

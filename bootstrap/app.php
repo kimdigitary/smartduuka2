@@ -8,6 +8,7 @@
     use App\Http\Middleware\CheckSalesLimit;
     use App\Http\Middleware\CheckUsersLimit;
     use App\Http\Middleware\DetectUnusualLogin;
+    use App\Http\Middleware\DynamicSanctumConfiguration;
     use App\Http\Middleware\ForceAdminLogin;
     use App\Http\Middleware\PermissionMiddleware;
     use App\Http\Middleware\RequireFeature;
@@ -63,6 +64,9 @@
                               AddTenantIDAndBranchID::class
                           ] );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
+                          $middleware->api(prepend: [
+                              DynamicSanctumConfiguration::class,
+                          ]);
                       } )
                       ->withExceptions( function (Exceptions $exceptions) : void {
 

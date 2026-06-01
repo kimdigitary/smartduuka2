@@ -19,7 +19,7 @@
         public function destroy(Request $request) : LogoutResponse
         {
             $app_id = $request->header( 'X-App-Id' );
-            activityLog( 'Logged out' , $app_id );
+//            activityLog( 'Logged out' , $app_id );
             $this->guard->logout();
 
             if ( $request->hasSession() ) {
