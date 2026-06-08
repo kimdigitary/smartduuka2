@@ -3,11 +3,13 @@
     namespace App\Models;
 
     use App\Enums\Status;
+    use App\Enums\SubscriptionPaymentStatus;
     use App\Helpers\JwtHelper;
     use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Casts\Attribute;
     use Illuminate\Database\Eloquent\Model;
     use Illuminate\Database\Eloquent\Relations\BelongsTo;
+    use Illuminate\Database\Eloquent\Relations\HasMany;
 
     class TenantBranch extends Model
     {
@@ -40,6 +42,14 @@
         public function tenant() : BelongsTo
         {
             return $this->belongsTo( Tenant::class );
+        }
+
+        public function activeSubscriptions() : HasMany
+        {
+            return $this->hasMany( TenantSubscription::class , 'branch_id' , 'id' )
+                        ->where( 'expires_at' , '>=' , now() )
+                        ->where( 'payment_status' , '=' , SubscriptionPaymentStatus::Paid )
+                        ->latest();
         }
 
         public function scopeTenantBranch(Builder $query , string $tenantId , string | int $branchId) : Builder

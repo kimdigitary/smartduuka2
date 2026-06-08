@@ -1,8 +1,10 @@
 <?php
 
     namespace App\Http\Controllers;
-    use App\Http\Resources\TenantResource;
-    use App\Models\Tenant;
+
+    use App\Enums\Status;
+    use App\Http\Resources\BusinessResource;
+    use App\Models\BusinessOnBoard;
     use App\Traits\HasAdvancedFilter;
     use Illuminate\Http\Request;
 
@@ -12,8 +14,21 @@
 
         public function index(Request $request)
         {
-            $query = Tenant::with( [ 'domains' , 'activeSubscriptions' ] );
-            return TenantResource::collection( $this->filter( $query , $request ) );
+            $user     = $request->user();
+            $onboards = BusinessOnBoard::with(
+                [
+                    'business.activeSubscriptions.subscriptionPlan' ,
+                    'business.activeSubscriptions.billingCycle' ,
+                    'business.branches.activeSubscriptions.subscriptionPlan' ,
+                    'business.branches.activeSubscriptions.billingCycle'
+                ] )
+                                       ->where( [
+                                           'admin_email' => $user?->email ,
+                                           'status'      => Status::ACTIVE ,
+                                       ] )->get();
+//            info( $onboards );
+//            $query    = Tenant::with( [ 'domains' , 'activeSubscriptions' ] );
+            return BusinessResource::collection( $onboards );
         }
 
         public function store(Request $request)

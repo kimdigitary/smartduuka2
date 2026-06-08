@@ -4,7 +4,8 @@
 
     enum ReservedTenantNames : string
     {
-//        case App         = 'app';
+        case App         = 'app';
+        case MainApp     = 'mainapp';
         case Admin       = 'admin';
         case Api         = 'api';
         case CashflowApp = 'cashflowapp';

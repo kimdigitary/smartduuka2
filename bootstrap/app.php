@@ -64,9 +64,9 @@
                               AddTenantIDAndBranchID::class
                           ] );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
-//                          $middleware->api(prepend: [
-//                              DynamicSanctumConfiguration::class,
-//                          ]);
+                          $middleware->api(prepend: [
+                              DynamicSanctumConfiguration::class,
+                          ]);
                       } )
                       ->withExceptions( function (Exceptions $exceptions) : void {
 

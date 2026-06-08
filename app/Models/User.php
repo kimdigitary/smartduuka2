@@ -103,6 +103,11 @@
                         );
         }
 
+        public function businesses() : HasMany
+        {
+            return $this->hasMany( BusinessOnBoard::class , 'admin_email' , 'email' );
+        }
+
         public function unPaidOrders() : HasMany
         {
             $creditTypes = self::creditPaymentTypes();

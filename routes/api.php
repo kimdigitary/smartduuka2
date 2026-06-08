@@ -1,7 +1,6 @@
 <?php
 
     use App\Http\Controllers\Auth\Apps\AuthenticatedSessionController;
-    use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
     use App\Http\Controllers\IotecController;
     use App\Http\Controllers\SubscriptionController;
     use App\Http\Controllers\SubscriptionPlanController;
@@ -27,20 +26,21 @@
             Route::apiResource( 'tenants' , TenantController::class );
         } );
 
+
     }
+        Route::middleware( [ 'api' ] )->group( function () {
+            Route::get( 'subscription-plans' , [ SubscriptionPlanController::class , 'index' ] );
+            Route::post( '/webhook/{gateway}' , [ PaymentsController::class , 'webhook' ] )->name( 'webhook.gateway' );
+            Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
+            Route::post( 'store-tenant' , [ TenantController::class , 'store' ] );
+            Route::get( 'billingCycles' , [ SubscriptionPlanController::class , 'billingCycles' ] );
 
-    Route::middleware( [ 'api' ] )->group( function () {
-        Route::get( 'subscription-plans' , [ SubscriptionPlanController::class , 'index' ] );
-        Route::post( '/webhook/{gateway}' , [ PaymentsController::class , 'webhook' ] )->name( 'webhook.gateway' );
-        Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
-        Route::post( 'store-tenant' , [ TenantController::class , 'store' ] );
-        Route::get( 'billingCycles' , [ SubscriptionPlanController::class , 'billingCycles' ] );
+            Route::middleware( [ 'auth:sanctum' ] )->group( function () {
+                Route::post( 'logout' , [ AuthenticatedSessionController::class , 'destroy' ] );
+                Route::get( '/user' , [ UserController::class , 'centralUser' ] );
+            } );
 
-        Route::middleware( [ 'auth:sanctum' ] )->group( function () {
-            Route::post( 'logout' , [ AuthenticatedSessionController::class , 'destroy' ] );
-            Route::get( '/user' , [ UserController::class , 'centralUser' ] );
+            Route::apiResource( 'branches' , TenantBranchController::class )->except( 'destroy' );
+            Route::delete( 'branches/delete' , [ TenantBranchController::class , 'destroy' ] )->name( 'branches.destroy' );
         } );
 
-        Route::apiResource( 'branches' , TenantBranchController::class )->except( 'destroy' );
-        Route::delete( 'branches/delete' , [ TenantBranchController::class , 'destroy' ] )->name( 'branches.destroy' );
-    } );

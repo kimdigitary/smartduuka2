@@ -21,16 +21,17 @@
         public function toArray($request) : array
         {
             return [
-                "id"         => $this->id ,
-                "name"       => $this->name ,
-                "email"      => $this->email === NULL ? '' : $this->email ,
-                "phone"      => $this->phone === NULL ? '' : $this->phone ,
-                "address"    => $this->address ,
-                "staffCount" => 0 ,
-                "code"       => $this->code ,
-                "can_delete" => $this->can_delete ,
-                "status"     => $this->status ,
-                "c"          => $this->status
+                "id"                  => $this->id ,
+                "name"                => $this->name ,
+                "email"               => $this->email === NULL ? '' : $this->email ,
+                "phone"               => $this->phone === NULL ? '' : $this->phone ,
+                "address"             => $this->address ,
+                "staffCount"          => 0 ,
+                "code"                => $this->code ,
+                "can_delete"          => $this->can_delete ,
+                "status"              => $this->status ,
+                "activeSubscriptions" => TenantSubscriptionResource::collection( $this->whenLoaded( 'activeSubscriptions' ) ) ,
+                "c"                   => $this->status
             ];
         }
     }

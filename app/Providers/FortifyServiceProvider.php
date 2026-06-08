@@ -115,14 +115,10 @@
                     return NULL;
                 }
 
-//                $host         = $request->getHost();
-//                $subdomain    = explode( '.' , $host )[ 0 ];
-//                $tenantSlug   = Str::before( $subdomain , '-api' );
-
                 $tenant_id = $request->string( 'tenant_id' );
                 $isCentral = in_array( $tenant_id , ReservedTenantNames::toArray() );
 
-                $appId        = $request->header( 'X-App-Id' );
+                $appId        = $tenant_id;
                 $isSuperAdmin = $centralUser->email === config( 'app.demo_email' );
 
                 // --------------------------------------------------------------
@@ -130,9 +126,10 @@
                 //                    tenant admins
                 // --------------------------------------------------------------
                 if ( $isCentral ) {
-                    if ( ! $isSuperAdmin && ! $this->centralUserIsAdmin( $centralUser ) ) {
-                        return NULL;
-                    }
+//                    if ( ! $isSuperAdmin && ! $this->centralUserIsAdmin( $centralUser ) ) {
+//                        return NULL;
+//                    }
+
                     return $centralUser;
                 }
 

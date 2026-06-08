@@ -24,8 +24,11 @@
                 'phone'         => $this?->phone ,
                 'created_at'    => datetime( $this->created_at ) ,
                 'status'        => $this->status ,
-                'domains_count' => $this->domains_count ,
-                'domains'       => DomainResource::collection( $this->domains ) ,
+                'domains_count' => $this->whenCounted( 'domains' ) ,
+                'domains'       => DomainResource::collection( $this->whenLoaded( 'domains' ) ) ,
+                'subscriptions' => TenantSubscriptionResource::collection( $this->whenLoaded( 'activeSubscriptions' ) ) ,
+//                'subscriptions' => $this->activeSubscriptions,
+                'branches'      => BranchResource::collection( $this->whenLoaded( 'branches' ) ) ,
             ];
         }
     }
