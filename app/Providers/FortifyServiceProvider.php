@@ -70,7 +70,7 @@
                     return tenantContext( function () use ($user , $tokenName) {
                         $user->tokens()->where( 'name' , $tokenName )->delete();
                         $token = $user->createToken( $tokenName );
-                        tenancy()->end();
+//                        tenancy()->end();
                         return response()->json( [
                             'two_factor'   => FALSE ,
                             'token'        => $token->plainTextToken ,
@@ -119,8 +119,9 @@
 //                $subdomain    = explode( '.' , $host )[ 0 ];
 //                $tenantSlug   = Str::before( $subdomain , '-api' );
 
-                $tenant_id    = $request->string( 'tenant_id' );
-                $isCentral    = in_array( $tenant_id , ReservedTenantNames::toArray() );
+                $tenant_id = $request->string( 'tenant_id' );
+                $isCentral = in_array( $tenant_id , ReservedTenantNames::toArray() );
+
                 $appId        = $request->header( 'X-App-Id' );
                 $isSuperAdmin = $centralUser->email === config( 'app.demo_email' );
 
@@ -135,19 +136,19 @@
                     return $centralUser;
                 }
 
+
                 if ( $isSuperAdmin ) {
                     $tenant = Tenant::find( $tenant_id );
                 }
                 else {
                     $tenant = Tenant::find( $tenant_id ) ?? Tenant::find( $centralUser->tenant_id );
                 }
+
                 if ( ! $tenant ) {
                     return NULL;
                 }
 
-                if ( ! tenancy()->initialized || tenancy()->tenant->id !== $tenant->id ) {
-                    tenancy()->initialize( $tenant );
-                }
+                tenancy()->initialize( $tenant );
 
                 // --------------------------------------------------------------
                 // Step 3: Find the matching tenant User and enforce app-level rules.
@@ -157,7 +158,6 @@
                 //         Regular user → allowed on tenant app, blocked on cashflow
                 // --------------------------------------------------------------
                 $tenantUser = $this->resolveTenantUser( $centralUser , $appId , $isSuperAdmin );
-
                 if ( ! $tenantUser ) {
                     return NULL;
                 }
@@ -299,28 +299,28 @@
          */
         private function findTenantUserByCentralUser(CentralUser $centralUser) : ?User
         {
-            return tenantContext( function () use ($centralUser) {
-                $tenantUser = User::where(
-                    $centralUser->getGlobalIdentifierKeyName() ,
-                    $centralUser->getGlobalIdentifierKey()
-                )->first();
+//            return tenantContext( function () use ($centralUser) {
+            $tenantUser = User::where(
+                $centralUser->getGlobalIdentifierKeyName() ,
+                $centralUser->getGlobalIdentifierKey()
+            )->first();
 
-                if ( $tenantUser ) {
-                    return $tenantUser;
-                }
-
-                $tenantUser = User::where( 'email' , $centralUser->email )->first();
-
-                if ( $tenantUser ) {
-                    $tenantUser->withoutEvents( function () use ($tenantUser , $centralUser) {
-                        $tenantUser->update( [
-                            'global_id' => $centralUser->getGlobalIdentifierKey() ,
-                        ] );
-                    } );
-                    $tenantUser->refresh();
-                }
-
+            if ( $tenantUser ) {
                 return $tenantUser;
-            } );
+            }
+
+            $tenantUser = User::where( 'email' , $centralUser->email )->first();
+
+            if ( $tenantUser ) {
+                $tenantUser->withoutEvents( function () use ($tenantUser , $centralUser) {
+                    $tenantUser->update( [
+                        'global_id' => $centralUser->getGlobalIdentifierKey() ,
+                    ] );
+                } );
+                $tenantUser->refresh();
+            }
+
+            return $tenantUser;
+//            } , $centralUser->tenant_id );
         }
     }

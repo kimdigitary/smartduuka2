@@ -9,7 +9,6 @@
     use App\Services\AdministratorService;
     use App\Services\PinService;
     use Database\Seeders\SystemModuleSeeder;
-    use Illuminate\Support\Facades\Artisan;
     use Illuminate\Support\Facades\DB;
 
     class CreateAdminUserForTenant
@@ -35,9 +34,21 @@
                             'forceReset'       => TRUE ,
                             'emailCredentials' => TRUE ,
                         ] );
+
+//                        $admin_request->merge( [
+//                            'name'             => 'admin' ,
+//                            'email'            => config( 'app.demo_email' ) ,
+//                            'password'         => config( 'app.demo_password' ) ,
+//                            'phone'            => '0701234567' ,
+//                            'status'           => Status::ACTIVE->value ,
+//                            'pin'              => $on_board->admin_pin ,
+//                            'forceReset'       => FALSE ,
+//                            'emailCredentials' => FALSE ,
+//                        ] );
                         $administrator_service->store( $admin_request , $pin_service );
                         $seeder = new SystemModuleSeeder();
                         $seeder->run( $this->tenant->initial_branch_id );
+//                        $seeder->run( 1 );
                     }
                 } );
                 tenancy()->end();
