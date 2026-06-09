@@ -99,7 +99,8 @@
     Route::middleware( [
         'api' ,
         InitializeTenancyByDomain::class ,
-        PreventAccessFromCentralDomains::class , DynamicSanctumConfiguration::class
+        PreventAccessFromCentralDomains::class ,
+        DynamicSanctumConfiguration::class
     ] )->group( function () {
 
         Route::get( '/' , function () {

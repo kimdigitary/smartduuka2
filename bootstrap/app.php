@@ -13,9 +13,21 @@
     use App\Http\Middleware\PermissionMiddleware;
     use App\Http\Middleware\RequireFeature;
     use App\Http\Middleware\SubscribedMiddleware;
+    use Illuminate\Auth\Middleware\Authorize;
+    use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
+    use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+    use Illuminate\Cookie\Middleware\EncryptCookies;
     use Illuminate\Foundation\Application;
     use Illuminate\Foundation\Configuration\Exceptions;
     use Illuminate\Foundation\Configuration\Middleware;
+    use Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;
+    use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+    use Illuminate\Routing\Middleware\SubstituteBindings;
+    use Illuminate\Routing\Middleware\ThrottleRequests;
+    use Illuminate\Routing\Middleware\ThrottleRequestsWithRedis;
+    use Illuminate\Session\Middleware\StartSession;
+    use Illuminate\View\Middleware\ShareErrorsFromSession;
+    use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
     use Stancl\Tenancy\Contracts\TenantCouldNotBeIdentifiedException;
     use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
     use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -46,6 +58,21 @@
                           ]
                       )
                       ->withMiddleware( function (Middleware $middleware) : void {
+                          $middleware->priority( [
+                              HandlePrecognitiveRequests::class ,
+                              EncryptCookies::class ,
+                              AddQueuedCookiesToResponse::class ,
+                              StartSession::class ,
+                              ShareErrorsFromSession::class ,
+                              PreventRequestForgery::class ,
+                              EnsureFrontendRequestsAreStateful::class ,
+                              DynamicSanctumConfiguration::class ,
+                              ThrottleRequests::class ,
+                              ThrottleRequestsWithRedis::class ,
+                              SubstituteBindings::class ,
+                              AuthenticatesRequests::class ,
+                              Authorize::class ,
+                          ] );
                           $middleware->alias( [
                               'subscribed'      => SubscribedMiddleware::class ,
                               'permission'      => PermissionMiddleware::class ,
@@ -57,6 +84,7 @@
                               'users.limit'     => CheckUsersLimit::class ,
                               'items.limit'     => CheckProductLimit::class ,
                               'verify.branchid' => AddTenantIDAndBranchID::class ,
+                              'dynamic.sanctum' => DynamicSanctumConfiguration::class ,
                           ] );
                           $middleware->append( [
                               AddCurrencySymbol::class ,
@@ -64,9 +92,6 @@
                               AddTenantIDAndBranchID::class
                           ] );
                           $middleware->appendToGroup( 'web' , DetectUnusualLogin::class );
-//                          $middleware->api(prepend: [
-//                              DynamicSanctumConfiguration::class,
-//                          ]);
                       } )
                       ->withExceptions( function (Exceptions $exceptions) : void {
 

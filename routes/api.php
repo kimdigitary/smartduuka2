@@ -26,9 +26,7 @@
             Route::apiResource( 'tenants' , TenantController::class );
         } );
 
-
-    }
-        Route::middleware( [ 'api' ] )->group( function () {
+        Route::middleware( [ 'api' , 'dynamic.sanctum' ] )->group( function () {
             Route::get( 'subscription-plans' , [ SubscriptionPlanController::class , 'index' ] );
             Route::post( '/webhook/{gateway}' , [ PaymentsController::class , 'webhook' ] )->name( 'webhook.gateway' );
             Route::apiResource( 'tenantSubscription' , TenantSubscriptionController::class );
@@ -43,4 +41,5 @@
             Route::apiResource( 'branches' , TenantBranchController::class )->except( 'destroy' );
             Route::delete( 'branches/delete' , [ TenantBranchController::class , 'destroy' ] )->name( 'branches.destroy' );
         } );
+    }
 
