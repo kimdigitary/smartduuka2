@@ -87,6 +87,7 @@
     use App\Http\Controllers\UserController;
     use App\Http\Controllers\WarehouseController;
     use App\Http\Controllers\WhatsAppController;
+    use App\Http\Middleware\DynamicSanctumConfiguration;
     use App\Services\OrderService;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Auth;
@@ -98,7 +99,7 @@
     Route::middleware( [
         'api' ,
         InitializeTenancyByDomain::class ,
-        PreventAccessFromCentralDomains::class ,
+        PreventAccessFromCentralDomains::class , DynamicSanctumConfiguration::class
     ] )->group( function () {
 
         Route::get( '/' , function () {
