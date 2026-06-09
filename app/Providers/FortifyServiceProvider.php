@@ -114,6 +114,7 @@
                 if ( ! $centralUser ) {
                     return NULL;
                 }
+                info($centralUser);
 
                 $tenant_id = $request->string( 'tenant_id' );
                 $isCentral = in_array( $tenant_id , ReservedTenantNames::toArray() );
