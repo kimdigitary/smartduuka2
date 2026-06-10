@@ -43,6 +43,10 @@
                                    ->name( 'auth-api.' )
                                    ->prefix( 'api' )
                                    ->group( base_path( 'routes/auth-api.php' ) );
+
+                              Route::middleware( 'api' )
+                                   ->prefix( 'api' )
+                                   ->group( base_path( 'routes/adam.php' ) );
                           } ,
                       )
                       ->withBroadcasting(
