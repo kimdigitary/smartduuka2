@@ -4,6 +4,7 @@
 
     use Closure;
     use Illuminate\Http\Request;
+
     class DynamicSanctumConfiguration
     {
 

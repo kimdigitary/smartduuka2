@@ -14,7 +14,7 @@
     {
         public function handle(Request $request , Closure $next) : Response
         {
-            $tenantId = $request->user()->tenant_id;
+            $tenantId = tenant( 'id' );
             $plan     = activeSubscription( $tenantId );
 
             if ( ! $plan ) {

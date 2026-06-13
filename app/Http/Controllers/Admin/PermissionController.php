@@ -20,10 +20,10 @@
             $this->permissionService = $permissionService;
         }
 
-        public function index_old(Role $role)
+        public function index(Role $role)
         {
             try {
-                $permissions     = Permission::get();
+                $permissions     = Permission::orderBy( 'id' )->get();
                 $rolePermissions = Permission::join(
                     'role_has_permissions' ,
                     'role_has_permissions.permission_id' ,
@@ -38,34 +38,6 @@
                         'role'        => $role ,
                         'permissions' => $permissions ,
                     ]
-                ];
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function index(Role $role)
-        {
-            try {
-                $permissions     = Permission::get();
-                $rolePermissions = Permission::join(
-                    'role_has_permissions' ,
-                    'role_has_permissions.permission_id' ,
-                    '=' ,
-                    'permissions.id'
-                )->where( 'role_has_permissions.role_id' , $role->id )->get()->pluck( 'name' , 'id' );
-
-                permissionWithAccess( $permissions , $rolePermissions );
-
-                $formattedPermissions = $permissions->filter( fn($permission) => (int) $permission->parent == 0 )->map( function ($parent) use ($permissions) {
-                    $parent->children = $permissions->filter( fn($permission) => (int) $permission->parent == (int) $parent->id )->values();
-                    return $parent;
-                } )->values();
-
-                return [
-                    'role'        => $role ,
-                    'permissions' => $formattedPermissions ,
-                    'access'      => $role->permissions
                 ];
             } catch ( Exception $exception ) {
                 return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );

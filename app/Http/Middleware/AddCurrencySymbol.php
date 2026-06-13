@@ -19,7 +19,7 @@
                     $user               = auth()->user();
                     $data[ 'currency' ] = currencySymbol();
                     if ( $user ) {
-                        $data[ 'has_open_register' ] = $user->registers()->whereNull( 'closed_at' )->latest()->exists();;
+                        $data[ 'has_open_register' ] = $user->registers()->whereNull( 'closed_at' )->latest()->exists();
                     }
                 }
                 $response->setData( $data );

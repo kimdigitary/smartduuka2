@@ -44,7 +44,7 @@
     use Smartisan\Settings\Facades\Settings;
 
 
-    #[Middleware( 'sales.limit' , only: [  'store' , 'quotationStore' , 'returnOrderStore' ] )]
+    #[Middleware( 'sales.limit' , only: [ 'store' , 'quotationStore' , 'returnOrderStore' ] )]
     class PosController extends AdminController
     {
         use ApiResponse;
@@ -158,15 +158,15 @@
                     }
 
                     $notificationSettings = Settings::group( 'notification' )->all();
-                    $adminEmail           = $notificationSettings[ 'admin_email' ] ?? null;
-                    $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? null;
+                    $adminEmail           = $notificationSettings[ 'admin_email' ] ?? NULL;
+                    $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? NULL;
 
                     $originalOrder = $order->originalOrder ?? Order::find( $order->original_order_id );
 
                     $returnItems   = json_decode( $request->returnItems , TRUE ) ?? [];
                     $exchangeItems = json_decode( $request->exchangeItems , TRUE ) ?? [];
 
-                    $totalReturnValue = collect( $returnItems )->sum( fn($i) => $i[ 'qty' ] * $i[ 'price' ] );
+                    $totalReturnValue   = collect( $returnItems )->sum( fn($i) => $i[ 'qty' ] * $i[ 'price' ] );
                     $totalExchangeValue = collect( $exchangeItems )->sum( fn($i) => $i[ 'qty' ] * $i[ 'price' ] );
 
                     $order->loadMissing( 'user' );
@@ -175,21 +175,21 @@
                                 ->route( 'sms' , $adminPhone )
                                 ->route( 'whatsapp' , $adminPhone )
                                 ->notify( new RefundProcessed(
-                                    title               : 'Refund / Return Processed' ,
-                                    message             : "A return has been processed against order #{$originalOrder?->order_serial_no} by " . auth()->user()->name . '.' ,
-                                    returnOrderNo       : $order->order_serial_no ,
-                                    originalOrderNo     : $originalOrder?->order_serial_no ?? 'N/A' ,
-                                    customerName        : $order->user?->name ?? null ,
-                                    createdBy           : auth()->user()->name ,
-                                    orderDate           : $order->order_datetime?->format( 'd M Y, H:i:s' ) ?? now()->format( 'd M Y, H:i:s' ) ,
-                                    totalReturnValue    : $totalReturnValue ,
-                                    totalExchangeValue  : $totalExchangeValue ,
-                                    refundBalance       : max( 0 , $totalReturnValue - $totalExchangeValue ) ,
-                                    returnItemCount     : count( $returnItems ) ,
-                                    exchangeItemCount   : count( $exchangeItems ) ,
-                                    refundStatus        : $order->refund_status?->label() ?? $order->refund_status?->value ,
-                                    returnStatus        : $order->return_status?->label() ?? $order->return_status?->value ,
-                                    reason              : $request->input( 'reason' ) ?: null ,
+                                    title: 'Refund / Return Processed' ,
+                                    message: "A return has been processed against order #{$originalOrder?->order_serial_no} by " . auth()->user()->name . '.' ,
+                                    returnOrderNo: $order->order_serial_no ,
+                                    originalOrderNo: $originalOrder?->order_serial_no ?? 'N/A' ,
+                                    customerName: $order->user?->name ?? NULL ,
+                                    createdBy: auth()->user()->name ,
+                                    orderDate: $order->order_datetime?->format( 'd M Y, H:i:s' ) ?? now()->format( 'd M Y, H:i:s' ) ,
+                                    totalReturnValue: $totalReturnValue ,
+                                    totalExchangeValue: $totalExchangeValue ,
+                                    refundBalance: max( 0 , $totalReturnValue - $totalExchangeValue ) ,
+                                    returnItemCount: count( $returnItems ) ,
+                                    exchangeItemCount: count( $exchangeItems ) ,
+                                    refundStatus: $order->refund_status?->label() ?? $order->refund_status?->value ,
+                                    returnStatus: $order->return_status?->label() ?? $order->return_status?->value ,
+                                    reason: $request->input( 'reason' ) ?: NULL ,
                                 ) );
                 }
 
@@ -244,10 +244,11 @@
 
         public function openRegister(Request $request)
         {
+            $user = $request->user();
             Register::create( [
                 'opening_float' => $request->integer( 'amount' ) ,
                 'status'        => RegisterStatus::OPEN ,
-                'user_id'       => auth()->id()
+                'user_id'       => $user->id,
             ] );
         }
 

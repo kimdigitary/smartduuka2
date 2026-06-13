@@ -428,7 +428,7 @@
                 } );
 
                 Route::prefix( 'permission' )->name( 'permission.' )->group( function () {
-                    Route::get( '/{role}' , [ PermissionController::class , 'index_old' ] );
+                    Route::get( '/{role}' , [ PermissionController::class , 'index' ] );
                     Route::post( '/{role}' , [ PermissionController::class , 'update' ] );
                 } );
             } );

@@ -37,11 +37,6 @@
                 $orderColumn = $request->input( 'order_column' ) ?? 'id';
                 $orderType   = $request->input( 'order_type' ) ?? 'desc';
 
-                $con = DB::connection();
-                info( [
-                    'db' => $con->getDatabaseName()
-                ] );
-
                 $query = User::with( [ 'media' , 'addresses' ] )
                              ->withoutRole( $this->blockRoles );
 
@@ -74,11 +69,6 @@
                         'raw_pin'           => $pin ,
                         'pin'               => $pin_service->hashPin( $pin ) ,
                         'force_reset'       => $request->boolean( 'forceReset' ) ,
-                    ] );
-
-                    $con = DB::connection();
-                    info( [
-                        'db' => $con->getDatabaseName()
                     ] );
 
                     $this->user->save();

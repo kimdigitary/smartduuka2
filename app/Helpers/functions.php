@@ -38,6 +38,7 @@
     use Carbon\Carbon;
     use Illuminate\Database\Eloquent\Builder;
     use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Http\Request;
     use Illuminate\Notifications\AnonymousNotifiable;
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Cache;
@@ -49,6 +50,12 @@
     function project()
     {
         return Settings::group( 'site' )->get( 'project' );
+    }
+
+    function tenantUserId(Request $request)
+    {
+        $user = $request->user();
+        return User::where( 'email' , $user->email )->first()->id;
     }
 
     function tenantContext(callable $callback , int | Tenant | string | null $tenant = NULL) : mixed

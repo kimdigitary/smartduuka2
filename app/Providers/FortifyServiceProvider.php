@@ -50,27 +50,25 @@
 
                 private function centralAppLoginResponse(CentralUser $user , string $tokenName) : JsonResponse
                 {
+                    info('central');
                     return centralContext( function () use ($user , $tokenName) {
                         $user->tokens()->where( 'name' , $tokenName )->delete();
                         $token = $user->createToken( $tokenName );
-
-                        tenancy()->end();
 
                         return response()->json( [
                             'two_factor' => FALSE ,
                             'token'      => $token->plainTextToken ,
                             'user'       => $user->toArray() ,
                         ] );
-
                     } );
                 }
 
                 private function tenantAppLoginResponse(User $user , string $tokenName) : JsonResponse
                 {
+                    info('tenant');
                     return tenantContext( function () use ($user , $tokenName) {
                         $user->tokens()->where( 'name' , $tokenName )->delete();
                         $token = $user->createToken( $tokenName );
-//                        tenancy()->end();
                         return response()->json( [
                             'two_factor'   => FALSE ,
                             'token'        => $token->plainTextToken ,
@@ -114,7 +112,6 @@
                 if ( ! $centralUser ) {
                     return NULL;
                 }
-
                 $tenant_id = $request->string( 'tenant_id' );
                 $isCentral = in_array( $tenant_id , ReservedTenantNames::toArray() );
 

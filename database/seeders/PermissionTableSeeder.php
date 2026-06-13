@@ -3,11 +3,12 @@
     namespace Database\Seeders;
 
     use App\Enums\Role as EnumRole;
-    use App\Libraries\AppLibrary;
     use Illuminate\Database\Seeder;
+    use Illuminate\Support\Facades\DB;
     use Illuminate\Support\Str;
     use Spatie\Permission\Models\Permission;
     use Spatie\Permission\Models\Role;
+    use Spatie\Permission\PermissionRegistrar;
 
     class PermissionTableSeeder extends Seeder
     {
@@ -40,7 +41,14 @@
                         [ 'title' => 'Credit Sales' , 'name' => 'credit_sales' , 'url' => 'salesorders/credit' , 'items' => [] ] ,
                         [ 'title' => 'Deposited Sales' , 'name' => 'deposited_sales' , 'url' => 'salesorders/deposited' , 'items' => [] ] ,
                         [ 'title' => 'Pre-Orders' , 'name' => 'pre_orders' , 'url' => 'salesorders/preorders' , 'items' => [] ] ,
-                        [ 'title' => 'Sales Returns' , 'name' => 'sales_returns' , 'url' => 'salesorders/salesreturns' , 'items' => [] ]
+                        [ 'title' => 'Sales Returns' , 'name' => 'sales_returns' , 'url' => 'salesorders/salesreturns' , 'items' => [] ] ,
+                        [ 'title' => 'Register' , 'name' => 'register' , 'url' => 'salesorders/register' , 'items' => [
+//                            [ 'title' => 'Register Create' , 'name' => 'register_create' , 'url' => 'register/create' , 'items' => [] ] ,
+//                            [ 'title' => 'Register Edit' , 'name' => 'register_edit' , 'url' => 'register/edit' , 'items' => [] ] ,
+//                            [ 'title' => 'Register Delete' , 'name' => 'register_delete' , 'url' => 'register/delete' , 'items' => [] ] ,
+                            [ 'title' => 'View Register' , 'name' => 'register_show' , 'url' => 'pos/register' , 'items' => [] ] ,
+                        ]
+                        ]
                     ]
                 ] ,
                 [
@@ -53,13 +61,13 @@
                     'group' => 'Services' ,
                     'items' => [
                         [
-                            'title' => 'Services' ,
-                            'name'  => 'services' ,
+                            'title' => 'Service List' ,
+                            'name'  => 'service_list' ,
                             'url'   => 'services' ,
                             'items' => [
-                                [ 'title' => 'Service Create' , 'name' => 'service_create' , 'url' => 'services/create' , 'items' => [] ] ,
-                                [ 'title' => 'Service Edit' , 'name' => 'service_edit' , 'url' => 'services/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Service Delete' , 'name' => 'service_delete' , 'url' => 'services/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Service List Create' , 'name' => 'service_list_create' , 'url' => 'services/create' , 'items' => [] ] ,
+                                [ 'title' => 'Service List Edit' , 'name' => 'service_list_edit' , 'url' => 'services/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Service List Delete' , 'name' => 'service_list_delete' , 'url' => 'services/delete' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -84,14 +92,14 @@
                     'group' => 'Inventory' ,
                     'items' => [
                         [
-                            'title' => 'Inventory' ,
-                            'name'  => 'inventory' ,
+                            'title' => 'Inventory List' ,
+                            'name'  => 'inventory_list' ,
                             'url'   => 'inventory' ,
                             'items' => [
-                                [ 'title' => 'Inventory Create' , 'name' => 'inventory_create' , 'url' => 'inventory/create' , 'items' => [] ] ,
-                                [ 'title' => 'Inventory Edit' , 'name' => 'inventory_edit' , 'url' => 'inventory/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Inventory Delete' , 'name' => 'inventory_delete' , 'url' => 'inventory/delete' , 'items' => [] ] ,
-                                [ 'title' => 'Inventory Show' , 'name' => 'inventory_show' , 'url' => 'inventory/show' , 'items' => [] ] ,
+                                [ 'title' => 'Inventory List Create' , 'name' => 'inventory_list_create' , 'url' => 'inventory/create' , 'items' => [] ] ,
+                                [ 'title' => 'Inventory List Edit' , 'name' => 'inventory_list_edit' , 'url' => 'inventory/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Inventory List Delete' , 'name' => 'inventory_list_delete' , 'url' => 'inventory/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Inventory List Show' , 'name' => 'inventory_list_show' , 'url' => 'inventory/show' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -100,13 +108,13 @@
                     'group' => 'Distribution' ,
                     'items' => [
                         [
-                            'title' => 'Distribution' ,
-                            'name'  => 'distribution' ,
+                            'title' => 'Distribution List' ,
+                            'name'  => 'distribution_list' ,
                             'url'   => 'distribution' ,
                             'items' => [
-                                [ 'title' => 'Distribution Create' , 'name' => 'distribution_create' , 'url' => 'distribution/create' , 'items' => [] ] ,
-                                [ 'title' => 'Distribution Edit' , 'name' => 'distribution_edit' , 'url' => 'distribution/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Distribution Delete' , 'name' => 'distribution_delete' , 'url' => 'distribution/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Distribution List Create' , 'name' => 'distribution_list_create' , 'url' => 'distribution/create' , 'items' => [] ] ,
+                                [ 'title' => 'Distribution List Edit' , 'name' => 'distribution_list_edit' , 'url' => 'distribution/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Distribution List Delete' , 'name' => 'distribution_list_delete' , 'url' => 'distribution/delete' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -115,14 +123,14 @@
                     'group' => 'Stock' ,
                     'items' => [
                         [
-                            'title' => 'Stock' ,
-                            'name'  => 'stock' ,
+                            'title' => 'Stock List' ,
+                            'name'  => 'stock_list' ,
                             'url'   => 'stock' ,
                             'items' => [
-                                [ 'title' => 'Stock Create' , 'name' => 'stock_create' , 'url' => 'stock/create' , 'items' => [] ] ,
-                                [ 'title' => 'Stock Edit' , 'name' => 'stock_edit' , 'url' => 'stock/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Stock Delete' , 'name' => 'stock_delete' , 'url' => 'stock/delete' , 'items' => [] ] ,
-                                [ 'title' => 'Stock Show' , 'name' => 'stock_show' , 'url' => 'stock/show' , 'items' => [] ] ,
+                                [ 'title' => 'Stock List Create' , 'name' => 'stock_list_create' , 'url' => 'stock/create' , 'items' => [] ] ,
+                                [ 'title' => 'Stock List Edit' , 'name' => 'stock_list_edit' , 'url' => 'stock/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Stock List Delete' , 'name' => 'stock_list_delete' , 'url' => 'stock/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Stock List Show' , 'name' => 'stock_list_show' , 'url' => 'stock/show' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -131,14 +139,14 @@
                     'group' => 'Warehouse & Storage' ,
                     'items' => [
                         [
-                            'title' => 'Warehouse & Storage' ,
-                            'name'  => 'warehouse_storage' ,
+                            'title' => 'Warehouse & Storage List' ,
+                            'name'  => 'warehouse_storage_list' ,
                             'url'   => 'warehouses&storage' ,
                             'items' => [
-                                [ 'title' => 'Warehouse & Storage Create' , 'name' => 'warehouse_storage_create' , 'url' => 'warehouses&storage/create' , 'items' => [] ] ,
-                                [ 'title' => 'Warehouse & Storage Edit' , 'name' => 'warehouse_storage_edit' , 'url' => 'warehouses&storage/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Warehouse & Storage Delete' , 'name' => 'warehouse_storage_delete' , 'url' => 'warehouses&storage/delete' , 'items' => [] ] ,
-                                [ 'title' => 'Warehouse & Storage Show' , 'name' => 'warehouse_storage_show' , 'url' => 'warehouses&storage/show' , 'items' => [] ] ,
+                                [ 'title' => 'Warehouse & Storage List Create' , 'name' => 'warehouse_storage_list_create' , 'url' => 'warehouses&storage/create' , 'items' => [] ] ,
+                                [ 'title' => 'Warehouse & Storage List Edit' , 'name' => 'warehouse_storage_list_edit' , 'url' => 'warehouses&storage/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Warehouse & Storage List Delete' , 'name' => 'warehouse_storage_list_delete' , 'url' => 'warehouses&storage/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Warehouse & Storage List Show' , 'name' => 'warehouse_storage_list_show' , 'url' => 'warehouses&storage/show' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -147,13 +155,13 @@
                     'group' => 'Procurement' ,
                     'items' => [
                         [
-                            'title' => 'Procurement' ,
-                            'name'  => 'procurement' ,
+                            'title' => 'Procurement List' ,
+                            'name'  => 'procurement_list' ,
                             'url'   => 'procurement' ,
                             'items' => [
-                                [ 'title' => 'Procurement Create' , 'name' => 'procurement_create' , 'url' => 'procurement/create' , 'items' => [] ] ,
-                                [ 'title' => 'Procurement Edit' , 'name' => 'procurement_edit' , 'url' => 'procurement/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Procurement Delete' , 'name' => 'procurement_delete' , 'url' => 'procurement/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Procurement List Create' , 'name' => 'procurement_list_create' , 'url' => 'procurement/create' , 'items' => [] ] ,
+                                [ 'title' => 'Procurement List Edit' , 'name' => 'procurement_list_edit' , 'url' => 'procurement/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Procurement List Delete' , 'name' => 'procurement_list_delete' , 'url' => 'procurement/delete' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -173,33 +181,37 @@
                 ] ,
                 [
                     'group' => 'Projects' ,
-                    'items' => array_map( fn($item) => [
-                        'title' => $item[ 'title' ] ,
-                        'name'  => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) ,
-                        'url'   => $item[ 'url' ] ,
-                        'items' => [
-                            [ 'title' => "{$item['title']} Create" , 'name' => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) . '_create' , 'url' => "{$item['url']}/create" , 'items' => [] ] ,
-                            [ 'title' => "{$item['title']} Edit" , 'name' => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) . '_edit' , 'url' => "{$item['url']}/edit" , 'items' => [] ] ,
-                            [ 'title' => "{$item['title']} Delete" , 'name' => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) . '_delete' , 'url' => "{$item['url']}/delete" , 'items' => [] ] ,
-                        ]
-                    ] , [
+                    'items' => array_map( function ($item) {
+                        $name = $item[ 'name' ] ?? strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) );
+
+                        return [
+                            'title' => $item[ 'title' ] ,
+                            'name'  => $name ,
+                            'url'   => $item[ 'url' ] ,
+                            'items' => [
+                                [ 'title' => "{$item['title']} Create" , 'name' => $name . '_create' , 'url' => "{$item['url']}/create" , 'items' => [] ] ,
+                                [ 'title' => "{$item['title']} Edit" , 'name' => $name . '_edit' , 'url' => "{$item['url']}/edit" , 'items' => [] ] ,
+                                [ 'title' => "{$item['title']} Delete" , 'name' => $name . '_delete' , 'url' => "{$item['url']}/delete" , 'items' => [] ] ,
+                            ]
+                        ];
+                    } , [
                         [ 'title' => 'Projects List' , 'url' => 'projects/list' ] ,
                         [ 'title' => 'Tasks' , 'url' => 'projects/tasks' ] ,
                         [ 'title' => 'Timesheets' , 'url' => 'projects/timesheets' ] ,
-                        [ 'title' => 'Settings' , 'url' => 'projects/settings' ]
+                        [ 'title' => 'Settings' , 'name' => 'project_settings' , 'url' => 'projects/settings' ]
                     ] )
                 ] ,
                 [
                     'group' => 'Expenses' ,
                     'items' => [
                         [
-                            'title' => 'Expenses' ,
-                            'name'  => 'expenses' ,
+                            'title' => 'Expenses List' ,
+                            'name'  => 'expenses_list' ,
                             'url'   => 'expenses' ,
                             'items' => [
-                                [ 'title' => 'Expenses Create' , 'name' => 'expenses_create' , 'url' => 'expenses/create' , 'items' => [] ] ,
-                                [ 'title' => 'Expenses Edit' , 'name' => 'expenses_edit' , 'url' => 'expenses/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Expenses Delete' , 'name' => 'expenses_delete' , 'url' => 'expenses/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Expenses List Create' , 'name' => 'expenses_list_create' , 'url' => 'expenses/create' , 'items' => [] ] ,
+                                [ 'title' => 'Expenses List Edit' , 'name' => 'expenses_list_edit' , 'url' => 'expenses/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Expenses List Delete' , 'name' => 'expenses_list_delete' , 'url' => 'expenses/delete' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -208,13 +220,13 @@
                     'group' => 'Branches' ,
                     'items' => [
                         [
-                            'title' => 'Branches' ,
-                            'name'  => 'branches' ,
+                            'title' => 'Branch List' ,
+                            'name'  => 'branch_list' ,
                             'url'   => 'branches' ,
                             'items' => [
-                                [ 'title' => 'Branch Create' , 'name' => 'branch_create' , 'url' => 'branches/create' , 'items' => [] ] ,
-                                [ 'title' => 'Branch Edit' , 'name' => 'branch_edit' , 'url' => 'branches/edit' , 'items' => [] ] ,
-                                [ 'title' => 'Branch Delete' , 'name' => 'branch_delete' , 'url' => 'branches/delete' , 'items' => [] ] ,
+                                [ 'title' => 'Branch List Create' , 'name' => 'branch_list_create' , 'url' => 'branches/create' , 'items' => [] ] ,
+                                [ 'title' => 'Branch List Edit' , 'name' => 'branch_list_edit' , 'url' => 'branches/edit' , 'items' => [] ] ,
+                                [ 'title' => 'Branch List Delete' , 'name' => 'branch_list_delete' , 'url' => 'branches/delete' , 'items' => [] ] ,
                             ]
                         ]
                     ]
@@ -227,20 +239,24 @@
                 ] ,
                 [
                     'group' => 'Accounting' ,
-                    'items' => array_map( fn($item) => [
-                        'title' => $item[ 'title' ] ,
-                        'name'  => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) ,
-                        'url'   => $item[ 'url' ] ,
-                        'items' => [
-                            [ 'title' => "{$item['title']} Create" , 'name' => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) . '_create' , 'url' => "{$item['url']}/create" , 'items' => [] ] ,
-                            [ 'title' => "{$item['title']} Edit" , 'name' => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) . '_edit' , 'url' => "{$item['url']}/edit" , 'items' => [] ] ,
-                            [ 'title' => "{$item['title']} Delete" , 'name' => strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) ) . '_delete' , 'url' => "{$item['url']}/delete" , 'items' => [] ] ,
-                        ]
-                    ] , [
+                    'items' => array_map( function ($item) {
+                        $name = $item[ 'name' ] ?? strtolower( str_replace( ' ' , '_' , $item[ 'title' ] ) );
+
+                        return [
+                            'title' => $item[ 'title' ] ,
+                            'name'  => $name ,
+                            'url'   => $item[ 'url' ] ,
+                            'items' => [
+                                [ 'title' => "{$item['title']} Create" , 'name' => $name . '_create' , 'url' => "{$item['url']}/create" , 'items' => [] ] ,
+                                [ 'title' => "{$item['title']} Edit" , 'name' => $name . '_edit' , 'url' => "{$item['url']}/edit" , 'items' => [] ] ,
+                                [ 'title' => "{$item['title']} Delete" , 'name' => $name . '_delete' , 'url' => "{$item['url']}/delete" , 'items' => [] ] ,
+                            ]
+                        ];
+                    } , [
                         [ 'title' => 'Transactions' , 'url' => 'transactions' ] ,
                         [ 'title' => 'Chart of Accounts' , 'url' => 'chart-of-accounts' ] ,
                         [ 'title' => 'Journal Entry' , 'url' => 'journal-entries' ] ,
-                        [ 'title' => 'Settings' , 'url' => 'accounting-settings' ]
+                        [ 'title' => 'Settings' , 'name' => 'accounting_settings' , 'url' => 'accounting-settings' ]
                     ] )
                 ] ,
                 [
@@ -383,30 +399,90 @@
 //                $adminRole->syncPermissions( $allPermissions );
 //            }
 
-            $flattenedPermissions = AppLibrary::recursiveFlattenPermissions( $permissions );
+            app( PermissionRegistrar::class )->forgetCachedPermissions();
 
-            $definedPermNames = array_column( $flattenedPermissions , 'name' );
-
-            $existingPermNames = Permission::where( 'guard_name' , 'sanctum' )->pluck( 'name' )->toArray();
-
-            $missingPerms = array_diff( $definedPermNames , $existingPermNames );
-
-            if ( empty( $missingPerms ) ) {
-                return;
+            if ( DB::connection()->getDriverName() === 'pgsql' ) {
+                DB::statement( "
+                    SELECT setval(
+                        pg_get_serial_sequence('permissions', 'id'),
+                        COALESCE((SELECT MAX(id) FROM permissions), 1),
+                        (SELECT COUNT(*) > 0 FROM permissions)
+                    )
+                " );
             }
 
-            foreach ( $flattenedPermissions as $perm ) {
-                if ( in_array( $perm[ 'name' ] , $missingPerms ) ) {
-                    Permission::firstOrCreate(
-                        [ 'name' => $perm[ 'name' ] , 'guard_name' => $perm[ 'guard_name' ] ] ,
-                        $perm
-                    );
+            $savedPermissionNames = [];
+            $savedPermissions     = [];
+
+            $savePermissions = function (array $nodes , int $parentId = 0) use (&$savePermissions , &$savedPermissionNames , &$savedPermissions) : void {
+                foreach ( $nodes as $node ) {
+                    $children = $node[ 'children' ] ?? [];
+                    $permissionKey = $node[ 'guard_name' ] . ':' . $node[ 'name' ];
+
+                    if ( isset( $savedPermissions[ $permissionKey ] ) ) {
+                        $permission = $savedPermissions[ $permissionKey ];
+                    }
+                    else {
+                        $permission = Permission::updateOrCreate(
+                            [ 'name' => $node[ 'name' ] , 'guard_name' => $node[ 'guard_name' ] ] ,
+                            [
+                                'title'  => $node[ 'title' ] ,
+                                'url'    => $node[ 'url' ] ,
+                                'parent' => $parentId ,
+                            ]
+                        );
+
+                        $savedPermissions[ $permissionKey ] = $permission;
+                    }
+
+                    $savedPermissionNames[] = $permission->name;
+
+                    if ( ! empty( $children ) ) {
+                        $savePermissions( $children , $permission->id );
+                    }
                 }
-            }
+            };
+
+            $savePermissions( $permissions );
+
+            Permission::whereIn( 'name' , [
+                'service_create' ,
+                'service_edit' ,
+                'service_delete' ,
+                'inventory_create' ,
+                'inventory_edit' ,
+                'inventory_delete' ,
+                'inventory_show' ,
+                'distribution_create' ,
+                'distribution_edit' ,
+                'distribution_delete' ,
+                'stock_create' ,
+                'stock_edit' ,
+                'stock_delete' ,
+                'stock_show' ,
+                'warehouse_storage_create' ,
+                'warehouse_storage_edit' ,
+                'warehouse_storage_delete' ,
+                'warehouse_storage_show' ,
+                'procurement_create' ,
+                'procurement_edit' ,
+                'procurement_delete' ,
+                'expenses_create' ,
+                'expenses_edit' ,
+                'expenses_delete' ,
+                'branch_create' ,
+                'branch_edit' ,
+                'branch_delete' ,
+                'settings_create' ,
+                'settings_edit' ,
+                'settings_delete' ,
+            ] )->delete();
+
+            app( PermissionRegistrar::class )->forgetCachedPermissions();
 
             $adminRole = Role::where( 'name' , EnumRole::ADMIN )->first();
             if ( $adminRole ) {
-                $adminRole->givePermissionTo( $missingPerms );
+                $adminRole->givePermissionTo( $savedPermissionNames );
             }
         }
     }
