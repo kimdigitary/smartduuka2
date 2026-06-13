@@ -193,7 +193,9 @@
         {
             return Attribute::make(
                 get: function ($value) {
-                    $retailPrice = $this->retailPrices()->first();
+                    $retailPrice = $this->relationLoaded( 'retailPrices' )
+                        ? $this->retailPrices->first()
+                        : $this->retailPrices()->first();
                     return $retailPrice ? $retailPrice->selling_price : $value;
                 }
             );
@@ -203,7 +205,9 @@
         {
             return Attribute::make(
                 get: function ($value) {
-                    $retailPrice = $this->retailPrices()->first();
+                    $retailPrice = $this->relationLoaded( 'retailPrices' )
+                        ? $this->retailPrices->first()
+                        : $this->retailPrices()->first();
                     return $retailPrice ? $retailPrice->buying_price : $value;
                 }
             );

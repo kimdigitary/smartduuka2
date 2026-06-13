@@ -114,7 +114,11 @@
 
         public function getBalanceAttribute()
         {
-            return $this->total - $this->posPayments()->sum( 'amount' );
+            $paid = $this->relationLoaded( 'posPayments' )
+                ? $this->posPayments->sum( 'amount' )
+                : $this->posPayments()->sum( 'amount' );
+
+            return $this->total - $paid;
         }
 
         protected function orderSerialNo() : Attribute
@@ -165,7 +169,9 @@
 
         public function getNetPaidAttribute()
         {
-            return $this->posPayments()->sum( 'amount' );
+            return $this->relationLoaded( 'posPayments' )
+                ? $this->posPayments->sum( 'amount' )
+                : $this->posPayments()->sum( 'amount' );
         }
 
 

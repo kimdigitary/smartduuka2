@@ -5,7 +5,11 @@
     use App\Enums\RegisterStatus;
     use App\Http\Resources\RegisterResource;
     use App\Models\Register;
+    use App\Models\Product;
+    use App\Models\ProductVariation;
+    use App\Models\Service;
     use Illuminate\Http\Request;
+    use Illuminate\Database\Eloquent\Relations\MorphTo;
 
     class RegisterReportController
     {
@@ -13,7 +17,15 @@
         {
             $query  = Register::with( [
                 'user' ,
-                'orders.orderProducts.item' ,
+                'orders.posPayments.paymentMethod' ,
+                'orders.taxes.tax' ,
+                'orders.orderProducts.item' => function (MorphTo $morphTo) {
+                    $morphTo->morphWith( [
+                        Product::class          => [ 'unit' , 'retailPrices' ] ,
+                        ProductVariation::class => [ 'product.unit' , 'productAttributeOption.productAttribute' , 'retailPrices' ] ,
+                        Service::class          => [] ,
+                    ] );
+                } ,
                 'posPayments.paymentMethod' ,
                 'expensesPayments.expense' ,
                 'walletTransactions' ,

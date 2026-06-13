@@ -17,7 +17,9 @@
         {
 
             $new_total = $this->calculated_new_total ?? 0;
-            $last_paid = $this->posPayments()?->latest()?->first();
+            $last_paid = $this->relationLoaded( 'posPayments' )
+                ? $this->posPayments->sortByDesc( 'id' )->first()
+                : $this->posPayments()?->latest()?->first();
 
             return [
                 'id'                => $this->id ,
@@ -66,7 +68,7 @@
                     return $this->taxes->map->tax;
                 } ) ) ,
                 'tax_inclusive'        => $this->tax_inclusive ,
-                'tax_ids'              => $this->taxes->map( fn($t) => $t->id ) ,
+                'tax_ids'              => $this->relationLoaded( 'taxes' ) ? $this->taxes->map( fn($t) => $t->id ) : [] ,
 
                 // Use relation checks to prevent errors if not eager loaded
                 'order_items'          => $this->relationLoaded( 'orderProducts' ) ? $this->orderProducts->count() : 0 ,

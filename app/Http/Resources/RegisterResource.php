@@ -2,6 +2,7 @@
 
     namespace App\Http\Resources;
 
+    use App\Enums\DefaultPaymentMethods;
     use App\Enums\ExpenseNature;
     use App\Enums\PaymentType;
     use App\Enums\PosPaymentType;
@@ -84,7 +85,9 @@
 
             // --- 2. CASH FLOW (DRAWER REALITY) ---
             // Money actually handed to cashier today (Cash sales + Old debts paid)
-            $total_revenue = $this->posPayments()->sum( 'amount' );
+            $total_revenue = $this->relationLoaded( 'posPayments' )
+                ? $this->posPayments->sum( 'amount' )
+                : $this->posPayments()->sum( 'amount' );
 
             $reserved_value = $groupedItems->sum( 'reserved_value' );
             $damages_value  = $groupedItems->sum( 'damages_value' );
@@ -118,14 +121,40 @@
                 ->where( 'payment_type' , PaymentType::CREDIT )
                 ->sum( 'balance' );
 
-            $deposits = $this->orders()->where( 'payment_type' , '<>' , PaymentType::CASH )->get()->sum( function (Order $order) {
-                return $order->posPayments()->sum( 'amount' );
-            } );
+            $deposits = $this->orders
+                ->where( 'payment_type' , '<>' , PaymentType::CASH )
+                ->sum( function (Order $order) {
+                    return $order->relationLoaded( 'posPayments' )
+                        ? $order->posPayments->sum( 'amount' )
+                        : $order->posPayments()->sum( 'amount' );
+                } );
 
             $total_order_cost    = $this->orders->sum( function (Order $order) {
                 return $order->totalCost();
             } );
-            $wallet_transactions = $this->walletTransactions()->sum( 'amount' );
+            $wallet_transactions = $this->relationLoaded( 'walletTransactions' )
+                ? $this->walletTransactions->sum( 'amount' )
+                : $this->walletTransactions()->sum( 'amount' );
+
+            $expected_float = $this->opening_float + (
+                $this->relationLoaded( 'posPayments' )
+                    ? $this->posPayments
+                           ->reject( fn($payment) => $payment->paymentMethod?->name === DefaultPaymentMethods::WALLET->value )
+                           ->sum( 'amount' )
+                    : $this->posPayments()
+                           ->whereHas( 'paymentMethod' , function ($query) {
+                               $query->where( 'name' , '<>' , DefaultPaymentMethods::WALLET->value );
+                           } )
+                           ->sum( 'amount' )
+            );
+
+            $total_debt_paid = $this->relationLoaded( 'posPayments' )
+                ? $this->posPayments
+                       ->filter( fn($payment) => $payment->pos_payment_type === PosPaymentType::DEBT )
+                       ->sum( 'amount' )
+                : $this->posPayments()
+                       ->where( 'pos_payment_type' , PosPaymentType::DEBT )
+                       ->sum( 'amount' );
 
             return [
                 'id'                           => 'REG-' . Str::padLeft( $this->id , 5 , '0' ) ,
@@ -134,8 +163,8 @@
                 'reserved_value'               => currency( $reserved_value ) ,
                 'damages_value'                => currency( $damages_value ) ,
                 'notes'                        => $this->notes ,
-                'expected_float'               => $this->expected_float ,
-                'expected_float_currency'      => AppLibrary::currencyAmountFormat( $this->expected_float ) ,
+                'expected_float'               => $expected_float ,
+                'expected_float_currency'      => AppLibrary::currencyAmountFormat( $expected_float ) ,
                 'closing_float'                => $this->closing_float ,
                 'closing_float_currency'       => AppLibrary::currencyAmountFormat( $this->closing_float ) ,
                 'difference'                   => $this->difference ,
@@ -166,7 +195,7 @@
                 'wallet_transactions'          => $wallet_transactions ,
                 'wallet_transactions_currency' => currency( $wallet_transactions ) ,
                 'total_credit_currency'        => AppLibrary::currencyAmountFormat( $totalCreditRemaining ) ,
-                'total_debt_paid'              => currency( $this->posPayments()->where( 'pos_payment_type' , PosPaymentType::DEBT )->sum( 'amount' ) ) ,
+                'total_debt_paid'              => currency( $total_debt_paid ) ,
                 'deposits'                     => $deposits ,
                 'deposits_currency'            => currency( $deposits ) ,
 
