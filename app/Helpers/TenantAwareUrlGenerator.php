@@ -9,7 +9,11 @@
     {
         public function getUrl() : string
         {
-            $url = tenant_asset( $this->getPathRelativeToRoot() );
+            $path = $this->getPathRelativeToRoot();
+            $url  = config( 'tenancy.filesystem.asset_helper_tenancy' )
+                ? asset( $path )
+                : tenant_asset( $path );
+
             return $this->versionUrl( $url );
         }
     }
