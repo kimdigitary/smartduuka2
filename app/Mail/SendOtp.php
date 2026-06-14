@@ -25,6 +25,8 @@ class SendOtp extends Mailable
 
     public function build() : SendOtp
     {
-        return $this->subject("Reset Password")->markdown('emails.password');
+        return $this->from(config('mail.from.address'), 'Smart Duuka')
+                    ->subject("Reset Password")
+                    ->view('emails.password');
     }
 }

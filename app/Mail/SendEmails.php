@@ -18,7 +18,7 @@
         public function envelope() : Envelope
         {
             return new Envelope(
-                from: new Address( config( 'mail.from.address' ) , "Smartduuka" ) ,
+                from: new Address( config( 'mail.from.address' ) , "Smart Duuka" ) ,
                 subject: $this->subj ,
             );
         }

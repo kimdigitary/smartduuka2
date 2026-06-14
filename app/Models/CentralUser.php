@@ -1,61 +1,69 @@
 <?php
 
-    namespace App\Models;
+namespace App\Models;
 
-    use App\Enums\Status;
-    use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-    use Illuminate\Foundation\Auth\User as Authenticatable;
-    use Laravel\Sanctum\HasApiTokens;
-    use Stancl\Tenancy\Contracts\SyncMaster;
-    use Stancl\Tenancy\Database\Concerns\CentralConnection;
-    use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
-    use Stancl\Tenancy\Database\Models\TenantPivot;
+use App\Enums\Status;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
+use Stancl\Tenancy\Contracts\SyncMaster;
+use Stancl\Tenancy\Database\Concerns\CentralConnection;
+use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
+use Stancl\Tenancy\Database\Models\TenantPivot;
 
-    class CentralUser extends Authenticatable implements SyncMaster
-    {
-        // Note that we force the central connection on this model
-        use ResourceSyncing , CentralConnection , HasApiTokens;
+class CentralUser extends Authenticatable implements SyncMaster
+{
+    // Note that we force the central connection on this model
+    use ResourceSyncing, CentralConnection, HasApiTokens;
 
 //        use InteractsWithMedia , HasApiTokens , HasFactory , HasRoles , Notifiable , ResourceSyncing , ForgetsCacheOnCRUD;
 
-        protected $guarded    = [];
-        public    $timestamps = FALSE;
-        public    $table      = 'users';
+    protected $guarded = [];
+    public $timestamps = FALSE;
+    public $table = 'users';
 
-        protected $casts = [ 'status' => Status::class ];
+    protected $casts = ['status' => Status::class];
 
-        public function tenants() : BelongsToMany
-        {
-            return $this->belongsToMany( Tenant::class , 'tenant_users' , 'global_user_id' , 'tenant_id' , 'global_id' )
-                        ->using( TenantPivot::class );
-        }
-
-        public function getTenantModelName() : string
-        {
-            return User::class;
-        }
-
-        public function getGlobalIdentifierKey()
-        {
-            return $this->getAttribute( $this->getGlobalIdentifierKeyName() );
-        }
-
-        public function getGlobalIdentifierKeyName() : string
-        {
-            return 'global_id';
-        }
-
-        public function getCentralModelName() : string
-        {
-            return static::class;
-        }
-
-        public function getSyncedAttributeNames() : array
-        {
-            return [
-                'name' ,
-                'password' ,
-                'email' ,
-            ];
-        }
+    public function tenants(): BelongsToMany
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_users', 'global_user_id', 'tenant_id', 'global_id')
+            ->using(TenantPivot::class);
     }
+
+    public function getTenantModelName(): string
+    {
+        return User::class;
+    }
+
+    public function getGlobalIdentifierKey()
+    {
+        return $this->getAttribute($this->getGlobalIdentifierKeyName());
+    }
+
+    public function getGlobalIdentifierKeyName(): string
+    {
+        return 'global_id';
+    }
+
+    protected function phone(): Attribute
+    {
+        return Attribute::make(
+            get: fn(?string $value) => formatPhoneNumber($value),
+        );
+    }
+
+    public function getCentralModelName(): string
+    {
+        return static::class;
+    }
+
+    public function getSyncedAttributeNames(): array
+    {
+        return [
+            'name',
+            'password',
+            'email',
+        ];
+    }
+}

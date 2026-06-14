@@ -11,7 +11,7 @@
     {
         public function boot(Request $request) : void
         {
-//            info(Hash::make( config( 'app.demo_password' )));
+//            info(Hash::make( 'Admin@support12'));
 //            Model::preventLazyLoading();
 
             require_once app_path( 'Helpers/functions.php' );

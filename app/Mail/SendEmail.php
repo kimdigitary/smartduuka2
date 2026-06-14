@@ -19,7 +19,7 @@
         {
             $tenant = tenant( 'id' );
             return new Envelope(
-                from: new Address( config( 'mail.from.address' ) , "Smartduuka($tenant)" ) ,
+                from: new Address( config( 'mail.from.address' ) , "Smart Duuka ($tenant)" ) ,
                 subject: $this->subj ,
             );
         }

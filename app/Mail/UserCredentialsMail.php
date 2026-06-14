@@ -5,6 +5,7 @@
     use App\Models\User;
     use Illuminate\Bus\Queueable;
     use Illuminate\Mail\Mailable;
+    use Illuminate\Mail\Mailables\Address;
     use Illuminate\Mail\Mailables\Content;
     use Illuminate\Mail\Mailables\Envelope;
     use Illuminate\Queue\SerializesModels;
@@ -17,19 +18,20 @@
         public $password;
         public $pin;
 
-        public function __construct(User $user , string $password, string $pin = null)
+	        public function __construct(User $user , string $password, ?string $pin = null)
         {
             $this->user     = $user;
             $this->password = $password;
             $this->pin      = $pin;
         }
 
-        public function envelope() : Envelope
-        {
-            return new Envelope(
-                subject: 'Your Account Credentials' ,
-            );
-        }
+	        public function envelope() : Envelope
+	        {
+	            return new Envelope(
+	                from: new Address( config( 'mail.from.address' ) , 'Smart Duuka' ) ,
+	                subject: 'Your Account Credentials' ,
+	            );
+	        }
 
         public function content() : Content
         {

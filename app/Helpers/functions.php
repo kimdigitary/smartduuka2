@@ -1,746 +1,763 @@
 <?php
 
-    use App\Enums\Ask;
-    use App\Enums\BarcodeType;
-    use App\Enums\CacheEnum;
-    use App\Enums\Constants;
-    use App\Enums\CurrencyPosition;
-    use App\Enums\CustomerWalletTransactionType;
-    use App\Enums\OrderStatus;
-    use App\Enums\Pad;
-    use App\Enums\PaymentStatus;
-    use App\Enums\PaymentType;
-    use App\Enums\PlanFeature;
-    use App\Enums\PosPaymentType;
-    use App\Enums\Role;
-    use App\Enums\SettingsEnum;
-    use App\Enums\Status;
-    use App\Enums\StockStatus;
-    use App\Enums\SubscriptionPaymentStatus;
-    use App\Libraries\AppLibrary;
-    use App\Models\ChartOfAccountGroup;
-    use App\Models\Currency;
-    use App\Models\CustomerLedger;
-    use App\Models\CustomerWalletTransaction;
-    use App\Models\Ledger;
-    use App\Models\Order;
-    use App\Models\PaymentAccount;
-    use App\Models\PaymentMethod;
-    use App\Models\PaymentMethodTransaction;
-    use App\Models\PosPayment;
-    use App\Models\Register;
-    use App\Models\RoyaltyPointsExchageRate;
-    use App\Models\SubscriptionPlan;
-    use App\Models\TenantSubscription;
-    use App\Models\ThemeSetting;
-    use App\Models\User;
-    use App\Support\PlanFeatureMap;
-    use Carbon\Carbon;
-    use Illuminate\Database\Eloquent\Builder;
-    use Illuminate\Database\Eloquent\Model;
-    use Illuminate\Http\Request;
-    use Illuminate\Notifications\AnonymousNotifiable;
-    use Illuminate\Support\Facades\Auth;
-    use Illuminate\Support\Facades\Cache;
-    use Illuminate\Support\Str;
-    use Smartisan\Settings\Facades\Settings;
-    use Stancl\Tenancy\Database\Models\Tenant;
-    use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedById;
+use App\Enums\Ask;
+use App\Enums\BarcodeType;
+use App\Enums\CacheEnum;
+use App\Enums\Constants;
+use App\Enums\CurrencyPosition;
+use App\Enums\CustomerWalletTransactionType;
+use App\Enums\OrderStatus;
+use App\Enums\Pad;
+use App\Enums\PaymentStatus;
+use App\Enums\PaymentType;
+use App\Enums\PlanFeature;
+use App\Enums\PosPaymentType;
+use App\Enums\Role;
+use App\Enums\SettingsEnum;
+use App\Enums\Status;
+use App\Enums\StockStatus;
+use App\Enums\SubscriptionPaymentStatus;
+use App\Libraries\AppLibrary;
+use App\Models\ChartOfAccountGroup;
+use App\Models\Currency;
+use App\Models\CustomerLedger;
+use App\Models\CustomerWalletTransaction;
+use App\Models\Ledger;
+use App\Models\Order;
+use App\Models\PaymentAccount;
+use App\Models\PaymentMethod;
+use App\Models\PaymentMethodTransaction;
+use App\Models\PosPayment;
+use App\Models\Register;
+use App\Models\RoyaltyPointsExchageRate;
+use App\Models\SubscriptionPlan;
+use App\Models\TenantSubscription;
+use App\Models\ThemeSetting;
+use App\Models\User;
+use App\Support\PlanFeatureMap;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
+use Smartisan\Settings\Facades\Settings;
+use Stancl\Tenancy\Database\Models\Tenant;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedById;
 
-    function project()
-    {
-        return Settings::group( 'site' )->get( 'project' );
+function project()
+{
+    return Settings::group('site')->get('project');
+}
+
+function tenantUserId(Request $request)
+{
+    $user = $request->user();
+    return User::where('email', $user->email)->first()->id;
+}
+
+function formatPhoneNumber(string|int|null $phone): ?string
+{
+    if ($phone === NULL) {
+        return NULL;
     }
 
-    function tenantUserId(Request $request)
-    {
-        $user = $request->user();
-        return User::where( 'email' , $user->email )->first()->id;
+    $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone) ?? '';
+
+    if ($cleanPhone === '') {
+        return NULL;
     }
 
-    function tenantContext(callable $callback , int | Tenant | string | null $tenant = NULL) : mixed
-    {
-        $previousTenant = tenancy()->tenant;
-        try {
-            tenancy()->initialize( $tenant ?? tenantId() );
-            return $callback();
-        } catch ( TenantCouldNotBeIdentifiedById $exception ) {
-            info( 'Functions.php: ' . $exception->getMessage() );
-            return NULL;
-        } finally {
-            if ( $previousTenant ) {
-                try {
-                    tenancy()->initialize( $previousTenant );
-                } catch ( TenantCouldNotBeIdentifiedById $e ) {
-                    info( 'Functions.php: ' . $e->getMessage() );
-                }
-            }
-            else {
-                tenancy()->end();
-            }
-        }
+    if (strlen($cleanPhone) === 10 && str_starts_with($cleanPhone, '0')) {
+        return '+256' . substr($cleanPhone, 1);
     }
 
-    function centralContext(callable $callback) : mixed
-    {
-        $previousTenant = tenancy()->tenant;
-        try {
-            return tenancy()->central( $callback );
-        } catch ( Exception $exception ) {
-            info( $exception->getMessage() );
-            return NULL;
-        } finally {
+    if (strlen($cleanPhone) === 9) {
+        return '+256' . $cleanPhone;
+    }
+
+    if (strlen($cleanPhone) === 12 && str_starts_with($cleanPhone, '256')) {
+        return '+' . $cleanPhone;
+    }
+
+    return '+' . ltrim($cleanPhone, '+');
+}
+
+function tenantContext(callable $callback, int|Tenant|string|null $tenant = NULL): mixed
+{
+    $previousTenant = tenancy()->tenant;
+    try {
+        tenancy()->initialize($tenant ?? tenantId());
+        return $callback();
+    } catch (TenantCouldNotBeIdentifiedById $exception) {
+        info('Functions.php: ' . $exception->getMessage());
+        return NULL;
+    } finally {
+        if ($previousTenant) {
             try {
-                if ( $previousTenant ) {
-                    tenancy()->initialize( $previousTenant );
-                }
-            } catch ( TenantCouldNotBeIdentifiedById $e ) {
-                info( $e->getMessage() );
+                tenancy()->initialize($previousTenant);
+            } catch (TenantCouldNotBeIdentifiedById $e) {
+                info('Functions.php: ' . $e->getMessage());
+            }
+        } else {
+            tenancy()->end();
+        }
+    }
+}
+
+function centralContext(callable $callback): mixed
+{
+    $previousTenant = tenancy()->tenant;
+    try {
+        return tenancy()->central($callback);
+    } catch (Exception $exception) {
+        info($exception->getMessage());
+        return NULL;
+    } finally {
+        try {
+            if ($previousTenant) {
+                tenancy()->initialize($previousTenant);
+            }
+        } catch (TenantCouldNotBeIdentifiedById $e) {
+            info($e->getMessage());
+        }
+    }
+}
+
+function numericToAssociativeArrayBuilder($array): array
+{
+    $i = 0;
+    $parentId = NULL;
+    $parentIncrementId = NULL;
+    $buildArray = [];
+    if (count($array)) {
+        foreach ($array as $arr) {
+            if (!$arr['parent']) {
+                $parentId = $arr['id'];
+                $parentIncrementId = $i;
+                $buildArray[$i] = $arr;
+                $i++;
+            }
+
+            if ($arr['parent'] == $parentId) {
+                $buildArray[$parentIncrementId]['children'][] = $arr;
             }
         }
     }
-
-    function numericToAssociativeArrayBuilder($array) : array
-    {
-        $i                 = 0;
-        $parentId          = NULL;
-        $parentIncrementId = NULL;
-        $buildArray        = [];
-        if ( count( $array ) ) {
-            foreach ( $array as $arr ) {
-                if ( ! $arr[ 'parent' ] ) {
-                    $parentId          = $arr[ 'id' ];
-                    $parentIncrementId = $i;
-                    $buildArray[ $i ]  = $arr;
-                    $i++;
-                }
-
-                if ( $arr[ 'parent' ] == $parentId ) {
-                    $buildArray[ $parentIncrementId ][ 'children' ][] = $arr;
-                }
+    if ($buildArray) {
+        foreach ($buildArray as $key => $build) {
+            if ($build['url'] == '#' && !isset($build['children'])) {
+                unset($buildArray[$key]);
             }
         }
-        if ( $buildArray ) {
-            foreach ( $buildArray as $key => $build ) {
-                if ( $build[ 'url' ] == '#' && ! isset( $build[ 'children' ] ) ) {
-                    unset( $buildArray[ $key ] );
-                }
+    }
+    return $buildArray;
+}
+
+function isDev(): bool
+{
+    return ((bool)config('app.dev')) === TRUE;
+}
+
+
+function eventConfig(string $event)
+{
+    $events = Settings::group('notification')->get('events') ?? [];
+    if (is_array($events) && isset($events[0]) && is_string($events[0])) {
+        $decodedEvents = json_decode($events[0], TRUE);
+    } elseif (is_string($events)) {
+        $decodedEvents = json_decode($events, TRUE);
+    } else {
+        $decodedEvents = $events;
+    }
+    return collect($decodedEvents)->firstWhere('id', $event);
+}
+
+function notificationChannels(object $notifiable, string $event): array
+{
+    $eventConfig = eventConfig($event);
+    if (!$eventConfig || !isset($eventConfig['channels'])) {
+        return [];
+    }
+
+    $isAnonymous = $notifiable instanceof AnonymousNotifiable;
+
+    $channelMap = [
+        'email' => 'mail',
+        'sms' => 'sms',
+        'whatsapp' => 'whatsapp',
+        'system' => 'database',
+    ];
+
+    $channels = collect($channelMap)
+        ->filter(function ($channel, $key) use ($eventConfig, $isAnonymous) {
+            if (!($eventConfig['channels'][$key] ?? FALSE)) {
+                return FALSE;   // disabled in settings
             }
-        }
-        return $buildArray;
-    }
-
-    function isDev() : bool
-    {
-        return ( (bool) config( 'app.dev' ) ) === TRUE;
-    }
-
-
-    function eventConfig(string $event)
-    {
-        $events = Settings::group( 'notification' )->get( 'events' ) ?? [];
-        if ( is_array( $events ) && isset( $events[ 0 ] ) && is_string( $events[ 0 ] ) ) {
-            $decodedEvents = json_decode( $events[ 0 ] , TRUE );
-        }
-        elseif ( is_string( $events ) ) {
-            $decodedEvents = json_decode( $events , TRUE );
-        }
-        else {
-            $decodedEvents = $events;
-        }
-        return collect( $decodedEvents )->firstWhere( 'id' , $event );
-    }
-
-    function notificationChannels(object $notifiable , string $event) : array
-    {
-        $eventConfig = eventConfig( $event );
-        if ( ! $eventConfig || ! isset( $eventConfig[ 'channels' ] ) ) {
-            return [];
-        }
-
-        $isAnonymous = $notifiable instanceof AnonymousNotifiable;
-
-        $channelMap = [
-            'email'    => 'mail' ,
-            'sms'      => 'sms' ,
-            'whatsapp' => 'whatsapp' ,
-            'system'   => 'database' ,
-        ];
-
-        $channels = collect( $channelMap )
-            ->filter( function ($channel , $key) use ($eventConfig , $isAnonymous) {
-                if ( ! ( $eventConfig[ 'channels' ][ $key ] ?? FALSE ) ) {
-                    return FALSE;   // disabled in settings
-                }
-                if ( $isAnonymous && $channel === 'database' ) {
-                    return FALSE;   // database requires a real system user
-                }
-                return TRUE;
-            } )
-            ->values()
-            ->all();
-
-        return ! empty( $channels ) ? $channels : [];
-    }
-
-    function phoneNumber() : string
-    {
-        $code  = Settings::group( 'company' )->get( 'company_calling_code' );
-        $phone = substr( Settings::group( 'company' )->get( 'company_phone' ) , -9 );
-        return "$code$phone";
-    }
-
-    function normalisePhone(string $phone) : string
-    {
-        if ( str_starts_with( $phone , '+256' ) ) {
-            return substr( $phone , 1 );
-        }
-
-        if ( str_starts_with( $phone , '0' ) ) {
-            return '256' . substr( $phone , 1 );
-        }
-
-        return $phone;
-    }
-
-    function recordId(string $prefix , Model $model , $pad = NULL) : string
-    {
-        return $prefix . '-' . Str::padLeft( $model->id , $pad ?? 6 , '0' );
-    }
-
-    function permissionWithAccess(&$permissions , $rolePermissions) : object
-    {
-        if ( $permissions ) {
-            foreach ( $permissions as $permission ) {
-                if ( isset( $rolePermissions[ $permission->id ] ) ) {
-                    $permission->access = TRUE;
-                }
-                else {
-                    $permission->access = FALSE;
-                }
+            if ($isAnonymous && $channel === 'database') {
+                return FALSE;   // database requires a real system user
             }
-        }
-        return $permissions;
-    }
-
-    function isDistributor()
-    {
-        $user = Auth::user();
-        return $user->roles->some( fn($role) => $role->id == Role::DISTRIBUTOR );
-    }
-
-    function parseDate(string $date) : string
-    {
-        return Carbon::parse( $date )->format( 'Y-m-d H:i:s' );
-    }
-
-    function toCarbonDate(string $date) : Carbon
-    {
-        return Carbon::parse( $date );
-    }
-
-    function ledgerCode() : int | string
-    {
-        $last_ledger = Ledger::orderBy( 'id' , 'desc' )->first();
-        return ! $last_ledger ? Str::padLeft( 1 , 5 , '0' ) : Str::padLeft( ( (int) $last_ledger->code ) + 1 , 5 , '0' );
-    }
-
-    function enabledWarehouse() : bool
-    {
-        $setting = Settings::group( 'module' )->get( 'module_warehouse' );
-        if ( $setting == 1 ) {
             return TRUE;
+        })
+        ->values()
+        ->all();
+
+    return !empty($channels) ? $channels : [];
+}
+
+function phoneNumber(): string
+{
+    $code = Settings::group('company')->get('company_calling_code');
+    $phone = substr(Settings::group('company')->get('company_phone'), -9);
+    return "$code$phone";
+}
+
+function normalisePhone(string $phone): string
+{
+    if (str_starts_with($phone, '+256')) {
+        return substr($phone, 1);
+    }
+
+    if (str_starts_with($phone, '0')) {
+        return '256' . substr($phone, 1);
+    }
+
+    return $phone;
+}
+
+function recordId(string $prefix, Model $model, $pad = NULL): string
+{
+    return $prefix . '-' . Str::padLeft($model->id, $pad ?? 6, '0');
+}
+
+function permissionWithAccess(&$permissions, $rolePermissions): object
+{
+    if ($permissions) {
+        foreach ($permissions as $permission) {
+            if (isset($rolePermissions[$permission->id])) {
+                $permission->access = TRUE;
+            } else {
+                $permission->access = FALSE;
+            }
         }
+    }
+    return $permissions;
+}
+
+function isDistributor()
+{
+    $user = Auth::user();
+    return $user->roles->some(fn($role) => $role->id == Role::DISTRIBUTOR);
+}
+
+function parseDate(string $date): string
+{
+    return Carbon::parse($date)->format('Y-m-d H:i:s');
+}
+
+function toCarbonDate(string $date): Carbon
+{
+    return Carbon::parse($date);
+}
+
+function ledgerCode(): int|string
+{
+    $last_ledger = Ledger::orderBy('id', 'desc')->first();
+    return !$last_ledger ? Str::padLeft(1, 5, '0') : Str::padLeft(((int)$last_ledger->code) + 1, 5, '0');
+}
+
+function enabledWarehouse(): bool
+{
+    $setting = Settings::group('module')->get('module_warehouse');
+    if ($setting == 1) {
         return TRUE;
+    }
+    return TRUE;
 //        return FALSE;
-    }
+}
 
-    function moduleEnabled(string $key , string $group = 'module') : bool
-    {
-        return Settings::group( $group )->get( $key ) == Ask::YES;
-    }
+function moduleEnabled(string $key, string $group = 'module'): bool
+{
+    return Settings::group($group)->get($key) == Ask::YES;
+}
 
-    function settingEnabled(string $key , string $group = SettingsEnum::APP_SETTINGS->value) : bool
-    {
-        return Settings::group( $group )->get( $key ) == Ask::YES;
-    }
+function settingEnabled(string $key, string $group = SettingsEnum::APP_SETTINGS->value): bool
+{
+    return Settings::group($group)->get($key) == Ask::YES;
+}
 
-    function isEnabled(string $key , string $group) : bool
-    {
-        return filter_var( Settings::group( $group )->get( $key ) ?? FALSE , FILTER_VALIDATE_BOOLEAN );
-    }
+function isEnabled(string $key, string $group): bool
+{
+    return filter_var(Settings::group($group)->get($key) ?? FALSE, FILTER_VALIDATE_BOOLEAN);
+}
 
-    function setting(string $key , string $group = SettingsEnum::APP_SETTINGS->value) : string | null
-    {
-        return Settings::group( $group )->get( $key );
-    }
+function setting(string $key, string $group = SettingsEnum::APP_SETTINGS->value): string|null
+{
+    return Settings::group($group)->get($key);
+}
 
-    function hasFeature(string $tenantId , PlanFeature $feature) : bool
-    {
-        return tenancy()->central( function () use ($tenantId , $feature) {
-            $plan = activeSubscription( $tenantId );
+function hasFeature(string $tenantId, PlanFeature $feature): bool
+{
+    return tenancy()->central(function () use ($tenantId, $feature) {
+        $plan = activeSubscription($tenantId);
 
-            if ( ! $plan ) return FALSE;
+        if (!$plan) return FALSE;
 
-            return PlanFeatureMap::has( $plan->name , $feature );
-        } );
-    }
+        return PlanFeatureMap::has($plan->name, $feature);
+    });
+}
 
-    function company()
-    {
-        return Settings::group( 'company' )->all();
-    }
+function company()
+{
+    return Settings::group('company')->all();
+}
 
-    function logo()
-    {
-        return ThemeSetting::where( [ 'key' => 'theme_logo' ] )?->first()?->logo ?? asset( 'logo.png' );
-    }
+function logo()
+{
+    return ThemeSetting::where(['key' => 'theme_logo'])?->first()?->logo ?? asset('logo.png');
+}
 
-    function tenantSubscriptions(string $tenantId) : Builder
-    {
-        return centralContext( fn() => TenantSubscription::with( 'subscriptionPlan' )
-                                                         ->where( 'expires_at' , '>=' , now() )
-                                                         ->where( 'payment_status' , SubscriptionPaymentStatus::Paid )
-                                                         ->where( 'status' , Status::ACTIVE )
-                                                         ->where( 'tenant_id' , $tenantId )
-                                                         ->latest()
-        );
-    }
+function tenantSubscriptions(string $tenantId): Builder
+{
+    return centralContext(fn() => TenantSubscription::with('subscriptionPlan')
+        ->where('expires_at', '>=', now())
+        ->where('payment_status', SubscriptionPaymentStatus::Paid)
+        ->where('status', Status::ACTIVE)
+        ->where('tenant_id', $tenantId)
+        ->latest()
+    );
+}
 
-    function activeSubscription(string $tenantId) : ?SubscriptionPlan
-    {
-        return centralContext( fn() => tenantSubscriptions( $tenantId )?->first()?->subscriptionPlan );
-    }
+function activeSubscription(string $tenantId): ?SubscriptionPlan
+{
+    return centralContext(fn() => tenantSubscriptions($tenantId)?->first()?->subscriptionPlan);
+}
 
-    function branchId() : int
-    {
-        return (int) request()->header( 'X-BranchId' );
-    }
+function branchId(): int
+{
+    return (int)request()->header('X-BranchId');
+}
 
-    function tenantId() : string | null
-    {
-        return request()->header( 'X-TenantId' );
-    }
+function tenantId(): string|null
+{
+    return request()->header('X-TenantId');
+}
 
-    function addPayment(?Order $order = NULL , int $amount = 0 , int $payment_method = 0 , ?string $reference = NULL , PosPaymentType $pos_payment_type =
-    PosPaymentType::SALE) : void
-    {
-        $p = PosPayment::create( [
-            'date'              => now() ,
-            'reference_no'      => $reference ?? 'PP-' . time() ,
-            'amount'            => $amount ,
-            'payment_method_id' => $payment_method ,
-            'pos_payment_type'  => $pos_payment_type ,
-            'register_id'       => register()?->id
-        ] );
+function addPayment(?Order $order = NULL, int $amount = 0, int $payment_method = 0, ?string $reference = NULL, PosPaymentType $pos_payment_type =
+PosPaymentType::SALE): void
+{
+    $p = PosPayment::create([
+        'date' => now(),
+        'reference_no' => $reference ?? 'PP-' . time(),
+        'amount' => $amount,
+        'payment_method_id' => $payment_method,
+        'pos_payment_type' => $pos_payment_type,
+        'register_id' => register()?->id
+    ]);
 
-        $p->update( [ 'reference_no' => recordId( 'PP' , $p ) ] );
+    $p->update(['reference_no' => recordId('PP', $p)]);
 
-        if ( $order ) $p->update( [ 'order_id' => $order->id ] );
+    if ($order) $p->update(['order_id' => $order->id]);
 
-        $pmt = PaymentMethodTransaction::create( [
-            'amount'            => $amount ,
-            'charge'            => 0 ,
-            'description'       => 'Customer Payment ' ,
-            'payment_method_id' => $payment_method ,
-        ] );
-        if ( $order ) $pmt->update( [
-            'item_type' => Order::class , 'item_id' => $order->id , 'description' => 'Order Payment #' . $order->order_serial_no ,
-        ] );
-    }
+    $pmt = PaymentMethodTransaction::create([
+        'amount' => $amount,
+        'charge' => 0,
+        'description' => 'Customer Payment ',
+        'payment_method_id' => $payment_method,
+    ]);
+    if ($order) $pmt->update([
+        'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #' . $order->order_serial_no,
+    ]);
+}
 
-    function datetime2(?Carbon $datetime) : string
-    {
-        return $datetime ? $datetime->format( 'd-M-Y H:i:s' ) : '';
-    }
+function datetime2(?Carbon $datetime): string
+{
+    return $datetime ? $datetime->format('d-M-Y H:i:s') : '';
+}
 
-    function addToLedger(User $user , string $reference , float $bill_amount , float $paid)
-    {
-        return CustomerLedger::create( [
-            'user_id'     => $user->id ,
-            'date'        => now() ,
-            'reference'   => time() ,
-            'description' => $reference ,
-            'bill_amount' => $bill_amount ,
-            'paid'        => $paid ,
-            'balance'     => userCredit( $user ) - $paid
-        ] );
-    }
+function addToLedger(User $user, string $reference, float $bill_amount, float $paid)
+{
+    return CustomerLedger::create([
+        'user_id' => $user->id,
+        'date' => now(),
+        'reference' => time(),
+        'description' => $reference,
+        'bill_amount' => $bill_amount,
+        'paid' => $paid,
+        'balance' => userCredit($user) - $paid
+    ]);
+}
 
-    function userCredit(User $user)
-    {
-        return User::withDebtMetrics()
-                   ->where( 'id' , $user->id )
-                   ->value( 'total_credits' );
-    }
+function userCredit(User $user)
+{
+    return User::withDebtMetrics()
+        ->where('id', $user->id)
+        ->value('total_credits');
+}
 
-    function register() : Register | null
-    {
-        $tenant = tenant( 'id' );
-        if ( $tenant ) return auth()->user()?->openRegister();
-        else return NULL;
-    }
+function register(): Register|null
+{
+    $tenant = tenant('id');
+    if ($tenant) return auth()->user()?->openRegister();
+    else return NULL;
+}
 
-    function orderLabel(Order $order) : string
-    {
-        if ( $order->status == OrderStatus::PENDING ) {
-            return 'Quotation';
-        }
-        else if ( $order->payment_status == PaymentStatus::UNPAID || $order->payment_status == PaymentStatus::PARTIALLY_PAID ) {
-            return 'Invoice';
-        }
-        else if ( $order->payment_status == PaymentStatus::PAID ) {
-            return 'Receipt';
-        }
-        else return '';
-    }
+function orderLabel(Order $order): string
+{
+    if ($order->status == OrderStatus::PENDING) {
+        return 'Quotation';
+    } else if ($order->payment_status == PaymentStatus::UNPAID || $order->payment_status == PaymentStatus::PARTIALLY_PAID) {
+        return 'Invoice';
+    } else if ($order->payment_status == PaymentStatus::PAID) {
+        return 'Receipt';
+    } else return '';
+}
 
-    function orderName(Order $order) : string
-    {
-        $order_serial_no = $order->order_serial_no;
-        $label           = orderLabel( $order );
-        return $order->user->name . ' ' . $label . '#' . $order_serial_no;
-    }
+function orderName(Order $order): string
+{
+    $order_serial_no = $order->order_serial_no;
+    $label = orderLabel($order);
+    return $order->user->name . ' ' . $label . '#' . $order_serial_no;
+}
 
-    function addToCustomerWalletTransaction(User $customer , float $amount , CustomerWalletTransactionType $typ , int $payment_method_id , string $reference = NULL)
-    {
-        $transaction = CustomerWalletTransaction::create( [
-            'user_id'           => $customer->id ,
-            'reference'         => '' ,
-            'amount'            => $amount ,
-            'type'              => $typ ,
-            'payment_method_id' => $payment_method_id ,
-            'register_id'       => register()?->id ,
-            'balance'           => 0
-        ] );
-        $transaction->update( [ 'reference' => $reference ?? walletTransactionReferenceNo( $transaction ) ] );
-        $customer->refresh();
-        $transaction->update( [ 'balance' => walletBalance( $customer ) ] );
-        addPayment( NULL , $amount , $payment_method_id , NULL , PosPaymentType::DEPOSIT );
-        return $transaction;
-    }
+function addToCustomerWalletTransaction(User $customer, float $amount, CustomerWalletTransactionType $typ, int $payment_method_id, string $reference = NULL)
+{
+    $transaction = CustomerWalletTransaction::create([
+        'user_id' => $customer->id,
+        'reference' => '',
+        'amount' => $amount,
+        'type' => $typ,
+        'payment_method_id' => $payment_method_id,
+        'register_id' => register()?->id,
+        'balance' => 0
+    ]);
+    $transaction->update(['reference' => $reference ?? walletTransactionReferenceNo($transaction)]);
+    $customer->refresh();
+    $transaction->update(['balance' => walletBalance($customer)]);
+    addPayment(NULL, $amount, $payment_method_id, NULL, PosPaymentType::DEPOSIT);
+    return $transaction;
+}
 
-    function walletBalance(User $user) : float
-    {
-        return (float) $user->walletTransactions()->sum( 'amount' );
-    }
+function walletBalance(User $user): float
+{
+    return (float)$user->walletTransactions()->sum('amount');
+}
 
-    function orderSerialNo(Order $order) : string
-    {
-        $id           = $order->id;
-        $payment_type = $order->payment_type;
-        $prefix       = match ( $payment_type ) {
-            PaymentType::PREORDER  => 'PRE-' ,
-            PaymentType::RETURN    => 'RTN-' ,
-            PaymentType::QUOTATION => 'QT-' ,
-            default                => 'ORD-'
-        };
-        return $prefix . Str::padLeft( $id , Pad::LENGTH , '0' );
-    }
+function orderSerialNo(Order $order): string
+{
+    $id = $order->id;
+    $payment_type = $order->payment_type;
+    $prefix = match ($payment_type) {
+        PaymentType::PREORDER => 'PRE-',
+        PaymentType::RETURN => 'RTN-',
+        PaymentType::QUOTATION => 'QT-',
+        default => 'ORD-'
+    };
+    return $prefix . Str::padLeft($id, Pad::LENGTH, '0');
+}
 
-    function walletTransactionReferenceNo(CustomerWalletTransaction $wallet_transaction) : string
-    {
-        $id     = $wallet_transaction->id;
-        $type   = $wallet_transaction->type;
-        $prefix = match ( $type ) {
-            CustomerWalletTransactionType::DEPOSIT  => 'WD-' ,
-            CustomerWalletTransactionType::PURCHASE => 'WP-' ,
-            default                                 => 'WT-'
-        };
-        return $prefix . Str::padLeft( $id , Pad::LENGTH , '0' );
-    }
+function walletTransactionReferenceNo(CustomerWalletTransaction $wallet_transaction): string
+{
+    $id = $wallet_transaction->id;
+    $type = $wallet_transaction->type;
+    $prefix = match ($type) {
+        CustomerWalletTransactionType::DEPOSIT => 'WD-',
+        CustomerWalletTransactionType::PURCHASE => 'WP-',
+        default => 'WT-'
+    };
+    return $prefix . Str::padLeft($id, Pad::LENGTH, '0');
+}
 
-    function validateAndCorrectChecksum($code , $type) : string
-    {
-        $code = (string) $code;
+function validateAndCorrectChecksum($code, $type): string
+{
+    $code = (string)$code;
 
-        if ( $type === BarcodeType::EAN_13 ) {
-            if ( strlen( $code ) !== 13 ) {
-                throw new \Exception( 'EAN-13 must be 13 digits long.' );
-            }
-
-            $digits   = str_split( $code );
-            $checksum = 0;
-
-            // Calculate the checksum for EAN-13
-            for ( $i = 0 ; $i < 12 ; $i++ ) {
-                $digit    = (int) $digits[ $i ];
-                $checksum += ( $i % 2 === 0 ) ? $digit : $digit * 3;
-            }
-
-            $calculatedChecksum = ( 10 - ( $checksum % 10 ) ) % 10;
-
-            // Compare the calculated checksum with the 13th digit
-            if ( $calculatedChecksum != $digits[ 12 ] ) {
-                // If the checksum is invalid, correct it
-                return substr( $code , 0 , 12 ) . $calculatedChecksum;
-            }
-
-            return $code; // The checksum is already correct
+    if ($type === BarcodeType::EAN_13) {
+        if (strlen($code) !== 13) {
+            throw new \Exception('EAN-13 must be 13 digits long.');
         }
 
-        if ( $type === BarcodeType::UPC_A ) {
-            // UPC-A requires 12 digits (11 digits + 1 checksum)
-            if ( strlen( $code ) !== 12 ) {
-                throw new \Exception( 'UPC-A must be 12 digits long.' );
-            }
-
-            $digits   = str_split( $code );
-            $checksum = 0;
-
-            // Calculate the checksum for UPC-A
-            for ( $i = 0 ; $i < 11 ; $i++ ) {
-                $digit    = (int) $digits[ $i ];
-                $checksum += ( $i % 2 === 0 ) ? $digit * 3 : $digit;
-            }
-
-            $calculatedChecksum = ( 10 - ( $checksum % 10 ) ) % 10;
-
-            // Compare the calculated checksum with the 12th digit
-            if ( $calculatedChecksum != $digits[ 11 ] ) {
-                // If the checksum is invalid, correct it
-                return substr( $code , 0 , 11 ) . $calculatedChecksum;
-            }
-            return $code; // The checksum is already correct
-        }
-
-        throw new \Exception( 'Unsupported barcode type.' );
-    }
-
-    function validateAndCorrectEAN13Checksum($ean13)
-    {
-        if ( strlen( $ean13 ) !== 13 ) {
-            throw new \Exception( 'EAN-13 must be 13 digits long.' );
-        }
-
-        $digits   = str_split( $ean13 );
+        $digits = str_split($code);
         $checksum = 0;
 
-        // Calculate the checksum
-        for ( $i = 0 ; $i < 12 ; $i++ ) {
-            $digit    = (int) $digits[ $i ];
-            $checksum += ( $i % 2 === 0 ) ? $digit : $digit * 3;
+        // Calculate the checksum for EAN-13
+        for ($i = 0; $i < 12; $i++) {
+            $digit = (int)$digits[$i];
+            $checksum += ($i % 2 === 0) ? $digit : $digit * 3;
         }
 
-        $calculatedChecksum = ( 10 - ( $checksum % 10 ) ) % 10;
+        $calculatedChecksum = (10 - ($checksum % 10)) % 10;
 
         // Compare the calculated checksum with the 13th digit
-        if ( $calculatedChecksum != $digits[ 12 ] ) {
+        if ($calculatedChecksum != $digits[12]) {
             // If the checksum is invalid, correct it
-            $correctedEAN13 = substr( $ean13 , 0 , 12 ) . $calculatedChecksum;
-            return $correctedEAN13;
+            return substr($code, 0, 12) . $calculatedChecksum;
         }
 
-        return $ean13; // The checksum is already correct
+        return $code; // The checksum is already correct
     }
 
-    function royaltyPointsExchangeRate() : float | int
-    {
-        $exchange_rate = RoyaltyPointsExchageRate::first();
-        $points_value  = Constants::ROYALTY_POINTS_DEFAULT_VALUE;
-        if ( $exchange_rate ) {
-            $points_value = $exchange_rate->value / $exchange_rate->points;
-        }
-        return $points_value;
-    }
-
-    function clean_amount(string $value) : int
-    {
-        return (int) preg_replace( '/\D/' , '' , $value );
-    }
-
-    function currency($value) : string
-    {
-        return AppLibrary::currencyAmountFormat( $value );
-    }
-
-    function format_currency_short($n) : string
-    {
-        $precision = config( 'system.currency_decimal_point' );
-
-        if ( $n < 1000 ) {
-            $format = number_format( $n , $precision );
-            $suffix = '';
-        }
-        else if ( $n < 1000000 ) {
-            $format = number_format( $n / 1000 , $precision );
-            $suffix = 'K';
-        }
-        else if ( $n < 1000000000 ) {
-            $format = number_format( $n / 1000000 , $precision );
-            $suffix = 'M';
-        }
-        else {
-            $format = number_format( $n / 1000000000 , $precision );
-            $suffix = 'B';
+    if ($type === BarcodeType::UPC_A) {
+        // UPC-A requires 12 digits (11 digits + 1 checksum)
+        if (strlen($code) !== 12) {
+            throw new \Exception('UPC-A must be 12 digits long.');
         }
 
-        if ( config( 'system.currency_position' ) == CurrencyPosition::RIGHT ) {
-            return $format . $suffix . ' ' . currencySymbol();
-        }
-        return currencySymbol() . ' ' . $format . $suffix;
-    }
+        $digits = str_split($code);
+        $checksum = 0;
 
-    function currencySymbol() : string
-    {
-        return Cache::rememberForever( CacheEnum::CURRENCY_SYMBOL , function () {
-            $currency = Currency::find( Settings::group( 'site' )->get( CacheEnum::CURRENCY_SYMBOL ) );
-            return $currency->symbol ?? 'UGX';
-        } );
-    }
-
-    function datetime($value) : string
-    {
-        if ( ! $value ) return '';
-        return AppLibrary::datetime2( $value );
-    }
-
-    function siteDate($value) : string
-    {
-        if ( ! $value ) return '';
-        return AppLibrary::date( $value );
-    }
-
-    function transformGroup($group)
-    {
-        return [
-            'id'       => $group->id ,
-            'name'     => $group->name ,
-            'ledgers'  => $group->ledger ,
-            'children' => $group->childrenRecursive->map( fn($child) => transformGroup( $child ) ) ,
-        ];
-    }
-
-    function updateCoa() : void
-    {
-        $default_currency_symbol = Settings::group( 'site' )->get( 'site_default_currency_symbol' );
-        $default_currency        = Currency::where( 'symbol' , $default_currency_symbol )->first();
-
-        $code = ledgerCode();
-
-        $current_assets = ChartOfAccountGroup::whereName( 'Current Assets' )->first();
-        $revenue        = ChartOfAccountGroup::whereName( 'Revenue' )->first();
-
-        foreach ( PaymentMethod::all() as $payment_method ) {
-            if ( $default_currency ) {
-                PaymentAccount::firstOrCreate(
-                    [ 'name' => $payment_method->name ] ,
-                    [ 'currency_id' => $default_currency->id ]
-                );
-            }
+        // Calculate the checksum for UPC-A
+        for ($i = 0; $i < 11; $i++) {
+            $digit = (int)$digits[$i];
+            $checksum += ($i % 2 === 0) ? $digit * 3 : $digit;
         }
 
-        foreach ( PaymentAccount::all() as $payment_account ) {
-            if ( $current_assets ) {
-                Ledger::firstOrCreate(
-                    [ 'name' => $payment_account->name , 'parent_id' => $current_assets->id ] ,
-                    [
-                        'currency_id' => $payment_account->currency_id ,
-                        'type'        => 'debit' ,
-                        'code'        => $code ,
-                    ]
-                );
-            }
+        $calculatedChecksum = (10 - ($checksum % 10)) % 10;
+
+        // Compare the calculated checksum with the 12th digit
+        if ($calculatedChecksum != $digits[11]) {
+            // If the checksum is invalid, correct it
+            return substr($code, 0, 11) . $calculatedChecksum;
         }
+        return $code; // The checksum is already correct
+    }
 
-        $ledgers = [
-            [
-                'name'      => 'Stock value' ,
-                'parent_id' => $current_assets?->id ,
-                'type'      => 'debit' ,
-            ] ,
-            [
-                'name'      => 'Sales' ,
-                'parent_id' => $revenue?->id ,
-                'type'      => 'credit' ,
-            ] ,
-            [
-                'name'      => 'Sales return' ,
-                'parent_id' => $revenue?->id ,
-                'type'      => 'debit' ,
-            ] ,
-            [
-                'name'      => 'Cost of Sales' ,
-                'parent_id' => $revenue?->id ,
-                'type'      => 'debit' ,
-            ] ,
-        ];
+    throw new \Exception('Unsupported barcode type.');
+}
 
-        foreach ( $ledgers as $ledger ) {
-            if ( $current_assets && $revenue ) {
-                Ledger::firstOrCreate(
-                    [ 'name' => $ledger[ 'name' ] , 'parent_id' => $ledger[ 'parent_id' ] ] ,
-                    [
-                        'currency_id' => $default_currency->id ,
-                        'type'        => $ledger[ 'type' ] ,
-                        'code'        => $code ,
-                    ]
-                );
-            }
+function validateAndCorrectEAN13Checksum($ean13)
+{
+    if (strlen($ean13) !== 13) {
+        throw new \Exception('EAN-13 must be 13 digits long.');
+    }
+
+    $digits = str_split($ean13);
+    $checksum = 0;
+
+    // Calculate the checksum
+    for ($i = 0; $i < 12; $i++) {
+        $digit = (int)$digits[$i];
+        $checksum += ($i % 2 === 0) ? $digit : $digit * 3;
+    }
+
+    $calculatedChecksum = (10 - ($checksum % 10)) % 10;
+
+    // Compare the calculated checksum with the 13th digit
+    if ($calculatedChecksum != $digits[12]) {
+        // If the checksum is invalid, correct it
+        $correctedEAN13 = substr($ean13, 0, 12) . $calculatedChecksum;
+        return $correctedEAN13;
+    }
+
+    return $ean13; // The checksum is already correct
+}
+
+function royaltyPointsExchangeRate(): float|int
+{
+    $exchange_rate = RoyaltyPointsExchageRate::first();
+    $points_value = Constants::ROYALTY_POINTS_DEFAULT_VALUE;
+    if ($exchange_rate) {
+        $points_value = $exchange_rate->value / $exchange_rate->points;
+    }
+    return $points_value;
+}
+
+function clean_amount(string $value): int
+{
+    return (int)preg_replace('/\D/', '', $value);
+}
+
+function currency($value): string
+{
+    return AppLibrary::currencyAmountFormat($value);
+}
+
+function format_currency_short($n): string
+{
+    $precision = config('system.currency_decimal_point');
+
+    if ($n < 1000) {
+        $format = number_format($n, $precision);
+        $suffix = '';
+    } else if ($n < 1000000) {
+        $format = number_format($n / 1000, $precision);
+        $suffix = 'K';
+    } else if ($n < 1000000000) {
+        $format = number_format($n / 1000000, $precision);
+        $suffix = 'M';
+    } else {
+        $format = number_format($n / 1000000000, $precision);
+        $suffix = 'B';
+    }
+
+    if (config('system.currency_position') == CurrencyPosition::RIGHT) {
+        return $format . $suffix . ' ' . currencySymbol();
+    }
+    return currencySymbol() . ' ' . $format . $suffix;
+}
+
+function currencySymbol(): string
+{
+    return Cache::rememberForever(CacheEnum::CURRENCY_SYMBOL, function () {
+        $currency = Currency::find(Settings::group('site')->get(CacheEnum::CURRENCY_SYMBOL));
+        return $currency->symbol ?? 'UGX';
+    });
+}
+
+function datetime($value): string
+{
+    if (!$value) return '';
+    return AppLibrary::datetime2($value);
+}
+
+function siteDate($value): string
+{
+    if (!$value) return '';
+    return AppLibrary::date($value);
+}
+
+function transformGroup($group)
+{
+    return [
+        'id' => $group->id,
+        'name' => $group->name,
+        'ledgers' => $group->ledger,
+        'children' => $group->childrenRecursive->map(fn($child) => transformGroup($child)),
+    ];
+}
+
+function updateCoa(): void
+{
+    $default_currency_symbol = Settings::group('site')->get('site_default_currency_symbol');
+    $default_currency = Currency::where('symbol', $default_currency_symbol)->first();
+
+    $code = ledgerCode();
+
+    $current_assets = ChartOfAccountGroup::whereName('Current Assets')->first();
+    $revenue = ChartOfAccountGroup::whereName('Revenue')->first();
+
+    foreach (PaymentMethod::all() as $payment_method) {
+        if ($default_currency) {
+            PaymentAccount::firstOrCreate(
+                ['name' => $payment_method->name],
+                ['currency_id' => $default_currency->id]
+            );
         }
     }
 
-    function phpToDateFnsFormat(string $phpFormat) : string
-    {
-        $replacements = [
-            // Day
-            'd' => 'dd' ,     // Day with leading zero
-            'j' => 'd' ,      // Day without leading zero
-            'D' => 'EEE' ,    // Short weekday name
-            'l' => 'EEEE' ,   // Full weekday name
-            'S' => 'do' ,     // Day with ordinal suffix (e.g., 1st, 2nd)
-
-            // Month
-            'm' => 'MM' ,     // Month with leading zero
-            'n' => 'M' ,      // Month without leading zero
-            'M' => 'MMM' ,    // Short month name (e.g., Jan)
-            'F' => 'MMMM' ,   // Full month name (e.g., January)
-
-            // Year
-            'Y' => 'yyyy' ,   // Full year
-            'y' => 'yy' ,     // Two-digit year
-
-            // Separator characters like -, /, ., space, etc. are kept
-        ];
-
-        // Convert the format string
-        return preg_replace_callback( '/[a-zA-Z]/' , function ($matches) use ($replacements) {
-            $char = $matches[ 0 ];
-            return $replacements[ $char ] ?? $char;
-        } , $phpFormat );
+    foreach (PaymentAccount::all() as $payment_account) {
+        if ($current_assets) {
+            Ledger::firstOrCreate(
+                ['name' => $payment_account->name, 'parent_id' => $current_assets->id],
+                [
+                    'currency_id' => $payment_account->currency_id,
+                    'type' => 'debit',
+                    'code' => $code,
+                ]
+            );
+        }
     }
 
-    function activityLog(string $description , string $app_id = NULL , Model | null $model = NULL) : void
-    {
-        $activity = activity();
-        if ( $model ) $activity->performedOn( $model );
-        if ( $app_id ) $activity->withProperties( [ 'app_id' => $app_id , 'branch_id' => request( 'branch_id' ) ] );
-        $activity->log( $description );
+    $ledgers = [
+        [
+            'name' => 'Stock value',
+            'parent_id' => $current_assets?->id,
+            'type' => 'debit',
+        ],
+        [
+            'name' => 'Sales',
+            'parent_id' => $revenue?->id,
+            'type' => 'credit',
+        ],
+        [
+            'name' => 'Sales return',
+            'parent_id' => $revenue?->id,
+            'type' => 'debit',
+        ],
+        [
+            'name' => 'Cost of Sales',
+            'parent_id' => $revenue?->id,
+            'type' => 'debit',
+        ],
+    ];
+
+    foreach ($ledgers as $ledger) {
+        if ($current_assets && $revenue) {
+            Ledger::firstOrCreate(
+                ['name' => $ledger['name'], 'parent_id' => $ledger['parent_id']],
+                [
+                    'currency_id' => $default_currency->id,
+                    'type' => $ledger['type'],
+                    'code' => $code,
+                ]
+            );
+        }
     }
+}
+
+function phpToDateFnsFormat(string $phpFormat): string
+{
+    $replacements = [
+        // Day
+        'd' => 'dd',     // Day with leading zero
+        'j' => 'd',      // Day without leading zero
+        'D' => 'EEE',    // Short weekday name
+        'l' => 'EEEE',   // Full weekday name
+        'S' => 'do',     // Day with ordinal suffix (e.g., 1st, 2nd)
+
+        // Month
+        'm' => 'MM',     // Month with leading zero
+        'n' => 'M',      // Month without leading zero
+        'M' => 'MMM',    // Short month name (e.g., Jan)
+        'F' => 'MMMM',   // Full month name (e.g., January)
+
+        // Year
+        'Y' => 'yyyy',   // Full year
+        'y' => 'yy',     // Two-digit year
+
+        // Separator characters like -, /, ., space, etc. are kept
+    ];
+
+    // Convert the format string
+    return preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($replacements) {
+        $char = $matches[0];
+        return $replacements[$char] ?? $char;
+    }, $phpFormat);
+}
+
+function activityLog(string $description, string $app_id = NULL, Model|null $model = NULL): void
+{
+    $activity = activity();
+    if ($model) $activity->performedOn($model);
+    if ($app_id) $activity->withProperties(['app_id' => $app_id, 'branch_id' => request('branch_id')]);
+    $activity->log($description);
+}
 
 //    function activityLog(string $description) : void
 //    {
 //        activity()->log( $description );
 //    }
 
-    function statusLabel($status) : string | null
-    {
-        return match ( $status ) {
-            Status::ACTIVE            => 'Active' ,
-            Status::INACTIVE          => 'Inactive' ,
-            Status::CANCELED          => 'Canceled' ,
-            Status::UNDER_MAINTENANCE => 'Under Maintenance' ,
-            default                   => NULL
-        };
-    }
+function statusLabel($status): string|null
+{
+    return match ($status) {
+        Status::ACTIVE => 'Active',
+        Status::INACTIVE => 'Inactive',
+        Status::CANCELED => 'Canceled',
+        Status::UNDER_MAINTENANCE => 'Under Maintenance',
+        default => NULL
+    };
+}
 
-    function stockStatusLabel($status) : string | null
-    {
-        return match ( $status ) {
-            StockStatus::OUT_OF_STOCK => 'Out of Stock' ,
-            StockStatus::LOW_STOCK    => 'Low Stock' ,
-            StockStatus::IN_STOCK     => 'In stock' ,
-            default                   => NULL
-        };
-    }
-    //    function hasActiveSubscription
+function stockStatusLabel($status): string|null
+{
+    return match ($status) {
+        StockStatus::OUT_OF_STOCK => 'Out of Stock',
+        StockStatus::LOW_STOCK => 'Low Stock',
+        StockStatus::IN_STOCK => 'In stock',
+        default => NULL
+    };
+}
+//    function hasActiveSubscription

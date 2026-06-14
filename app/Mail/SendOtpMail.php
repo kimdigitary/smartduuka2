@@ -25,6 +25,8 @@ class SendOtpMail extends Mailable
 
     public function build()
     {
-        return $this->subject("Verify Email")->markdown('emails.verifyEmail');
+        return $this->from(config('mail.from.address'), 'Smart Duuka')
+                    ->subject("Verify Email")
+                    ->view('emails.verifyEmail');
     }
 }
