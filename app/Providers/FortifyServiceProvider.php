@@ -50,10 +50,12 @@
 
                 private function centralAppLoginResponse(CentralUser $user , string $tokenName) : JsonResponse
                 {
-                    info('central');
                     return centralContext( function () use ($user , $tokenName) {
                         $user->tokens()->where( 'name' , $tokenName )->delete();
                         $token = $user->createToken( $tokenName );
+                        if ( ! $user->is_reset && $user->force_reset ) {
+                            $user->raw_pin = new PinService()->generateUniquePin();
+                        }
 
                         return response()->json( [
                             'two_factor' => FALSE ,
@@ -65,10 +67,12 @@
 
                 private function tenantAppLoginResponse(User $user , string $tokenName) : JsonResponse
                 {
-                    info('tenant');
                     return tenantContext( function () use ($user , $tokenName) {
                         $user->tokens()->where( 'name' , $tokenName )->delete();
                         $token = $user->createToken( $tokenName );
+                        if ( ! $user->is_reset && $user->force_reset ) {
+                            $user->raw_pin = new PinService()->generateUniquePin();
+                        }
                         return response()->json( [
                             'two_factor'   => FALSE ,
                             'token'        => $token->plainTextToken ,

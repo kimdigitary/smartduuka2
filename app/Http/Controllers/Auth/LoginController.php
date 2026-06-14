@@ -140,7 +140,7 @@
          */
         public function pin(PinService $pin_service)
         {
-            $pin = $pin_service->generateUniquePin();
+            $pin =  $pin_service->generateUniquePin();
             return response()->json( [ 'data' => [ 'pin' => $pin ] ] );
         }
 

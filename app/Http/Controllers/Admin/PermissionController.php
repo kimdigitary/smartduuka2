@@ -46,7 +46,6 @@
 
         public function update(PermissionRequest $request , Role $role)
         {
-            info( $request->headers );
             try {
                 return new RoleResource( $this->permissionService->update( $request , $role ) );
             } catch ( Exception $exception ) {

@@ -43,14 +43,24 @@
                         [ 'title' => 'Pre-Orders' , 'name' => 'pre_orders' , 'url' => 'salesorders/preorders' , 'items' => [] ] ,
                         [ 'title' => 'Sales Returns' , 'name' => 'sales_returns' , 'url' => 'salesorders/salesreturns' , 'items' => [] ] ,
                         [ 'title' => 'Register' , 'name' => 'register' , 'url' => 'salesorders/register' , 'items' => [
-//                            [ 'title' => 'Register Create' , 'name' => 'register_create' , 'url' => 'register/create' , 'items' => [] ] ,
-//                            [ 'title' => 'Register Edit' , 'name' => 'register_edit' , 'url' => 'register/edit' , 'items' => [] ] ,
-//                            [ 'title' => 'Register Delete' , 'name' => 'register_delete' , 'url' => 'register/delete' , 'items' => [] ] ,
                             [ 'title' => 'View Register' , 'name' => 'register_show' , 'url' => 'pos/register' , 'items' => [] ] ,
                         ]
                         ]
                     ]
                 ] ,
+                [
+                    'group' => 'Debt Management' ,
+                    'items' => [
+                        [ 'title' => 'Debt Management' , 'name' => 'debt_management' , 'url' => '/debt-mgt' , 'items' => [] ]
+                    ]
+                ] ,
+                [
+                    'group' => 'Loyalty Program' ,
+                    'items' => [
+                        [ 'title' => 'Loyalty Program' , 'name' => 'royalty_program' , 'url' => '/loyalty-program' , 'items' => [] ]
+                    ]
+                ] ,
+
                 [
                     'group' => 'Commission' ,
                     'items' => [
@@ -416,7 +426,7 @@
 
             $savePermissions = function (array $nodes , int $parentId = 0) use (&$savePermissions , &$savedPermissionNames , &$savedPermissions) : void {
                 foreach ( $nodes as $node ) {
-                    $children = $node[ 'children' ] ?? [];
+                    $children      = $node[ 'children' ] ?? [];
                     $permissionKey = $node[ 'guard_name' ] . ':' . $node[ 'name' ];
 
                     if ( isset( $savedPermissions[ $permissionKey ] ) ) {
