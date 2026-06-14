@@ -97,7 +97,7 @@
 //                'old_wholesale_prices'       => WholeSalePriceResource::collection(
 //                    $this->wholesalePrices->where( 'batch' , $previousBatch ?? $latestBatch )
 //                ) ,
-                "retailPrices"               => RetailPriceResource::collection( collect( [ $this->retailPrices->first() ] ) ) ,
+                "retailPrices"               => RetailPriceResource::collection( $this->retailPrices?->take( 1 ) ?? [] ) ,
 //                "old_retail_prices"          => RetailPriceResource::collection(
 //                    $this->retailPrices->count() > 1 ? $this->retailPrices->skip( 1 )->take( 1 ) : $this->retailPrices->take( 1 )
 //                ) ,
