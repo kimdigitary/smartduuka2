@@ -109,13 +109,13 @@ done
 log "🗄 Running database migrations and seeders..."
 $COMPOSE exec -T api php artisan migrate --force
 $COMPOSE exec -T api php artisan tenants:migrate --force
-$COMPOSE exec -T api php artisan db:seed --force --class=BillingCycleSeeder
-$COMPOSE exec -T api php artisan db:seed --force --class=SubscriptionPlanSeeder
-$COMPOSE exec -T api php artisan db:seed --force --class=BusinessOnBoardSeeder
-$COMPOSE exec -T api php artisan tenants:seed --class=SystemModuleSeeder
-$COMPOSE exec -T api php artisan tenants:seed --class=PermissionTableSeeder
-$COMPOSE exec -T api php artisan tenants:seed --class=RoleTableSeeder
-$COMPOSE exec -T api php artisan tenants:insert-register-report
+#$COMPOSE exec -T api php artisan db:seed --force --class=BillingCycleSeeder
+#$COMPOSE exec -T api php artisan db:seed --force --class=SubscriptionPlanSeeder
+#$COMPOSE exec -T api php artisan db:seed --force --class=BusinessOnBoardSeeder
+#$COMPOSE exec -T api php artisan tenants:seed --class=SystemModuleSeeder
+#$COMPOSE exec -T api php artisan tenants:seed --class=PermissionTableSeeder
+#$COMPOSE exec -T api php artisan tenants:seed --class=RoleTableSeeder
+#$COMPOSE exec -T api php artisan tenants:insert-register-report
 
 $COMPOSE exec -T api php artisan seed-branches
 

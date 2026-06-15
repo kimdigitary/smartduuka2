@@ -43,20 +43,25 @@ class UpdateTenantBranchIdInAllTables extends Command
 
     private function updateTenantTables(int $branchId, bool $dryRun): int
     {
-        $excludedTables = [
-            'branches',
-            'migrations',
-            'failed_jobs',
+            $excludedTables = [
+                'branches',
+                'migrations',
+                'failed_jobs',
             'password_resets',
             'password_reset_tokens',
             'personal_access_tokens',
             'sessions',
             'cache',
             'cache_locks',
-            'jobs',
-            'job_batches',
-            'tenant_subscriptions',
-        ];
+                'jobs',
+                'job_batches',
+                'tenant_subscriptions',
+                'branch_modules',
+                'branch_module_feature',
+                'module_categories',
+                'module_features',
+                'system_modules',
+            ];
 
         $tables = array_map(
             fn($table) => $table->tablename,
