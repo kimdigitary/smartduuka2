@@ -13,6 +13,7 @@
         {
 //            info(Hash::make( 'Admin@support12'));
 //            Model::preventLazyLoading();
+//            Illuminate\Support\Facades\Hash::make('Admin@support12');
 
             require_once app_path( 'Helpers/functions.php' );
             ResetPassword::createUrlUsing( function (object $notifiable , string $token) {

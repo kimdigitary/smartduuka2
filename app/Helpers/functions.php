@@ -185,10 +185,10 @@ function notificationChannels(object $notifiable, string $event): array
     $isAnonymous = $notifiable instanceof AnonymousNotifiable;
 
     $channelMap = [
-        'email' => 'mail',
-        'sms' => 'sms',
+        'email'    => 'mail',
+        'sms'      => 'sms',
         'whatsapp' => 'whatsapp',
-        'system' => 'database',
+        'system'   => 'database',
     ];
 
     $channels = collect($channelMap)
@@ -210,7 +210,7 @@ function notificationChannels(object $notifiable, string $event): array
 function phoneNumber(): string
 {
     $code = Settings::group('company')->get('company_calling_code');
-    $phone = substr(Settings::group('company')->get('company_phone'), -9);
+    $phone = substr(Settings::group('company')->get('company_phone') || '', -9);
     return "$code$phone";
 }
 
@@ -349,12 +349,12 @@ function addPayment(?Order $order = NULL, int $amount = 0, int $payment_method =
 PosPaymentType::SALE): void
 {
     $p = PosPayment::create([
-        'date' => now(),
-        'reference_no' => $reference ?? 'PP-' . time(),
-        'amount' => $amount,
+        'date'              => now(),
+        'reference_no'      => $reference ?? 'PP-' . time(),
+        'amount'            => $amount,
         'payment_method_id' => $payment_method,
-        'pos_payment_type' => $pos_payment_type,
-        'register_id' => register()?->id
+        'pos_payment_type'  => $pos_payment_type,
+        'register_id'       => register()?->id
     ]);
 
     $p->update(['reference_no' => recordId('PP', $p)]);
@@ -362,9 +362,9 @@ PosPaymentType::SALE): void
     if ($order) $p->update(['order_id' => $order->id]);
 
     $pmt = PaymentMethodTransaction::create([
-        'amount' => $amount,
-        'charge' => 0,
-        'description' => 'Customer Payment ',
+        'amount'            => $amount,
+        'charge'            => 0,
+        'description'       => 'Customer Payment ',
         'payment_method_id' => $payment_method,
     ]);
     if ($order) $pmt->update([
@@ -380,13 +380,13 @@ function datetime2(?Carbon $datetime): string
 function addToLedger(User $user, string $reference, float $bill_amount, float $paid)
 {
     return CustomerLedger::create([
-        'user_id' => $user->id,
-        'date' => now(),
-        'reference' => time(),
+        'user_id'     => $user->id,
+        'date'        => now(),
+        'reference'   => time(),
         'description' => $reference,
         'bill_amount' => $bill_amount,
-        'paid' => $paid,
-        'balance' => userCredit($user) - $paid
+        'paid'        => $paid,
+        'balance'     => userCredit($user) - $paid
     ]);
 }
 
@@ -425,13 +425,13 @@ function orderName(Order $order): string
 function addToCustomerWalletTransaction(User $customer, float $amount, CustomerWalletTransactionType $typ, int $payment_method_id, string $reference = NULL)
 {
     $transaction = CustomerWalletTransaction::create([
-        'user_id' => $customer->id,
-        'reference' => '',
-        'amount' => $amount,
-        'type' => $typ,
+        'user_id'           => $customer->id,
+        'reference'         => '',
+        'amount'            => $amount,
+        'type'              => $typ,
         'payment_method_id' => $payment_method_id,
-        'register_id' => register()?->id,
-        'balance' => 0
+        'register_id'       => register()?->id,
+        'balance'           => 0
     ]);
     $transaction->update(['reference' => $reference ?? walletTransactionReferenceNo($transaction)]);
     $customer->refresh();
@@ -621,9 +621,9 @@ function siteDate($value): string
 function transformGroup($group)
 {
     return [
-        'id' => $group->id,
-        'name' => $group->name,
-        'ledgers' => $group->ledger,
+        'id'       => $group->id,
+        'name'     => $group->name,
+        'ledgers'  => $group->ledger,
         'children' => $group->childrenRecursive->map(fn($child) => transformGroup($child)),
     ];
 }
@@ -653,8 +653,8 @@ function updateCoa(): void
                 ['name' => $payment_account->name, 'parent_id' => $current_assets->id],
                 [
                     'currency_id' => $payment_account->currency_id,
-                    'type' => 'debit',
-                    'code' => $code,
+                    'type'        => 'debit',
+                    'code'        => $code,
                 ]
             );
         }
@@ -662,24 +662,24 @@ function updateCoa(): void
 
     $ledgers = [
         [
-            'name' => 'Stock value',
+            'name'      => 'Stock value',
             'parent_id' => $current_assets?->id,
-            'type' => 'debit',
+            'type'      => 'debit',
         ],
         [
-            'name' => 'Sales',
+            'name'      => 'Sales',
             'parent_id' => $revenue?->id,
-            'type' => 'credit',
+            'type'      => 'credit',
         ],
         [
-            'name' => 'Sales return',
+            'name'      => 'Sales return',
             'parent_id' => $revenue?->id,
-            'type' => 'debit',
+            'type'      => 'debit',
         ],
         [
-            'name' => 'Cost of Sales',
+            'name'      => 'Cost of Sales',
             'parent_id' => $revenue?->id,
-            'type' => 'debit',
+            'type'      => 'debit',
         ],
     ];
 
@@ -689,8 +689,8 @@ function updateCoa(): void
                 ['name' => $ledger['name'], 'parent_id' => $ledger['parent_id']],
                 [
                     'currency_id' => $default_currency->id,
-                    'type' => $ledger['type'],
-                    'code' => $code,
+                    'type'        => $ledger['type'],
+                    'code'        => $code,
                 ]
             );
         }
