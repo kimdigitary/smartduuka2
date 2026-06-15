@@ -92,10 +92,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'dynamic.sanctum' => DynamicSanctumConfiguration::class,
             'branchid'        => EnsureBranchIdHeader::class,
         ]);
+        $middleware->prepend(AddTenantIDAndBranchID::class);
         $middleware->append([
             AddCurrencySymbol::class,
-            AfterMiddleware::class,
-            AddTenantIDAndBranchID::class
+            AfterMiddleware::class
         ]);
         $middleware->appendToGroup('web', DetectUnusualLogin::class);
     })
