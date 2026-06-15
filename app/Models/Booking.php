@@ -19,6 +19,7 @@
             'status' ,
             'total' ,
             'notes' ,
+            'branch_id',
         ];
 
         public function service() : BelongsTo

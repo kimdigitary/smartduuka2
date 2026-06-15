@@ -17,6 +17,7 @@
         protected $fillable = [
             'name' ,
             'type' ,
+            'branch_id',
         ];
         protected $casts    = [ 'type' => EntityType::class ];
 

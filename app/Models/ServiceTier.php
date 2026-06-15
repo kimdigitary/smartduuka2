@@ -14,6 +14,7 @@
             'price' ,
             'features' ,
             'service_id' ,
+            'branch_id',
         ];
 
         protected $casts = ['price' => 'float'];

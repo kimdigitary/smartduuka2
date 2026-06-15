@@ -16,7 +16,8 @@
         protected $fillable = [
             'unit_id' ,
             'old_price' ,
-            'new_price' , 'item_id' , 'item_type','purchase_id'
+            'new_price' , 'item_id' , 'item_type','purchase_id',
+            'branch_id',
         ];
 
         public function item() : MorphTo

@@ -17,6 +17,7 @@
             'date' ,
             'debit_note' ,
             'notes' ,
+            'branch_id',
         ];
 
         public function supplier() : BelongsTo

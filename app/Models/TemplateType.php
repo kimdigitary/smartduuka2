@@ -12,5 +12,6 @@
             'name' ,
             'description' ,
             'icon' ,
+            'branch_id',
         ];
     }

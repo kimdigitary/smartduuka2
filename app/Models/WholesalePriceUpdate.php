@@ -19,7 +19,8 @@
             'old_price' ,
             'new_price' ,
             'item_id' ,
-            'item_type' ,'purchase_id'
+            'item_type' ,'purchase_id',
+            'branch_id',
         ];
         public function item() : MorphTo
         {

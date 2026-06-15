@@ -16,6 +16,7 @@
             'port' ,
             'path' ,
             'bluetooth_address' ,
+            'branch_id',
         ];
 
         public function templates() : BelongsToMany

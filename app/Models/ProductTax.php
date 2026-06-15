@@ -13,7 +13,7 @@ class ProductTax extends Model
     use HasFactory,SoftDeletes;
 
     protected $table = "product_taxes";
-    protected $fillable    = ['product_id', 'tax_id'];
+    protected $fillable    = ['product_id', 'tax_id', 'branch_id'];
     protected $casts = [
         'id'         => 'integer',
         'product_id' => 'integer',

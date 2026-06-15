@@ -27,6 +27,7 @@
             'serial' ,
             'expiry' ,
             'unit_id' ,
+            'branch_id',
         ];
 
         public function item() : MorphTo

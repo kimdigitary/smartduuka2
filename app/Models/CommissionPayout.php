@@ -15,6 +15,7 @@
             'role_id' ,
             'date' ,
             'reference' ,
+            'branch_id',
         ];
 
         protected $casts = [

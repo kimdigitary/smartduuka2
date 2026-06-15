@@ -12,7 +12,7 @@
         use HasFactory;
 
         protected $table    = "units";
-        protected $fillable = [ 'name' , 'short_name' , 'status' , 'conversion_factor' , 'base_unit_id' ];
+        protected $fillable = [ 'name' , 'short_name' , 'status' , 'conversion_factor' , 'base_unit_id' , 'branch_id'];
         protected $casts    = [
             'status'            => Status::class ,
             'conversion_factor' => 'integer' ,

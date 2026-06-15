@@ -15,7 +15,8 @@
 
         protected $table    = "ingredients";
         protected $fillable = [
-            'name' , 'buying_price' , 'unit' , 'quantity' , 'quantity_alert' , 'registerMediaConversionsUsingModelInstance' , 'status'
+            'name' , 'buying_price' , 'unit' , 'quantity' , 'quantity_alert' , 'registerMediaConversionsUsingModelInstance' , 'status',
+            'branch_id',
         ];
         protected $dates    = [ 'deleted_at' ];
         protected $casts    = [

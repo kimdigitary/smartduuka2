@@ -11,7 +11,7 @@ class ProductReview extends Model implements HasMedia
 {
     use InteractsWithMedia;
     protected $table    = "product_reviews";
-    protected $fillable = ['user_id', 'product_id', 'star', 'review'];
+    protected $fillable = ['user_id', 'product_id', 'star', 'review', 'branch_id'];
     protected $casts    = [
         'id'         => 'integer',
         'user_id'    => 'integer',

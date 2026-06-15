@@ -10,5 +10,5 @@ class VariationIngredient extends Model
     use HasFactory;
 
     protected $table = 'variation_ingredients';
-    protected $fillable = ['variation_id', 'ingredient_id', 'quantity', 'buying_price', 'total'];
+    protected $fillable = ['variation_id', 'ingredient_id', 'quantity', 'buying_price', 'total', 'branch_id'];
 }

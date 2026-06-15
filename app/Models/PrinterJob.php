@@ -13,6 +13,7 @@
         protected $fillable = [
             'printer_id' ,
             'printer_template_id' ,
+            'branch_id',
         ];
 
         public function printer() : BelongsToMany

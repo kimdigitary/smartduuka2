@@ -11,4 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 class Addon extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['branch_id'];
 }

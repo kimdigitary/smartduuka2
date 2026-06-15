@@ -17,7 +17,7 @@
         use InteractsWithMedia;
 
         protected $table    = "suppliers";
-        protected $fillable = [ 'company' , 'name' , 'email' , 'country_code' , 'phone' , 'address' , 'country' , 'state' , 'city' , 'postal_code' , 'zip_code' , 'creator_type' , 'creator_id' , 'editor_type' , 'editor_id' , 'tin' , 'status' , 'registerMediaConversionsUsingModelInstance' ];
+        protected $fillable = [ 'company' , 'name' , 'email' , 'country_code' , 'phone' , 'address' , 'country' , 'state' , 'city' , 'postal_code' , 'zip_code' , 'creator_type' , 'creator_id' , 'editor_type' , 'editor_id' , 'tin' , 'status' , 'registerMediaConversionsUsingModelInstance' , 'branch_id'];
         protected $casts    = [
             'id'           => 'integer' ,
             'status'       => Status::class ,

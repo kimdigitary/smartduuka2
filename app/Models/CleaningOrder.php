@@ -30,7 +30,8 @@
             'discount' ,
             'payment_method_id' ,
             'paid' ,
-            'balance' , 'address'
+            'balance' , 'address',
+            'branch_id',
         ];
 
         protected function getMediaCollectionName() : string

@@ -15,7 +15,7 @@ class ProductBrand extends Model implements HasMedia
 {
     use InteractsWithMedia;
     protected $table = "product_brands";
-    protected $fillable = ['name', 'slug', 'description', 'status'];
+    protected $fillable = ['name', 'slug', 'description', 'status', 'branch_id'];
     protected $casts = [
         'id'          => 'integer',
         'name'        => 'string',

@@ -15,7 +15,7 @@
         use  Filterable;
 
         protected $table    = 'distributionRoutes';
-        protected $fillable = [ 'user_id' , 'route_value' , 'actual_sales' , 'status' , 'stock_batch' ];
+        protected $fillable = [ 'user_id' , 'route_value' , 'actual_sales' , 'status' , 'stock_batch' , 'branch_id'];
 
         protected string $default_filters = DistributionRouteFilters::class;
 

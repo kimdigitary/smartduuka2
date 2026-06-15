@@ -14,6 +14,7 @@
             'role_id' ,
             'product_id' ,
             'product_variation_id' ,
+            'branch_id',
         ];
 
         public function commission() : BelongsTo

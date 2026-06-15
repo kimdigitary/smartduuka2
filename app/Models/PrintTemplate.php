@@ -34,6 +34,7 @@
             'color_theme' ,
             'page_orientation' ,
             'secondary_color' ,
+            'branch_id',
         ];
 
         protected function casts() : array

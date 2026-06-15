@@ -28,7 +28,8 @@
             'accountable_id' ,
             'accountable_type' ,
             'description' , 'cash_in' , 'cash_out' ,
-            'status' , 'transaction_category_id' , 'exchange_rate' , 'running_balance' , 'registerMediaConversionsUsingModelInstance'
+            'status' , 'transaction_category_id' , 'exchange_rate' , 'running_balance' , 'registerMediaConversionsUsingModelInstance',
+            'branch_id',
         ];
 
         public function accountable() : MorphTo

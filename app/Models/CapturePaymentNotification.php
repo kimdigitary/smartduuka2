@@ -9,7 +9,7 @@ class CapturePaymentNotification extends Model
 {
     public $timestamps = false;
     protected $table = "capture_payment_notifications";
-    protected $fillable = ['order_id', 'token', 'created_at'];
+    protected $fillable = ['order_id', 'token', 'created_at', 'branch_id'];
     protected $casts = [
         'order_id'   => 'integer',
         'token'      => 'string',

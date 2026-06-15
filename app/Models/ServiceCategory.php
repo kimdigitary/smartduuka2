@@ -15,5 +15,6 @@
         protected $fillable = [
             'name' ,
             'description' ,
+            'branch_id',
         ];
     }

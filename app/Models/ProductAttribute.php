@@ -13,7 +13,7 @@ class ProductAttribute extends Model
 {
     use HasFactory;
     protected $table = "product_attributes";
-    protected $fillable = ['name','status'];
+    protected $fillable = ['name','status', 'branch_id'];
     protected $casts = [
         'id'     => 'integer',
         'name'   => 'string',

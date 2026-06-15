@@ -15,6 +15,7 @@
             'product_scope' ,
             'condition_json' ,
             'is_active' ,
+            'branch_id',
         ];
 
         protected $casts = [

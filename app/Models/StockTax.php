@@ -21,7 +21,8 @@ class StockTax extends Model
         'name',
         'code',
         'tax_rate',
-        'tax_amount'
+        'tax_amount',
+        'branch_id',
     ];
 
     protected $casts = [

@@ -11,6 +11,7 @@
             'name' ,
             'symbol' ,
             'foreign' ,
+            'branch_id',
         ];
         protected $casts    = [ 'foreign' => Foreign::class ];
     }

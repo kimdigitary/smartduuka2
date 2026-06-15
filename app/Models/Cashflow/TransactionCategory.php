@@ -12,6 +12,7 @@ class TransactionCategory extends Model
     protected $fillable = [
         'name',
         'cash_type',
+        'branch_id',
     ];
     protected $casts = ['cash_type' => CashType::class];
 

@@ -9,7 +9,8 @@
     {
         protected $table    = "currencies";
         protected $fillable = [ 'name' , 'symbol' , 'code' , 'is_cryptocurrency' , 'exchange_rate' ,
-            'is_base'
+            'is_base',
+            'branch_id',
         ];
 
         protected $casts = [

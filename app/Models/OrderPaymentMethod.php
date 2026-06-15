@@ -15,6 +15,7 @@
             'payment_method_id' ,
             'amount' ,
             'order_id' ,
+            'branch_id',
         ];
 
         public function paymentMethod() : BelongsTo

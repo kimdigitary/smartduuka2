@@ -64,7 +64,8 @@
             'quotation_status' ,
             'offer_amount' ,
             'offer_message' , 'quotation_type' ,
-            'decline_message'
+            'decline_message',
+            'branch_id',
         ];
 
         protected $casts = [

@@ -10,6 +10,7 @@
         protected $fillable = [
             'name' ,
             'system_module_id' ,
+            'branch_id',
         ];
 
         public function systemModule() : BelongsTo

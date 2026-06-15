@@ -15,6 +15,7 @@
             'description' ,
             'quantity' ,
             'notes' ,
+            'branch_id',
         ];
 
         public function cleaningService() : BelongsTo

@@ -16,6 +16,7 @@
             'paid' ,
             'balance' ,
             'user_id' ,
+            'branch_id',
         ];
 
         protected function casts() : array

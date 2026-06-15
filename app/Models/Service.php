@@ -22,7 +22,8 @@
             'duration' ,
             'description' , 'type' , 'service_type' ,
             'status' ,
-            'tax_inclusive'
+            'tax_inclusive',
+            'branch_id',
         ];
 
         protected $casts = [ 'type' => ServiceType::class , 'status' => Status::class , 'base_price' => 'float' ];

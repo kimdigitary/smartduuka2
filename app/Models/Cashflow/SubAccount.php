@@ -15,6 +15,7 @@
             'name' ,
             'type' ,
             'mother_account_id' ,
+            'branch_id',
         ];
         protected $casts    = [
             'type' => SubAccountType::class

@@ -15,6 +15,7 @@
         protected $fillable = [
             'order_service_product_id' ,
             'service_tier_id' ,
+            'branch_id',
         ];
 
         public function orderServiceProduct() : BelongsTo

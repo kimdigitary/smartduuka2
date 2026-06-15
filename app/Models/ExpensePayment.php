@@ -13,7 +13,8 @@
     {
         use HasFactory;
 
-        protected $fillable = [ 'user_id' , 'expense_id' , 'date' , 'referenceNo' , 'amount' , 'paymentMethod' , 'attachment' , 'register_id' , 'payment_method_id'
+        protected $fillable = [ 'user_id' , 'expense_id' , 'date' , 'referenceNo' , 'amount' , 'paymentMethod' , 'attachment' , 'register_id' , 'payment_method_id',
+            'branch_id',
         ];
 
         protected $casts = [

@@ -10,7 +10,7 @@ class DefaultAccess extends Model
     use HasFactory;
 
     protected $table = "default_access";
-    protected $fillable = ['name', 'user_id', 'default_id'];
+    protected $fillable = ['name', 'user_id', 'default_id', 'branch_id'];
 
     protected $casts = [
         'id'         => 'integer',

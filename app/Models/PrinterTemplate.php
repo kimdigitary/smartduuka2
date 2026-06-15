@@ -9,7 +9,8 @@ class PrinterTemplate extends Model
     protected $fillable   = [
         'label' ,
         'value' ,
-        'document_type' // FIXED: Added document_type
+        'document_type', // FIXED: Added document_type
+        'branch_id',
     ];
     public    $timestamps = FALSE;
 }

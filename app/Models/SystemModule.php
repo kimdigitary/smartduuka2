@@ -14,6 +14,7 @@
             'icon' ,
             'price' ,
             'module_category_id' ,
+            'branch_id',
         ];
 
         // Removed the casts() method for 'enabled' as it no longer exists on this table

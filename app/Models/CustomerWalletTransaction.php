@@ -19,6 +19,7 @@
             'type' ,
             'balance' ,
             'register_id' ,
+            'branch_id',
         ];
 
         protected $casts = [ 'type' => CustomerWalletTransactionType::class ];

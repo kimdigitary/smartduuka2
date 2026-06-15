@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Tax extends Model
 {
     protected $table = "taxes";
-    protected $fillable = ['name', 'code', 'tax_rate', 'status'];
+    protected $fillable = ['name', 'code', 'tax_rate', 'status', 'branch_id'];
     protected $casts = [
         'id'       => 'integer',
         'name'     => 'string',

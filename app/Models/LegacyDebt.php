@@ -14,7 +14,8 @@
             'user_id' ,
             'amount' ,
             'date' ,
-            'notes' , 'payment_status'
+            'notes' , 'payment_status',
+            'branch_id',
         ];
 
 

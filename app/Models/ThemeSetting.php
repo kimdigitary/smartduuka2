@@ -10,6 +10,8 @@ class ThemeSetting extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
+    protected $fillable = ['branch_id'];
+
     protected $table = "settings";
 
     public function getLogoAttribute(): string

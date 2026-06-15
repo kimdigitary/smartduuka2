@@ -21,7 +21,8 @@ class NotificationAlert extends Model
         'system',
         'mail_message',
         'sms_message',
-        'push_notification_message'
+        'push_notification_message',
+        'branch_id',
     ];
 
     protected $casts = [

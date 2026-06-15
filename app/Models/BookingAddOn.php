@@ -12,6 +12,7 @@
         protected $fillable = [
             'booking_id' ,
             'service_add_on_id' ,
+            'branch_id',
         ];
 
         public function booking() : BelongsTo

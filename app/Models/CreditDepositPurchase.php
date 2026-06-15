@@ -17,7 +17,8 @@
             'user_id' ,
             'type' ,
             'paid' ,
-            'balance','date'
+            'balance','date',
+            'branch_id',
         ];
 
         public function paymentMethod() : HasOne

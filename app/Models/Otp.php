@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Otp extends Model
 {
     protected $table = "otps";
-    protected $fillable = ['phone', 'code', 'token', 'created_at'];
+    protected $fillable = ['phone', 'code', 'token', 'created_at', 'branch_id'];
     protected $casts = [
         'phone'      => 'string',
         'code'       => 'string',

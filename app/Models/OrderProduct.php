@@ -36,6 +36,7 @@
             'return_type' ,
             'return_quantity' ,
             'quotation_item_type' ,
+            'branch_id',
         ];
         protected $casts    = [ 'return_type' => ReturnType::class , 'quotation_item_type' => ItemType::class ];
 

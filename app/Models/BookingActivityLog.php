@@ -13,6 +13,7 @@
             'user_id' ,
             'booking_id' ,
             'created_at' ,
+            'branch_id',
         ];
 
         public function user() : BelongsTo

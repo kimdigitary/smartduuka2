@@ -12,7 +12,7 @@ class ProductAttributeOption extends Model
 {
     use HasFactory;
     protected $table = "product_attribute_options";
-    protected $fillable = ['product_attribute_id', 'name'];
+    protected $fillable = ['product_attribute_id', 'name', 'branch_id'];
 
     public function productAttribute(): BelongsTo
     {

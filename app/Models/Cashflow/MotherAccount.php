@@ -16,7 +16,8 @@
 
         protected $fillable = [
             'name' ,
-            'type' , 'cash_in' , 'cash_out'
+            'type' , 'cash_in' , 'cash_out',
+            'branch_id',
         ];
         protected $casts    = [
             'type' => SubAccountType::class

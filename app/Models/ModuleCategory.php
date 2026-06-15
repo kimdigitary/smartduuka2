@@ -9,6 +9,7 @@
     {
         protected $fillable = [
             'name' ,
+            'branch_id',
         ];
 
         public function modules() : HasMany

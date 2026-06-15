@@ -14,6 +14,7 @@
             'style' ,
             'description' ,
             'recommendations' ,
+            'branch_id',
         ];
         protected $casts    = [ 'style' => DesignStyle::class , 'recommendations' => 'array' ];
     }

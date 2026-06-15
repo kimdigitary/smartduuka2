@@ -21,6 +21,7 @@
             'unit_price' ,
             'service_id' ,
             'quotation_item_type' ,
+            'branch_id',
         ];
         protected $table    = 'order_services';
         protected $casts    = [ 'quotation_item_type' => ItemType::class ];

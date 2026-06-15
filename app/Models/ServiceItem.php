@@ -19,6 +19,7 @@
             'total' ,
             'service_id' ,
             'price' ,
+            'branch_id',
         ];
         protected $casts    = [ 'price' => 'float' , 'quantity' => 'float' , 'total' => 'float' ];
 

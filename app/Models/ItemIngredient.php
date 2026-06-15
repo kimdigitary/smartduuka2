@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class ItemIngredient extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['branch_id'];
 }
