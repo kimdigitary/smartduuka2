@@ -40,12 +40,12 @@ class User extends Authenticatable implements HasMedia, Syncable
     protected $hidden = ['password', 'remember_token', 'pin'];
 
     protected $casts = [
-        'id' => 'integer',
-        'status' => Status::class,
+        'id'                => 'integer',
+        'status'            => Status::class,
         'email_verified_at' => 'datetime',
-        'last_login_date' => 'datetime',
-        'force_reset' => 'boolean',
-        'is_reset' => 'boolean',
+        'last_login_date'   => 'datetime',
+        'force_reset'       => 'boolean',
+        'is_reset'          => 'boolean',
     ];
 
     public function getGlobalIdentifierKey()
@@ -271,7 +271,9 @@ class User extends Authenticatable implements HasMedia, Syncable
 
     public function openRegister(): Register|null
     {
-        return $this->registers()->whereNull('closed_at')->latest()->first();
+        $r = $this->registers()->whereNull('closed_at')->latest()->first();
+        info($r);
+        return $r;
     }
 
     public function scopeWhereHasDebt($query)
