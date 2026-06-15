@@ -1,22 +1,23 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
-    class StorePaymentMethodRequest extends FormRequest
+class StorePaymentMethodRequest extends FormRequest
+{
+    public function authorize(): bool
     {
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
-
-        public function rules() : array
-        {
-            return [
-                'name'          => 'required|string' ,
-                'merchant_code' => 'sometimes|string' ,
-                'image'         => 'sometimes|file' ,
-            ];
-        }
+        return TRUE;
     }
+
+    public function rules(): array
+    {
+        return [
+            'name'          => 'required|string',
+            'merchant_code' => 'sometimes|string',
+            'image'         => 'sometimes|file',
+            'branch_id'     => ['required', 'integer', 'min:1'],
+        ];
+    }
+}

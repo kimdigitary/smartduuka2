@@ -1,60 +1,60 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use Illuminate\Foundation\Http\FormRequest;
-    use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-    class ProductRequest extends FormRequest
+class ProductRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize(): bool
     {
-        /**
-         * Determine if the user is authorized to make this request.
-         *
-         * @return bool
-         */
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
+        return TRUE;
+    }
 
-        /**
-         * Get the validation rules that apply to the request.
-         *
-         * @return array
-         */
-        public function rules() : array
-        {
-            return [
-                'name'                       => [
-                    'required' ,
-                    'string' ,
-                    'max:190' ,
-                    Rule::unique( 'products' , 'name' )->whereNull( 'deleted_at' )->ignore( $this->route( 'product.id' ) )
-                ] ,
-                'sku'                        => [
-                    'required' ,
-                    Rule::unique( 'products' , 'sku' )->whereNull( 'deleted_at' )->ignore( $this->route( 'product.id' ) )
-                ] ,
-                'barcode'                    => [ 'required' , 'numeric' , 'not_in:0' ] ,
-                'type'                       => [ 'required' , 'numeric' , 'not_in:0' ] ,
-                'trackStock'                 => [ 'sometimes' , 'numeric' ] ,
-                'product_category_id'        => [ 'required' , 'numeric' , 'not_in:0' ] ,
-                'product_brand_id'           => [ 'nullable' , 'numeric' , 'max_digits:10' ] ,
-                'weight'                     => [ 'nullable' , 'string' , 'max:100' ] ,
-                'weight_unit_id'             => [ 'nullable' , 'string' , 'max:100' ] ,
-                'tags'                       => [ 'nullable' , 'string' ] ,
-                'unit_pricing'               => [ 'nullable' , 'json' ] ,
-                'returnable'                 => [ 'nullable' , 'string' ] ,
-                'description'                => [ 'nullable' , 'string' , 'max:5000' ] ,
-                'image'                      => 'sometimes|file' ,
-                'branch_id'                  => 'sometimes|numeric:' ,
-                'status'                     => [ 'required' , 'numeric' , 'max:24' ] ,
-                'can_purchasable'            => [ 'required' , 'numeric' , 'max:24' ] ,
-                'stock_out'                  => [ 'sometimes' , 'numeric' , 'max:24' ] ,
-                'stock'                      => "required_if:trackStock,1" ,
-                'low_stock_quantity_warning' => "required_if:trackStock,1" ,
-            ];
-        }
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            'name'                       => [
+                'required',
+                'string',
+                'max:190',
+                Rule::unique('products', 'name')->whereNull('deleted_at')->ignore($this->route('product.id'))
+            ],
+            'sku'                        => [
+                'required',
+                Rule::unique('products', 'sku')->whereNull('deleted_at')->ignore($this->route('product.id'))
+            ],
+            'barcode'                    => ['required', 'numeric', 'not_in:0'],
+            'type'                       => ['required', 'numeric', 'not_in:0'],
+            'trackStock'                 => ['sometimes', 'numeric'],
+            'product_category_id'        => ['required', 'numeric', 'not_in:0'],
+            'product_brand_id'           => ['nullable', 'numeric', 'max_digits:10'],
+            'weight'                     => ['nullable', 'string', 'max:100'],
+            'weight_unit_id'             => ['nullable', 'string', 'max:100'],
+            'tags'                       => ['nullable', 'string'],
+            'unit_pricing'               => ['nullable', 'json'],
+            'returnable'                 => ['nullable', 'string'],
+            'description'                => ['nullable', 'string', 'max:5000'],
+            'image'                      => 'sometimes|file',
+            'branch_id'                  => ['required', 'integer', 'min:1'],
+            'status'                     => ['required', 'numeric', 'max:24'],
+            'can_purchasable'            => ['required', 'numeric', 'max:24'],
+            'stock_out'                  => ['sometimes', 'numeric', 'max:24'],
+            'stock'                      => "required_if:trackStock,1",
+            'low_stock_quantity_warning' => "required_if:trackStock,1",
+        ];
+    }
 
 //        public function attributes() : array
 //        {
@@ -76,4 +76,4 @@
 //                }
 //            } );
 //        }
-    }
+}

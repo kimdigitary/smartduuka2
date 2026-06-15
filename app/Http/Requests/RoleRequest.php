@@ -13,7 +13,7 @@ class RoleRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize() : bool
+    public function authorize(): bool
     {
         return true;
     }
@@ -23,11 +23,12 @@ class RoleRequest extends FormRequest
      *
      * @return array
      */
-    #[ArrayShape(['name' => "array"])] 
-    public function rules() : array
+
+    public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:190', Rule::unique("roles", "name")->ignore($this->route('role.id'))],
+            'name'      => ['required', 'string', 'max:190', Rule::unique("roles", "name")->ignore($this->route('role.id'))],
+            'branch_id' => ['required', 'integer', 'min:1'],
         ];
     }
 }

@@ -19,6 +19,7 @@
                 'unit'           => [ 'required' , 'string' , 'regex:/^[a-zA-Z]+$/' , 'max:255' ] ,
 //            'quantity'        => ['required', 'integer', 'min:0'],
                 'quantity_alert' => [ 'required' , 'numeric' , 'min:0' ] ,
+                'branch_id'         => ['required', 'integer', 'min:1'],
             ];
         }
     }

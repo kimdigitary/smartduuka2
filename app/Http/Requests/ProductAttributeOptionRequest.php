@@ -12,7 +12,7 @@ class ProductAttributeOptionRequest extends FormRequest
      *
      * @return bool
      */
-    public function authorize() : bool
+    public function authorize(): bool
     {
         return true;
     }
@@ -22,17 +22,18 @@ class ProductAttributeOptionRequest extends FormRequest
      *
      * @return array
      */
-    public function rules() : array
+    public function rules(): array
     {
         return [
-            'name' => [
+            'name'      => [
                 'required',
                 'string',
                 'max:190',
                 Rule::unique("product_attribute_options", "name")->ignore(
                     $this->route('productAttributeOption.id')
                 )->where('product_attribute_id', $this->route('productAttribute.id'))
-            ]
+            ],
+            'branch_id' => ['required', 'integer', 'min:1'],
         ];
     }
 }

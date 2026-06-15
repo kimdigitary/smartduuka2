@@ -1,25 +1,26 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
-    class StockTransferRequest extends FormRequest
+class StockTransferRequest extends FormRequest
+{
+    public function authorize(): bool
     {
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
-
-        public function rules() : array
-        {
-            return [
-                'type'                     => [ 'required' , 'string' ] ,
-                'source_warehouse_id'      => [ enabledWarehouse() ? 'required' : 'nullable' ] ,
-                'destination_warehouse_id' => [ enabledWarehouse() ? 'required' : 'nullable' ] ,
-                'products'                 => [ 'required' , 'string' ] ,
-                'driver'                   => [ 'sometimes' , 'string' ] ,
-                'number_plate'             => [ 'sometimes' , 'string' ] ,
-            ];
-        }
+        return TRUE;
     }
+
+    public function rules(): array
+    {
+        return [
+            'type'                     => ['required', 'string'],
+            'source_warehouse_id'      => [enabledWarehouse() ? 'required' : 'nullable'],
+            'destination_warehouse_id' => [enabledWarehouse() ? 'required' : 'nullable'],
+            'products'                 => ['required', 'string'],
+            'driver'                   => ['sometimes', 'string'],
+            'number_plate'             => ['sometimes', 'string'],
+            'branch_id'                => ['required', 'integer', 'min:1'],
+        ];
+    }
+}

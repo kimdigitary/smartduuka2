@@ -96,6 +96,7 @@ class CustomerService
                     'phone2'            => $request->phone2,
                     'notes'             => $request->notes,
                     'email'             => $request->email,
+                    'branch_id'         => $request->branch_id,
                 ], fn($v) => $v !== NULL));
 
                 $this->user->assignRole(EnumRole::CUSTOMER);

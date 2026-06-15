@@ -54,14 +54,6 @@ class IngredientsController extends AdminController
     public function store(IngredientRequest $request)
     {
         try {
-//            if (config('system.demo')) {
-//                return new IngredientResource($this->ingredientsService->store($request));
-//            } else {
-//                if ($this->apiRequest->status) {
-//                    return new IngredientResource($this->ingredientsService->store($request));
-//                }
-//                return response(['status' => false, 'message' => $this->apiRequest->message], 422);
-//            }
             return new IngredientResource($this->ingredientsService->store($request));
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);

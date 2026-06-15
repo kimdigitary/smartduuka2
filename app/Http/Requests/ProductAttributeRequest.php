@@ -1,37 +1,38 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use Illuminate\Foundation\Http\FormRequest;
-    use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-    class ProductAttributeRequest extends FormRequest
+class ProductAttributeRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize(): bool
     {
-        /**
-         * Determine if the user is authorized to make this request.
-         *
-         * @return bool
-         */
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
-
-        /**
-         * Get the validation rules that apply to the request.
-         *
-         * @return array
-         */
-        public function rules() : array
-        {
-            return [
-                'name'   => [
-                    'required' ,
-                    'string' ,
-                    'max:190' ,
-                    Rule::unique( "product_attributes" , "name" )->ignore( $this->route( 'productAttribute.id' ) )
-                ] ,
-                'status' => [ 'required' , 'numeric:' ]
-            ];
-        }
+        return TRUE;
     }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules(): array
+    {
+        return [
+            'name'      => [
+                'required',
+                'string',
+                'max:190',
+                Rule::unique("product_attributes", "name")->ignore($this->route('productAttribute.id'))
+            ],
+            'status'    => ['required', 'numeric:'],
+            'branch_id' => ['required', 'integer', 'min:1'],
+        ];
+    }
+}

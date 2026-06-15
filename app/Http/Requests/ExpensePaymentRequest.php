@@ -1,22 +1,23 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
-    class ExpensePaymentRequest extends FormRequest
+class ExpensePaymentRequest extends FormRequest
+{
+    public function authorize(): bool
     {
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
-
-        public function rules() : array
-        {
-            return [
-                'amount'    => 'required' ,
-                'method'    => 'required|not_in:null' ,
-                'expenseId' => 'required' ,
-            ];
-        }
+        return TRUE;
     }
+
+    public function rules(): array
+    {
+        return [
+            'amount'    => 'required',
+            'method'    => 'required|not_in:null',
+            'expenseId' => 'required',
+            'branch_id' => ['required', 'integer', 'min:1'],
+        ];
+    }
+}

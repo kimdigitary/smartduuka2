@@ -25,13 +25,14 @@ class TaxRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'              => [
+            'name'      => [
                 'required',
                 'string',
                 'max:190'
             ],
-            'tax_rate' => ['required', 'numeric', 'min:0', 'max:100'],
-            'status'   => ['required', 'numeric'],
+            'tax_rate'  => ['required', 'numeric', 'min:0', 'max:100'],
+            'status'    => ['required', 'numeric'],
+            'branch_id' => ['required', 'integer', 'min:1'],
         ];
     }
 }

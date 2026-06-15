@@ -112,7 +112,7 @@
         }
 
         public function store(CustomerRequest $request
-        ) : Response | CustomerResource | Application | ResponseFactory
+        )
         {
             try {
                 return new CustomerResource( $this->customerService->store( $request ) );
@@ -124,7 +124,7 @@
         public function update(
             CustomerRequest $request ,
             User $customer
-        ) : Response | CustomerResource | Application | ResponseFactory
+        )
         {
             try {
                 return new CustomerResource( $this->customerService->update( $request , $customer ) );
@@ -155,7 +155,7 @@
         }
 
         public function show(User $customer
-        ) : Response | CustomerResource | Application | ResponseFactory
+        )
         {
             try {
                 return new CustomerResource( $this->customerService->show( $customer ) );
@@ -186,7 +186,7 @@
         public function changePassword(
             UserChangePasswordRequest $request ,
             User $customer
-        ) : Response | CustomerResource | Application | ResponseFactory
+        )
         {
             try {
                 return new CustomerResource( $this->customerService->changePassword( $request , $customer ) );
@@ -198,7 +198,7 @@
         public function changeImage(
             ChangeImageRequest $request ,
             User $customer
-        ) : Response | CustomerResource | Application | ResponseFactory
+        )
         {
             try {
                 return new CustomerResource( $this->customerService->changeImage( $request , $customer ) );
@@ -210,7 +210,7 @@
         public function myOrder(
             PaginateRequest $request ,
             User $customer
-        ) 
+        )
         {
             try {
                 return OrderResource::collection( $this->orderService->userOrder( $request , $customer ) );

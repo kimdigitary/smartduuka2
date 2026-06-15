@@ -1,52 +1,53 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use App\Models\Order;
-    use App\Models\PosPayment;
-    use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Order;
+use App\Models\PosPayment;
+use Illuminate\Foundation\Http\FormRequest;
 
-    class StorePosPaymentRequest extends FormRequest
+class StorePosPaymentRequest extends FormRequest
+{
+
+    public function authorize(): bool
     {
-
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
-
-        public function rules() : array
-        {
-            return [
-                'purchase_id'    => [ 'required' , 'not_in:0' , 'not_in:null' ] ,
-                'reference_no'   => [ 'nullable' , 'string' ] ,
-                'amount'         => [ 'required' , 'numeric' ] ,
-                'paid'           => [ 'sometimes' , 'numeric' ] ,
-                'points'         => [ 'sometimes' , 'numeric' ] ,
-                'change'         => [ 'sometimes' , 'numeric' ] ,
-                'payment_method' => [ 'required' , 'not_in:0' , 'not_in:null' ] ,
-                'file'           => [ 'nullable' , 'file' , 'mimes:jpg,jpeg,png,pdf' , 'max:2048' ] ,
-            ];
-        }
-
-        public function withValidator($validator)
-        {
-            $validator->after( function ($validator) {
-                $status  = FALSE;
-                $message = '';
-
-                $purchasePaymentAmount = PosPayment::where( 'order_id' , request( 'purchase_id' ) )->sum( 'amount' );
-                $order                 = Order::findOrFail( request( 'purchase_id' ) );
-
-                $paymentDue = (float) $order->total - (float) $purchasePaymentAmount;
-
-                if ( $paymentDue < request( 'amount' ) ) {
-                    $status  = TRUE;
-                    $message = trans( 'all.message.price_total_invalid' );
-                }
-
-                if ( $status ) {
-                    $validator->errors()->add( 'global' , $message );
-                }
-            } );
-        }
+        return TRUE;
     }
+
+    public function rules(): array
+    {
+        return [
+            'purchase_id'    => ['required', 'not_in:0', 'not_in:null'],
+            'reference_no'   => ['nullable', 'string'],
+            'amount'         => ['required', 'numeric'],
+            'paid'           => ['sometimes', 'numeric'],
+            'points'         => ['sometimes', 'numeric'],
+            'change'         => ['sometimes', 'numeric'],
+            'payment_method' => ['required', 'not_in:0', 'not_in:null'],
+            'file'           => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'branch_id'      => ['required', 'integer', 'min:1']
+        ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $status = FALSE;
+            $message = '';
+
+            $purchasePaymentAmount = PosPayment::where('order_id', request('purchase_id'))->sum('amount');
+            $order = Order::findOrFail(request('purchase_id'));
+
+            $paymentDue = (float)$order->total - (float)$purchasePaymentAmount;
+
+            if ($paymentDue < request('amount')) {
+                $status = TRUE;
+                $message = trans('all.message.price_total_invalid');
+            }
+
+            if ($status) {
+                $validator->errors()->add('global', $message);
+            }
+        });
+    }
+}

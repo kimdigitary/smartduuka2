@@ -355,7 +355,7 @@ PosPaymentType::SALE): void
         'payment_method_id' => $payment_method,
         'pos_payment_type'  => $pos_payment_type,
         'register_id'       => register()?->id,
-        'branch_id'             => branchId()
+        'branch_id'         => branchId()
     ]);
 
     $p->update(['reference_no' => recordId('PP', $p)]);
@@ -367,7 +367,7 @@ PosPaymentType::SALE): void
         'charge'            => 0,
         'description'       => 'Customer Payment ',
         'payment_method_id' => $payment_method,
-        'branch_id'             => branchId()
+        'branch_id'         => branchId()
     ]);
     if ($order) $pmt->update([
         'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #' . $order->order_serial_no,
@@ -429,6 +429,7 @@ function addToCustomerWalletTransaction(User $customer, float $amount, CustomerW
 {
     $transaction = CustomerWalletTransaction::create([
         'user_id'           => $customer->id,
+        'branch_id'         => branchId(),
         'reference'         => '',
         'amount'            => $amount,
         'type'              => $typ,
