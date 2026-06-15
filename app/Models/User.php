@@ -271,10 +271,7 @@ class User extends Authenticatable implements HasMedia, Syncable
 
     public function openRegister(): Register|null
     {
-        $r = $this->registers()->whereNull('closed_at')->latest()->first();
-        $sql = $this->registers()->whereNull('closed_at')->latest()->toRawSql();
-        info($sql);
-        return $r;
+        return $this->registers()->whereNull('closed_at')->latest()->first();
     }
 
     public function scopeWhereHasDebt($query)

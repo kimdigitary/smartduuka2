@@ -192,7 +192,7 @@ Route::middleware([
             ->name('forgot-password');
     });
 
-    Route::prefix('admin')->name('admin.')->middleware(['local.auth', 'auth:sanctum', 'subscribed'])->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware(['local.auth', 'auth:sanctum', 'subscribed', 'verify.branchid:POST,PUT,PATCH'])->group(function () {
         Route::prefix('timezone')->name('timezone.')->group(function () {
             Route::get('/', [TimezoneController::class, 'index']);
         });
@@ -219,29 +219,6 @@ Route::middleware([
         Route::apiResource('printDesigns', PrintDesignController::class)->except('destroy');
         Route::apiResource('templateTypes', TemplateTypeController::class)->except('destroy');
         Route::delete('expense-categories/delete', [ExpenseCategoryController::class, 'destroy']);
-
-//            Route::prefix( 'print-agent' )->group( function () {
-//                Route::post( '/trigger-scan' , [ PrintAgentController::class , 'triggerScan' ] );
-//                Route::get( '/latest-scan' , [ PrintAgentController::class , 'latestScan' ] );
-//                Route::post( '/print' , [ PrintAgentController::class , 'print' ] );
-//                Route::post( '/open-drawer' , [ PrintAgentController::class , 'openDrawer' ] );
-//                Route::get( '/status' , [ PrintAgentController::class , 'status' ] );
-//                Route::post( '/report-printers' , [ PrintAgentController::class , 'reportPrinters' ] );
-//                Route::post( '/status' , [ PrintAgentController::class , 'updateJobStatus' ] );
-//                Route::get( '/me' , function (Request $request) {
-//                    return response()->json( [
-//                        'business_id' => $request->user()->business_id ,
-//                        'currency'    => 'UGX'
-//                    ] );
-//                } );
-//            } );
-
-//            Route::prefix( 'branches' )->name( 'branches.' )->group( function () {
-//                Route::get( '/' , [ BranchController::class , 'branches' ] );
-//                Route::post( '/' , [ BranchController::class , 'store' ] );
-//                Route::put( '/{branch}' , [ BranchController::class , 'update' ] );
-//                Route::delete( '/delete' , [ BranchController::class , 'destroy' ] );
-//            } );
 
         Route::apiResource('returns', PurchaseReturnController::class)->except('destroy');
 

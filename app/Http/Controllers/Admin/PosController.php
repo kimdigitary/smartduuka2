@@ -249,6 +249,7 @@ class PosController extends AdminController
             'opening_float' => $request->integer('amount'),
             'status'        => RegisterStatus::OPEN,
             'user_id'       => $user->id,
+            'branch_id'     => branchId(),
         ]);
     }
 
@@ -453,8 +454,7 @@ class PosController extends AdminController
 
     public function registerDetails()
     {
-        $register = tenantUser()?->openRegister();
-        info($register);
+        $register = auth()->user()?->openRegister();
         if (!$register) {
             return response()->json(['message' => 'No open register found'], 404);
         }

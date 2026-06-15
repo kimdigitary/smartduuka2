@@ -27,6 +27,7 @@
             'closing_float' ,
             'difference' ,
             'notes' ,
+            'branch_id' ,
         ];
 
         public function posPayments() : HasMany
