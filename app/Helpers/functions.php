@@ -354,7 +354,8 @@ PosPaymentType::SALE): void
         'amount'            => $amount,
         'payment_method_id' => $payment_method,
         'pos_payment_type'  => $pos_payment_type,
-        'register_id'       => register()?->id
+        'register_id'       => register()?->id,
+        'branch_id'             => branchId()
     ]);
 
     $p->update(['reference_no' => recordId('PP', $p)]);
@@ -366,6 +367,7 @@ PosPaymentType::SALE): void
         'charge'            => 0,
         'description'       => 'Customer Payment ',
         'payment_method_id' => $payment_method,
+        'branch_id'             => branchId()
     ]);
     if ($order) $pmt->update([
         'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #' . $order->order_serial_no,
@@ -386,6 +388,7 @@ function addToLedger(User $user, string $reference, float $bill_amount, float $p
         'description' => $reference,
         'bill_amount' => $bill_amount,
         'paid'        => $paid,
+        'branch_id'   => branchId(),
         'balance'     => userCredit($user) - $paid
     ]);
 }
