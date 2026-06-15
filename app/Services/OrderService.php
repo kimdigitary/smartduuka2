@@ -522,7 +522,8 @@
                             'payment_status'  => $paymentStatus->value ,
                             'warehouse_id'    => $warehouse_id ,
                             'order_datetime'  => now() ,
-                            'register_id'     => register()->id
+                            'register_id'     => register()->id ,
+                            'branch_id'       => branchId()
                         ]
                     );
 
@@ -662,6 +663,7 @@
                             'order_datetime' => $request->date ,
                             'reason'         => $request->notes ?? $order->reason ,
                             'warehouse_id'   => $request->warehouse_id ?? $order->warehouse_id ,
+                            'branch_id'      => branchId() ,
                         ] )
                     );
 
@@ -731,7 +733,8 @@
                             'warehouse_id'     => $request->warehouse_id ?? Warehouse::first()->id ,
                             'order_datetime'   => $request->date ,
                             'reason'           => $request->notes ,
-                            'register_id'      => register()?->id
+                            'register_id'      => register()?->id ,
+                            'branch_id'        => branchId()
                         ] )
                     );
 
@@ -820,6 +823,7 @@
                 'unit_price'                  => $product[ 'unitPrice' ] ,
                 'product_attribute_id'        => $product[ 'attribute_id' ] ?? NULL ,
                 'product_attribute_option_id' => $product[ 'option_id' ] ?? NULL ,
+                'branch_id'                   => $order->branch_id ?: branchId() ,
             ] );
 
             if ( $is_variation ) $order_product->update( [ 'variation_id' => $variation_id ] );
@@ -947,6 +951,7 @@
                 'product_attribute_id'        => $product[ 'attribute_id' ] ?? NULL ,
                 'product_attribute_option_id' => $product[ 'option_id' ] ?? NULL ,
                 'quotation_item_type'         => ItemType::PRODUCT ,
+                'branch_id'                   => $order->branch_id ?: branchId() ,
             ] );
 
             if ( $is_variation ) {
@@ -1018,6 +1023,7 @@
                         'payment_method'    => $paymentMethodId ,
                         'register_id'       => register()->id ,
                         'original_order_id' => $originalOrder->id ,
+                        'branch_id'         => branchId() ,
                     ] );
 
                     $order->save();
@@ -1042,6 +1048,7 @@
                                 'total'           => ( $return_item_quantity * $price ) ,
                                 'price_id'        => $order_product->price_id ,
                                 'price_type'      => $order_product->price_type ,
+                                'branch_id'       => $order->branch_id ?: branchId() ,
                             ] );
                         }
                         else {
@@ -1056,6 +1063,7 @@
                                 'total'       => $order_product->total ,
                                 'price_id'    => $order_product->price_id ,
                                 'price_type'  => $order_product->price_type ,
+                                'branch_id'   => $order->branch_id ?: branchId() ,
                             ] );
                         }
                     }
@@ -1096,6 +1104,7 @@
                             'quantity'    => $item[ 'qty' ] ,
                             'unit_price'  => $item[ 'price' ] ,
                             'total'       => $item[ 'qty' ] * $item[ 'price' ] ,
+                            'branch_id'   => $order->branch_id ?: branchId() ,
                         ] );
                     }
                     $order->total = $order->orderProducts()->where( 'is_return' , TRUE )->sum( 'total' );
@@ -1144,7 +1153,8 @@
                             'creator_id'      => auth()->id() ,
                             'payment_status'  => $paymentStatus->value ,
                             'warehouse_id'    => $warehouse_id ,
-                            'register_id'     => register()->id
+                            'register_id'     => register()->id ,
+                            'branch_id'       => branchId()
                         ]
                     );
 

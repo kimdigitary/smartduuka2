@@ -1,53 +1,55 @@
 <?php
 
-    namespace App\Providers;
+namespace App\Providers;
 
-    use Illuminate\Auth\Notifications\ResetPassword;
-    use Illuminate\Database\Eloquent\Model;
-    use Illuminate\Http\Request;
-    use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\ServiceProvider;
 
-    class AppServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
+{
+    public function boot(Request $request): void
     {
-        public function boot(Request $request) : void
-        {
 //            info(Hash::make( 'Admin@support12'));
 //            Model::preventLazyLoading();
 //            Illuminate\Support\Facades\Hash::make('Admin@support12');
 
-            require_once app_path( 'Helpers/functions.php' );
+        require_once app_path('Helpers/functions.php');
 
-            Model::saving( function (Model $model) : void {
-                $request = request();
+        Model::saving(function (Model $model): void {
+            $request = request();
 
-                if ( ! $request->is( 'api/admin' , 'api/admin/*' ) || ! in_array( $request->method() , [ 'POST' , 'PUT' , 'PATCH' ] , TRUE ) ) {
-                    return;
-                }
+            if (!in_array($request->method(), ['POST', 'PUT', 'PATCH'], TRUE)) {
+                return;
+            }
 
-                if ( ! $request->headers->has( 'X-BranchId' ) ) {
-                    return;
-                }
+            $branchId = $request->header('X-BranchId');
 
-                static $tablesWithBranchId = [];
+            if ($branchId === NULL || !ctype_digit(trim((string)$branchId))) {
+                return;
+            }
 
-                $table = $model->getTable();
-                $key   = $model->getConnection()->getName() . '.' . $table;
+            static $tablesWithBranchId = [];
 
-                if ( ! array_key_exists( $key , $tablesWithBranchId ) ) {
-                    $tablesWithBranchId[ $key ] = $model->getConnection()->getSchemaBuilder()->hasColumn( $table , 'branch_id' );
-                }
+            $table = $model->getTable();
+            $key = $model->getConnection()->getName() . '.' . $table;
 
-                if ( ! $tablesWithBranchId[ $key ] ) {
-                    return;
-                }
+            if (!array_key_exists($key, $tablesWithBranchId)) {
+                $tablesWithBranchId[$key] = $model->getConnection()->getSchemaBuilder()->hasColumn($table, 'branch_id');
+            }
 
-                $model->forceFill( [
-                    'branch_id' => branchId(),
-                ] );
-            } );
+            if (!$tablesWithBranchId[$key]) {
+                return;
+            }
 
-            ResetPassword::createUrlUsing( function (object $notifiable , string $token) {
-                return config( 'app.frontend_url' ) . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
-            } );
-        }
+            $model->forceFill([
+                'branch_id' => (int)$branchId,
+            ]);
+        });
+
+        ResetPassword::createUrlUsing(function (object $notifiable, string $token) {
+            return config('app.frontend_url') . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
+        });
     }
+}
