@@ -345,6 +345,12 @@ function tenantId(): string|null
     return request()->header('X-TenantId');
 }
 
+function tenantUser(): User|null
+{
+    $auth_user = auth()->user();
+    return tenantContext(fn() => User::where('email', $auth_user->email)?->first(), tenantId());
+}
+
 function addPayment(?Order $order = NULL, int $amount = 0, int $payment_method = 0, ?string $reference = NULL, PosPaymentType $pos_payment_type =
 PosPaymentType::SALE): void
 {

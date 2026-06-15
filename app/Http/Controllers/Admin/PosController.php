@@ -1,504 +1,504 @@
 <?php
 
-    namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin;
 
-    use App\Enums\ExpenseNature;
-    use App\Enums\OrderStatus;
-    use App\Enums\PaymentType;
-    use App\Enums\RefundStatus;
-    use App\Enums\RegisterStatus;
-    use App\Enums\ReturnStatus;
-    use App\Enums\ReturnType;
-    use App\Enums\StockStatus;
-    use App\Http\Requests\CustomerRequest;
-    use App\Http\Requests\OrderReturnRequest;
-    use App\Http\Requests\PosOrderRequest;
-    use App\Http\Requests\QuotationRequest;
-    use App\Http\Resources\CustomerResource;
-    use App\Http\Resources\OrderDetailsResource;
-    use App\Http\Resources\OrderResource;
-    use App\Http\Resources\RegisterResource;
-    use App\Models\Damage;
-    use App\Models\ExpensePayment;
-    use App\Models\Order;
-    use App\Models\PaymentMethodTransaction;
-    use App\Models\PosPayment;
-    use App\Models\Product;
-    use App\Models\Register;
-    use App\Models\Stock;
-    use App\Models\User;
-    use App\Notifications\RefundProcessed;
-    use App\Notifications\ShiftClosed;
-    use App\Services\CommissionCalculator;
-    use App\Services\CustomerService;
-    use App\Services\OrderService;
-    use Essa\APIToolKit\Api\ApiResponse;
-    use Exception;
-    use Illuminate\Contracts\Foundation\Application;
-    use Illuminate\Contracts\Routing\ResponseFactory;
-    use Illuminate\Http\Request;
-    use Illuminate\Http\Response;
-    use Illuminate\Routing\Attributes\Controllers\Middleware;
-    use Illuminate\Support\Facades\DB;
-    use Illuminate\Support\Facades\Notification;
-    use Smartisan\Settings\Facades\Settings;
+use App\Enums\ExpenseNature;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentType;
+use App\Enums\RefundStatus;
+use App\Enums\RegisterStatus;
+use App\Enums\ReturnStatus;
+use App\Enums\ReturnType;
+use App\Enums\StockStatus;
+use App\Http\Requests\CustomerRequest;
+use App\Http\Requests\OrderReturnRequest;
+use App\Http\Requests\PosOrderRequest;
+use App\Http\Requests\QuotationRequest;
+use App\Http\Resources\CustomerResource;
+use App\Http\Resources\OrderDetailsResource;
+use App\Http\Resources\OrderResource;
+use App\Http\Resources\RegisterResource;
+use App\Models\Damage;
+use App\Models\ExpensePayment;
+use App\Models\Order;
+use App\Models\PaymentMethodTransaction;
+use App\Models\PosPayment;
+use App\Models\Product;
+use App\Models\Register;
+use App\Models\Stock;
+use App\Models\User;
+use App\Notifications\RefundProcessed;
+use App\Notifications\ShiftClosed;
+use App\Services\CommissionCalculator;
+use App\Services\CustomerService;
+use App\Services\OrderService;
+use Essa\APIToolKit\Api\ApiResponse;
+use Exception;
+use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Routing\Attributes\Controllers\Middleware;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
+use Smartisan\Settings\Facades\Settings;
 
 
-    #[Middleware( 'sales.limit' , only: [ 'store' , 'quotationStore' , 'returnOrderStore' ] )]
-    class PosController extends AdminController
+#[Middleware('sales.limit', only: ['store', 'quotationStore', 'returnOrderStore'])]
+class PosController extends AdminController
+{
+    use ApiResponse;
+
+    private OrderService $orderService;
+    private CustomerService $customerService;
+
+    public function __construct(OrderService $order, CustomerService $customerService)
     {
-        use ApiResponse;
+        parent::__construct();
+        $this->orderService = $order;
+        $this->customerService = $customerService;
+        $this->middleware(['permission:pos'])->only('store');
+    }
 
-        private OrderService    $orderService;
-        private CustomerService $customerService;
-
-        public function __construct(OrderService $order , CustomerService $customerService)
-        {
-            parent::__construct();
-            $this->orderService    = $order;
-            $this->customerService = $customerService;
-            $this->middleware( [ 'permission:pos' ] )->only( 'store' );
-        }
-
-        public function store(PosOrderRequest $request)
-        {
-            try {
-                return new OrderResource( $this->orderService->posOrderStore( $request ) );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function quotationStore(QuotationRequest $request)
-        {
-            try {
-                return $this->orderService->quotationStore( $request );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function quotationUpdate(Order $order , QuotationRequest $request)
-        {
-            try {
-                return $this->orderService->quotationUpdate( $order , $request );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function quotationStatusUpdate(Order $order , Request $request)
-        {
-            try {
-                return $this->orderService->updateQuotationStatus( $order , $request );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function returnOrderStore(OrderReturnRequest $request)
-        {
-            try {
-                return new OrderResource( $this->orderService->returnOrderStore( $request ) );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function returnOrderStatus(Request $request , Order $order)
-        {
-            try {
-                $status = $request->integer( 'status' );
-
-                if ( $status == ReturnStatus::APPROVED->value && $order->return_status !== ReturnStatus::APPROVED->value ) {
-                    foreach ( $order->orderProducts as $order_product ) {
-                        $stock = Stock::where( [
-                            'item_id'      => $order_product->item_id ,
-                            'item_type'    => $order_product->item_type ,
-                            'warehouse_id' => $order->warehouse_id ,
-                            'status'       => StockStatus::RECEIVED
-                        ] )->first();
-
-                        if ( $order_product->is_return && $stock && $order_product->return_type->value == ReturnType::RESELLABLE->value ) {
-                            info( 'increment stock.' );
-                            $stock->increment( 'quantity' , $order_product->return_quantity );
-                        }
-
-                        if ( $order_product->is_return && $order_product->return_type->value == ReturnType::DAMAGED->value ) {
-                            $damage = Damage::create( [
-                                'date'         => now() ,
-                                'reference_no' => 'D-' . time() ,
-                                'subtotal'     => 0 ,
-                                'creator_id'   => auth()->id() ,
-                                'tax'          => 0 ,
-                                'discount'     => 0 ,
-                                'total'        => 0 ,
-                                'note'         => '' ,
-                                'reason'       => $order->reason
-                            ] );
-
-                            Stock::create( [
-                                'model_type'      => Damage::class ,
-                                'model_id'        => $damage->id ,
-                                'warehouse_id'    => $order->warehouse_id ,
-                                'item_type'       => $order_product->item_type ,
-                                'product_id'      => $order_product->id ,
-                                'variation_names' => 'variation_names' ,
-                                'item_id'         => $order_product->id ,
-                                'price'           => 0 ,
-                                'quantity'        => -$order_product->return_quantity ,
-                                'discount'        => 0 ,
-                                'tax'             => 0 ,
-                                'subtotal'        => 0 ,
-                                'total'           => 0 ,
-                                'sku'             => 'sku' ,
-                                'status'          => StockStatus::RECEIVED
-                            ] );
-                        }
-                    }
-
-                    $notificationSettings = Settings::group( 'notification' )->all();
-                    $adminEmail           = $notificationSettings[ 'admin_email' ] ?? NULL;
-                    $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? NULL;
-
-                    $originalOrder = $order->originalOrder ?? Order::find( $order->original_order_id );
-
-                    $returnItems   = json_decode( $request->returnItems , TRUE ) ?? [];
-                    $exchangeItems = json_decode( $request->exchangeItems , TRUE ) ?? [];
-
-                    $totalReturnValue   = collect( $returnItems )->sum( fn($i) => $i[ 'qty' ] * $i[ 'price' ] );
-                    $totalExchangeValue = collect( $exchangeItems )->sum( fn($i) => $i[ 'qty' ] * $i[ 'price' ] );
-
-                    $order->loadMissing( 'user' );
-
-                    Notification::route( 'mail' , $adminEmail )
-                                ->route( 'sms' , $adminPhone )
-                                ->route( 'whatsapp' , $adminPhone )
-                                ->notify( new RefundProcessed(
-                                    title: 'Refund / Return Processed' ,
-                                    message: "A return has been processed against order #{$originalOrder?->order_serial_no} by " . auth()->user()->name . '.' ,
-                                    returnOrderNo: $order->order_serial_no ,
-                                    originalOrderNo: $originalOrder?->order_serial_no ?? 'N/A' ,
-                                    customerName: $order->user?->name ?? NULL ,
-                                    createdBy: auth()->user()->name ,
-                                    orderDate: $order->order_datetime?->format( 'd M Y, H:i:s' ) ?? now()->format( 'd M Y, H:i:s' ) ,
-                                    totalReturnValue: $totalReturnValue ,
-                                    totalExchangeValue: $totalExchangeValue ,
-                                    refundBalance: max( 0 , $totalReturnValue - $totalExchangeValue ) ,
-                                    returnItemCount: count( $returnItems ) ,
-                                    exchangeItemCount: count( $exchangeItems ) ,
-                                    refundStatus: $order->refund_status?->label() ?? $order->refund_status?->value ,
-                                    returnStatus: $order->return_status?->label() ?? $order->return_status?->value ,
-                                    reason: $request->input( 'reason' ) ?: NULL ,
-                                ) );
-                }
-
-                if ( $status == ReturnStatus::REJECTED->value || $status == ReturnStatus::CANCELED->value ) {
-                    $order->originalOrder()->update( [ 'is_returned' => FALSE ] );
-                }
-                $order->update( [ 'return_status' => $status ] );
-
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function returnOrderRefundPaymentStatus(Order $order , Request $request)
-        {
-            try {
-                DB::transaction( function () use ($order , $request) {
-                    $payment_method = $request->integer( 'payment_method' );
-                    PosPayment::create( [
-                        'order_id'          => $order->id ,
-                        'date'              => now() ,
-                        'reference_no'      => time() ,
-                        'amount'            => $order->total ,
-                        'payment_method_id' => $payment_method ,
-                        'register_id'       => register()->id
-                    ] );
-
-                    PaymentMethodTransaction::create( [
-                        'amount'            => $order->total ,
-                        'item_type'         => Order::class ,
-                        'item_id'           => $order->id ,
-                        'charge'            => 0 ,
-                        'description'       => 'Order Return/Exchange #' . $order->order_serial_no ,
-                        'payment_method_id' => $payment_method ,
-                    ] );
-                    $order->update( [ 'refund_status' => RefundStatus::REFUNDED ] );
-                } );
-
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function update(Order $order , PosOrderRequest $request)
-        {
-            try {
-                return new OrderResource( $this->orderService->posOrderUpdate( $order , $request ) );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function openRegister(Request $request)
-        {
-            $user = $request->user();
-            Register::create( [
-                'opening_float' => $request->integer( 'amount' ) ,
-                'status'        => RegisterStatus::OPEN ,
-                'user_id'       => $user->id,
-            ] );
-        }
-
-        public function closeRegister(Request $request)
-        {
-            $register       = register();
-            $closing_amount = $request->integer( 'closing_amount' );
-
-            $money_in  = $register->posPayments()->sum( 'amount' );
-            $money_out = $register->expensesPayments()->sum( 'amount' );
-
-            $expectedFloat = $register->opening_float + $money_in - $money_out;
-            $difference    = $closing_amount - $expectedFloat;
-
-            $register->update( [
-                'expected_float' => $expectedFloat ,
-                'closing_float'  => $closing_amount ,
-                'difference'     => $difference ,
-                'status'         => RegisterStatus::CLOSED->value ,
-                'closed_at'      => now() ,
-            ] );
-
-            if ( $request->notes ) {
-                $register->update( [ 'notes' => $request->notes ] );
-            }
-
-            // --- Replicate RegisterResource calculations ---
-            $register->loadMissing( [ 'orders.orderProducts.item' , 'posPayments.paymentMethod' , 'expensesPayments.expense' , 'walletTransactions' ] );
-
-            $allProducts = $register->orders->flatMap( fn($order) => $order->orderProducts );
-
-            $groupedItems = $allProducts->groupBy( fn($item) => $item->item_id . '-' . $item->item_type )
-                                        ->map( function ($group) {
-                                            $firstItem     = $group->first()->item;
-                                            $totalQuantity = $group->sum( 'quantity' );
-                                            return [
-                                                'total_sales' => $group->sum( 'total' ) ,
-                                                'total_cost'  => $totalQuantity * ( $firstItem->buying_price ?? 0 ) ,
-                                            ];
-                                        } );
-
-            $totalSalesValue  = $groupedItems->sum( 'total_sales' );  // Cash + Credit sales
-            $totalCostOfGoods = $groupedItems->sum( 'total_cost' );
-            $grossProfit      = $totalSalesValue - $totalCostOfGoods;
-            $totalRevenue     = $register->posPayments()->sum( 'amount' ); // Cash actually collected
-
-            $expenses = $register->expensesPayments->sum( function (ExpensePayment $ep) {
-                $expense = $ep->expense;
-                if ( $expense && (
-                        $expense->expense_nature === ExpenseNature::OPERATIONAL ||
-                        ( isset( $expense->expense_nature->value ) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value )
-                    ) ) {
-                    return $ep->amount;
-                }
-                return 0;
-            } );
-
-            $netProfit = $grossProfit - $expenses;
-
-            $totalCredit = $register->orders
-                ->where( 'payment_type' , PaymentType::CREDIT )
-                ->sum( 'balance' );
-
-            $deposits = $register->orders()->where( 'payment_type' , '<>' , PaymentType::CASH )->get()
-                                 ->sum( fn($order) => $order->posPayments()->sum( 'amount' ) );
-
-            $walletTransactions = $register->walletTransactions()->sum( 'amount' );
-
-            $notificationSettings = Settings::group( 'notification' )->all();
-            $adminEmail           = $notificationSettings[ 'admin_email' ] ?? NULL;
-            $adminPhone           = $notificationSettings[ 'admin_phone' ] ?? NULL;
-
-            Notification::route( 'mail' , $adminEmail )
-                        ->route( 'sms' , $adminPhone )
-                        ->route( 'whatsapp' , $adminPhone )
-                        ->notify( new ShiftClosed(
-                            title: 'Shift / Register Closed' ,
-                            message: "Register closed by {$register->user->name}. End-of-shift summary below." ,
-                            closedBy: $register->user->name ?? auth()->user()->name ,
-                            closedAt: now()->format( 'd M Y, H:i:s' ) ,
-                            openingFloat: $register->opening_float ,
-                            expectedFloat: $expectedFloat ,
-                            closingFloat: $closing_amount ,
-                            discrepancy: $difference ,
-                            totalSalesValue: $totalSalesValue ,
-                            totalRevenue: $totalRevenue ,
-                            totalCostOfGoods: $totalCostOfGoods ,
-                            grossProfit: $grossProfit ,
-                            expenses: $expenses ,
-                            netProfit: $netProfit ,
-                            totalCredit: $totalCredit ,
-                            deposits: $deposits ,
-                            walletTransactions: $walletTransactions ,
-                        ) );
-
-            return response()->json( [
-                'message' => 'Register closed successfully' ,
-                'audit'   => [
-                    'expected'    => $expectedFloat ,
-                    'actual'      => $closing_amount ,
-                    'discrepancy' => $difference
-                ]
-            ] );
-        }
-
-        public function closeRegister1(Request $request)
-        {
-            $register       = register();
-            $closing_amount = $request->integer( 'closing_amount' );
-
-            $money_in = $register->posPayments()->sum( 'amount' );
-
-            $money_out = $register->expensesPayments()->sum( 'amount' );
-
-            $expectedFloat = $register->opening_float + $money_in - $money_out;
-
-            $difference = $closing_amount - $expectedFloat;
-
-            $register->update( [
-                'expected_float' => $expectedFloat ,
-                'closing_float'  => $closing_amount ,
-                'difference'     => $difference ,
-                'status'         => RegisterStatus::CLOSED->value ,
-                'closed_at'      => now() ,
-            ] );
-
-            if ( $request->notes ) {
-                $register->update( [
-                    'notes' => $request->notes
-                ] );
-            }
-
-            return response()->json( [
-                'message' => 'Register closed successfully' ,
-                'audit'   => [
-                    'expected'    => $expectedFloat ,
-                    'actual'      => $closing_amount ,
-                    'discrepancy' => $difference
-                ]
-            ] );
-        }
-
-        public function makeSale(Request $request , CommissionCalculator $commissionCalculator)
-        {
-            try {
-                return new OrderDetailsResource( $this->orderService->posOrderMakeSale( $request , $commissionCalculator ) );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function makeQuotationSale(Order $order , Request $request)
-        {
-            try {
-                return $this->orderService->makeQuotationSale( $order , $request );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function cancel(Request $request)
-        {
-            try {
-                $order = Order::find( $request->order_id );
-                $order->update( [ 'status' => OrderStatus::CANCELED ] );
-                $order->stocks()->update( [ 'status' => StockStatus::CANCELED ] );
-                return new OrderResource( $order );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function storeCustomer(
-            CustomerRequest $request
-        ) : Response | CustomerResource | Application | ResponseFactory
-        {
-            try {
-                $customer = $this->customerService->store( $request );
-                return new CustomerResource( $customer );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function updateCustomer(
-            CustomerRequest $request ,
-            User $customer
-        ) : Response | CustomerResource | Application | ResponseFactory
-        {
-            try {
-                $customer = $this->customerService->update( $request , $customer );
-                return new CustomerResource( $customer );
-            } catch ( Exception $exception ) {
-                return response( [ 'status' => FALSE , 'message' => $exception->getMessage() ] , 422 );
-            }
-        }
-
-        public function index(Order $order)
-        {
-            return new OrderDetailsResource( $order );
-        }
-
-        public function registerDetails()
-        {
-            $register = auth()->user()?->openRegister();
-            if ( ! $register ) {
-                return response()->json( [ 'message' => 'No open register found' ] , 404 );
-            }
-            return new RegisterResource( $register->load( [ 'user' , 'posPayments' , 'orders.orderProducts.item' , 'expenses' , 'walletTransactions' ] ) );
-        }
-
-        public function destroy(Request $request)
-        {
-            try {
-                return DB::transaction( function () use ($request) {
-                    $ids = $request->ids;
-                    foreach ( $ids as $id ) {
-                        $order = Order::find( $id );
-                        $order->posPayments()->delete();
-                        $order->paymentMethodTransactions()->delete();
-                        $order->orderProducts()->delete();
-                        foreach ( $order->orderProducts as $order_product ) {
-                            $stock = Stock::where( [ 'item_type' => Product::class , 'item_id' => $order_product->item_id ] )->first();
-                            $stock->increment( 'quantity' , $order_product->quantity );
-                        }
-                        activity()->on( auth()->user() )->log( 'Deleted Order: ' . $order->order_serial_no );
-                        $order->delete();
-                    }
-                    return response()->json( [ 'status' => TRUE , 'message' => 'Orders deleted successfully' ] );
-                } );
-            } catch ( Exception $e ) {
-                return $this->APIError( 422 , 'Error' , $e->getMessage() );
-            }
-        }
-
-        public function deleteRefundOrder(Request $request)
-        {
-            try {
-                DB::transaction( function () use ($request) {
-                    $ids = $request->array( 'ids' );
-                    foreach ( $ids as $id ) {
-                        $order = Order::find( $id );
-                        $order->originalOrder()->update( [ 'is_returned' => FALSE ] );
-                        $order->delete();
-                    }
-                } );
-            } catch ( Exception $e ) {
-                return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
-            } catch ( \Throwable $e ) {
-                return response( [ 'status' => FALSE , 'message' => $e->getMessage() ] , 422 );
-            }
+    public function store(PosOrderRequest $request)
+    {
+        try {
+            return new OrderResource($this->orderService->posOrderStore($request));
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
         }
     }
+
+    public function quotationStore(QuotationRequest $request)
+    {
+        try {
+            return $this->orderService->quotationStore($request);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function quotationUpdate(Order $order, QuotationRequest $request)
+    {
+        try {
+            return $this->orderService->quotationUpdate($order, $request);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function quotationStatusUpdate(Order $order, Request $request)
+    {
+        try {
+            return $this->orderService->updateQuotationStatus($order, $request);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function returnOrderStore(OrderReturnRequest $request)
+    {
+        try {
+            return new OrderResource($this->orderService->returnOrderStore($request));
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function returnOrderStatus(Request $request, Order $order)
+    {
+        try {
+            $status = $request->integer('status');
+
+            if ($status == ReturnStatus::APPROVED->value && $order->return_status !== ReturnStatus::APPROVED->value) {
+                foreach ($order->orderProducts as $order_product) {
+                    $stock = Stock::where([
+                        'item_id'      => $order_product->item_id,
+                        'item_type'    => $order_product->item_type,
+                        'warehouse_id' => $order->warehouse_id,
+                        'status'       => StockStatus::RECEIVED
+                    ])->first();
+
+                    if ($order_product->is_return && $stock && $order_product->return_type->value == ReturnType::RESELLABLE->value) {
+                        info('increment stock.');
+                        $stock->increment('quantity', $order_product->return_quantity);
+                    }
+
+                    if ($order_product->is_return && $order_product->return_type->value == ReturnType::DAMAGED->value) {
+                        $damage = Damage::create([
+                            'date'         => now(),
+                            'reference_no' => 'D-' . time(),
+                            'subtotal'     => 0,
+                            'creator_id'   => auth()->id(),
+                            'tax'          => 0,
+                            'discount'     => 0,
+                            'total'        => 0,
+                            'note'         => '',
+                            'reason'       => $order->reason
+                        ]);
+
+                        Stock::create([
+                            'model_type'      => Damage::class,
+                            'model_id'        => $damage->id,
+                            'warehouse_id'    => $order->warehouse_id,
+                            'item_type'       => $order_product->item_type,
+                            'product_id'      => $order_product->id,
+                            'variation_names' => 'variation_names',
+                            'item_id'         => $order_product->id,
+                            'price'           => 0,
+                            'quantity'        => -$order_product->return_quantity,
+                            'discount'        => 0,
+                            'tax'             => 0,
+                            'subtotal'        => 0,
+                            'total'           => 0,
+                            'sku'             => 'sku',
+                            'status'          => StockStatus::RECEIVED
+                        ]);
+                    }
+                }
+
+                $notificationSettings = Settings::group('notification')->all();
+                $adminEmail = $notificationSettings['admin_email'] ?? NULL;
+                $adminPhone = $notificationSettings['admin_phone'] ?? NULL;
+
+                $originalOrder = $order->originalOrder ?? Order::find($order->original_order_id);
+
+                $returnItems = json_decode($request->returnItems, TRUE) ?? [];
+                $exchangeItems = json_decode($request->exchangeItems, TRUE) ?? [];
+
+                $totalReturnValue = collect($returnItems)->sum(fn($i) => $i['qty'] * $i['price']);
+                $totalExchangeValue = collect($exchangeItems)->sum(fn($i) => $i['qty'] * $i['price']);
+
+                $order->loadMissing('user');
+
+                Notification::route('mail', $adminEmail)
+                    ->route('sms', $adminPhone)
+                    ->route('whatsapp', $adminPhone)
+                    ->notify(new RefundProcessed(
+                        title: 'Refund / Return Processed',
+                        message: "A return has been processed against order #{$originalOrder?->order_serial_no} by " . auth()->user()->name . '.',
+                        returnOrderNo: $order->order_serial_no,
+                        originalOrderNo: $originalOrder?->order_serial_no ?? 'N/A',
+                        customerName: $order->user?->name ?? NULL,
+                        createdBy: auth()->user()->name,
+                        orderDate: $order->order_datetime?->format('d M Y, H:i:s') ?? now()->format('d M Y, H:i:s'),
+                        totalReturnValue: $totalReturnValue,
+                        totalExchangeValue: $totalExchangeValue,
+                        refundBalance: max(0, $totalReturnValue - $totalExchangeValue),
+                        returnItemCount: count($returnItems),
+                        exchangeItemCount: count($exchangeItems),
+                        refundStatus: $order->refund_status?->label() ?? $order->refund_status?->value,
+                        returnStatus: $order->return_status?->label() ?? $order->return_status?->value,
+                        reason: $request->input('reason') ?: NULL,
+                    ));
+            }
+
+            if ($status == ReturnStatus::REJECTED->value || $status == ReturnStatus::CANCELED->value) {
+                $order->originalOrder()->update(['is_returned' => FALSE]);
+            }
+            $order->update(['return_status' => $status]);
+
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function returnOrderRefundPaymentStatus(Order $order, Request $request)
+    {
+        try {
+            DB::transaction(function () use ($order, $request) {
+                $payment_method = $request->integer('payment_method');
+                PosPayment::create([
+                    'order_id'          => $order->id,
+                    'date'              => now(),
+                    'reference_no'      => time(),
+                    'amount'            => $order->total,
+                    'payment_method_id' => $payment_method,
+                    'register_id'       => register()->id
+                ]);
+
+                PaymentMethodTransaction::create([
+                    'amount'            => $order->total,
+                    'item_type'         => Order::class,
+                    'item_id'           => $order->id,
+                    'charge'            => 0,
+                    'description'       => 'Order Return/Exchange #' . $order->order_serial_no,
+                    'payment_method_id' => $payment_method,
+                ]);
+                $order->update(['refund_status' => RefundStatus::REFUNDED]);
+            });
+
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function update(Order $order, PosOrderRequest $request)
+    {
+        try {
+            return new OrderResource($this->orderService->posOrderUpdate($order, $request));
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function openRegister(Request $request)
+    {
+        $user = $request->user();
+        Register::create([
+            'opening_float' => $request->integer('amount'),
+            'status'        => RegisterStatus::OPEN,
+            'user_id'       => $user->id,
+        ]);
+    }
+
+    public function closeRegister(Request $request)
+    {
+        $register = register();
+        $closing_amount = $request->integer('closing_amount');
+
+        $money_in = $register->posPayments()->sum('amount');
+        $money_out = $register->expensesPayments()->sum('amount');
+
+        $expectedFloat = $register->opening_float + $money_in - $money_out;
+        $difference = $closing_amount - $expectedFloat;
+
+        $register->update([
+            'expected_float' => $expectedFloat,
+            'closing_float'  => $closing_amount,
+            'difference'     => $difference,
+            'status'         => RegisterStatus::CLOSED->value,
+            'closed_at'      => now(),
+        ]);
+
+        if ($request->notes) {
+            $register->update(['notes' => $request->notes]);
+        }
+
+        // --- Replicate RegisterResource calculations ---
+        $register->loadMissing(['orders.orderProducts.item', 'posPayments.paymentMethod', 'expensesPayments.expense', 'walletTransactions']);
+
+        $allProducts = $register->orders->flatMap(fn($order) => $order->orderProducts);
+
+        $groupedItems = $allProducts->groupBy(fn($item) => $item->item_id . '-' . $item->item_type)
+            ->map(function ($group) {
+                $firstItem = $group->first()->item;
+                $totalQuantity = $group->sum('quantity');
+                return [
+                    'total_sales' => $group->sum('total'),
+                    'total_cost'  => $totalQuantity * ($firstItem->buying_price ?? 0),
+                ];
+            });
+
+        $totalSalesValue = $groupedItems->sum('total_sales');  // Cash + Credit sales
+        $totalCostOfGoods = $groupedItems->sum('total_cost');
+        $grossProfit = $totalSalesValue - $totalCostOfGoods;
+        $totalRevenue = $register->posPayments()->sum('amount'); // Cash actually collected
+
+        $expenses = $register->expensesPayments->sum(function (ExpensePayment $ep) {
+            $expense = $ep->expense;
+            if ($expense && (
+                    $expense->expense_nature === ExpenseNature::OPERATIONAL ||
+                    (isset($expense->expense_nature->value) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value)
+                )) {
+                return $ep->amount;
+            }
+            return 0;
+        });
+
+        $netProfit = $grossProfit - $expenses;
+
+        $totalCredit = $register->orders
+            ->where('payment_type', PaymentType::CREDIT)
+            ->sum('balance');
+
+        $deposits = $register->orders()->where('payment_type', '<>', PaymentType::CASH)->get()
+            ->sum(fn($order) => $order->posPayments()->sum('amount'));
+
+        $walletTransactions = $register->walletTransactions()->sum('amount');
+
+        $notificationSettings = Settings::group('notification')->all();
+        $adminEmail = $notificationSettings['admin_email'] ?? NULL;
+        $adminPhone = $notificationSettings['admin_phone'] ?? NULL;
+
+        Notification::route('mail', $adminEmail)
+            ->route('sms', $adminPhone)
+            ->route('whatsapp', $adminPhone)
+            ->notify(new ShiftClosed(
+                title: 'Shift / Register Closed',
+                message: "Register closed by {$register->user->name}. End-of-shift summary below.",
+                closedBy: $register->user->name ?? auth()->user()->name,
+                closedAt: now()->format('d M Y, H:i:s'),
+                openingFloat: $register->opening_float,
+                expectedFloat: $expectedFloat,
+                closingFloat: $closing_amount,
+                discrepancy: $difference,
+                totalSalesValue: $totalSalesValue,
+                totalRevenue: $totalRevenue,
+                totalCostOfGoods: $totalCostOfGoods,
+                grossProfit: $grossProfit,
+                expenses: $expenses,
+                netProfit: $netProfit,
+                totalCredit: $totalCredit,
+                deposits: $deposits,
+                walletTransactions: $walletTransactions,
+            ));
+
+        return response()->json([
+            'message' => 'Register closed successfully',
+            'audit'   => [
+                'expected'    => $expectedFloat,
+                'actual'      => $closing_amount,
+                'discrepancy' => $difference
+            ]
+        ]);
+    }
+
+    public function closeRegister1(Request $request)
+    {
+        $register = register();
+        $closing_amount = $request->integer('closing_amount');
+
+        $money_in = $register->posPayments()->sum('amount');
+
+        $money_out = $register->expensesPayments()->sum('amount');
+
+        $expectedFloat = $register->opening_float + $money_in - $money_out;
+
+        $difference = $closing_amount - $expectedFloat;
+
+        $register->update([
+            'expected_float' => $expectedFloat,
+            'closing_float'  => $closing_amount,
+            'difference'     => $difference,
+            'status'         => RegisterStatus::CLOSED->value,
+            'closed_at'      => now(),
+        ]);
+
+        if ($request->notes) {
+            $register->update([
+                'notes' => $request->notes
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Register closed successfully',
+            'audit'   => [
+                'expected'    => $expectedFloat,
+                'actual'      => $closing_amount,
+                'discrepancy' => $difference
+            ]
+        ]);
+    }
+
+    public function makeSale(Request $request, CommissionCalculator $commissionCalculator)
+    {
+        try {
+            return new OrderDetailsResource($this->orderService->posOrderMakeSale($request, $commissionCalculator));
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function makeQuotationSale(Order $order, Request $request)
+    {
+        try {
+            return $this->orderService->makeQuotationSale($order, $request);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function cancel(Request $request)
+    {
+        try {
+            $order = Order::find($request->order_id);
+            $order->update(['status' => OrderStatus::CANCELED]);
+            $order->stocks()->update(['status' => StockStatus::CANCELED]);
+            return new OrderResource($order);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function storeCustomer(
+        CustomerRequest $request
+    ): Response|CustomerResource|Application|ResponseFactory
+    {
+        try {
+            $customer = $this->customerService->store($request);
+            return new CustomerResource($customer);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function updateCustomer(
+        CustomerRequest $request,
+        User            $customer
+    ): Response|CustomerResource|Application|ResponseFactory
+    {
+        try {
+            $customer = $this->customerService->update($request, $customer);
+            return new CustomerResource($customer);
+        } catch (Exception $exception) {
+            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function index(Order $order)
+    {
+        return new OrderDetailsResource($order);
+    }
+
+    public function registerDetails()
+    {
+        $register = tenantUser()?->openRegister();
+        if (!$register) {
+            return response()->json(['message' => 'No open register found'], 404);
+        }
+        return new RegisterResource($register->load(['user', 'posPayments', 'orders.orderProducts.item', 'expenses', 'walletTransactions']));
+    }
+
+    public function destroy(Request $request)
+    {
+        try {
+            return DB::transaction(function () use ($request) {
+                $ids = $request->ids;
+                foreach ($ids as $id) {
+                    $order = Order::find($id);
+                    $order->posPayments()->delete();
+                    $order->paymentMethodTransactions()->delete();
+                    $order->orderProducts()->delete();
+                    foreach ($order->orderProducts as $order_product) {
+                        $stock = Stock::where(['item_type' => Product::class, 'item_id' => $order_product->item_id])->first();
+                        $stock->increment('quantity', $order_product->quantity);
+                    }
+                    activity()->on(auth()->user())->log('Deleted Order: ' . $order->order_serial_no);
+                    $order->delete();
+                }
+                return response()->json(['status' => TRUE, 'message' => 'Orders deleted successfully']);
+            });
+        } catch (Exception $e) {
+            return $this->APIError(422, 'Error', $e->getMessage());
+        }
+    }
+
+    public function deleteRefundOrder(Request $request)
+    {
+        try {
+            DB::transaction(function () use ($request) {
+                $ids = $request->array('ids');
+                foreach ($ids as $id) {
+                    $order = Order::find($id);
+                    $order->originalOrder()->update(['is_returned' => FALSE]);
+                    $order->delete();
+                }
+            });
+        } catch (Exception $e) {
+            return response(['status' => FALSE, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            return response(['status' => FALSE, 'message' => $e->getMessage()], 422);
+        }
+    }
+}
