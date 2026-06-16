@@ -10,7 +10,6 @@
   "license": "MIT",
   "require": {
     "php": "^8.5",
-    "ext-intl": "*",
     "ext-openssl": "*",
     "ext-pdo": "*",
     "africastalking/africastalking": "^3.0",
@@ -48,6 +47,7 @@
   ],
   "require-dev": {
     "fakerphp/faker": "^1.23",
+    "laravel/boost": "^2.4",
     "laravel/breeze": "^2.3",
     "laravel/pail": "^1.2.2",
     "laravel/pint": "^1.24",

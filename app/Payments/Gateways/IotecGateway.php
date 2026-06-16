@@ -29,7 +29,6 @@
                                 'walletId'   => config( 'payments.iotec.iotec_wallet_id' ) ,
                             ] );
 
-            info($response);
 
             $body = $response->json();
 

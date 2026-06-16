@@ -45,8 +45,7 @@ class PaymentsController extends Controller
         );
 
         $payment_transaction->update(['transaction_id' => $transactionId]);
-        $result = $gateway->charge($paymentRequest);
-        info($result);
+        $gateway->charge($paymentRequest);
     }
 
     public function webhook(Request $request, string $gateway): Response
