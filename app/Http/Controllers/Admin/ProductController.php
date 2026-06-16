@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Status;
 use App\Exports\ProductExport;
 use App\Http\Requests\ChangeImageRequest;
 use App\Http\Requests\ImportFileRequest;
@@ -233,6 +234,15 @@ class ProductController extends AdminController
             }
 
             if ($standard_wholesale_prices) {
+                $standardWholesalePriceIds = array_filter(array_column($standard_wholesale_prices, 'id'));
+
+                $productModel->wholesalePrices()
+                    ->when(
+                        $standardWholesalePriceIds,
+                        fn($query) => $query->whereNotIn('id', $standardWholesalePriceIds)
+                    )
+                    ->update(['is_active' => Status::INACTIVE]);
+
                 $productModel->wholesalePrices()->upsert(
                     array_map(function ($price) use ($batch, $branch_id) {
                         return [
@@ -240,11 +250,12 @@ class ProductController extends AdminController
                             'minQuantity' => $price['minQuantity'],
                             'price'       => $price['price'],
                             'batch'       => $batch,
-                            'branch_id'   => $branch_id
+                            'branch_id'   => $branch_id,
+                            'is_active'   => Status::ACTIVE
                         ];
                     }, $standard_wholesale_prices),
                     ['id'],
-                    ['minQuantity', 'price', 'batch']
+                    ['minQuantity', 'price', 'batch', 'is_active']
                 );
             }
         });

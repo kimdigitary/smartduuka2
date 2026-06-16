@@ -67,9 +67,9 @@
                 $status      = $request->input( 'status' );
 
                 $products_query = Product::with( [
-                    'media' , 'category' , 'variations.wholesalePrices' ,
+                    'media' , 'category' , 'variations.wholesalePrices' => fn($query) => $query->active() ,
                     'variations.retailPrices' , 'brand' , 'taxes' , 'tags' ,
-                    'reviews' , 'unit' , 'stocks' , 'wholesalePrices' , 'retailPrices.unit'
+                    'reviews' , 'unit' , 'stocks' , 'wholesalePrices' => fn($query) => $query->active() , 'retailPrices.unit'
                 ] );
 
                 if ( $search ) {

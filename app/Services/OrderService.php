@@ -796,8 +796,6 @@ class OrderService
             }
         }
 
-        info('stock ' . $targetModel->stock);
-
         if ($targetModel->stock < $product['quantity'] && !$is_preorder) {
             $name = $is_variation ? $p->name . ' (' . $variation?->productAttributeOption?->name . ')' : $p->name;
             throw new Exception("{$name} stock not enough");
