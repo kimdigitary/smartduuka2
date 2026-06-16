@@ -16,7 +16,7 @@
     use Illuminate\Http\Response;
     use Illuminate\Routing\Attributes\Controllers\Middleware;
 
-    #[Middleware( 'feature' , only: [ 'store' ] )]
+//    #[Middleware( 'feature' , only: [ 'store' ] )]
     class SupplierController extends AdminController
     {
         private SupplierService $supplierService;
