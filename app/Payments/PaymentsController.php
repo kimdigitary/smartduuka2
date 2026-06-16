@@ -50,6 +50,7 @@ class PaymentsController extends Controller
 
     public function webhook(Request $request, string $gateway): Response
     {
+        info($request->all());
         try {
             $handler = $this->payments->gateway($gateway);
             $payload = $handler->parseWebhook($request);
