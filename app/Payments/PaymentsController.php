@@ -31,6 +31,7 @@ class PaymentsController extends Controller
     public function charge(PaymentTransaction $payment_transaction, ?string $gatewayName = NULL): void
     {
         $gatewayName = $gatewayName ?? config('payments.default', 'iotec');
+
         $gateway = $this->payments->gateway($gatewayName);
 
         $transactionId = Str::uuid()->getHex();
