@@ -232,6 +232,7 @@ class YoAPI
         } else {
             $this->YOURL = $this->production_url;
             $this->public_key_file = app_path('YoPayments/public_key.pem');
+            $this->private_key_file_location = app_path('YoPayments/private_key.pem');
         }
     }
 
