@@ -109,6 +109,7 @@ class PosController extends AdminController
     {
         try {
             $status = $request->integer('status');
+            $branch_id = $request->integer('branch_id');
 
             if ($status == ReturnStatus::APPROVED->value && $order->return_status !== ReturnStatus::APPROVED->value) {
                 foreach ($order->orderProducts as $order_product) {
@@ -120,7 +121,6 @@ class PosController extends AdminController
                     ])->first();
 
                     if ($order_product->is_return && $stock && $order_product->return_type->value == ReturnType::RESELLABLE->value) {
-                        info('increment stock.');
                         $stock->increment('quantity', $order_product->return_quantity);
                     }
 
@@ -134,7 +134,8 @@ class PosController extends AdminController
                             'discount'     => 0,
                             'total'        => 0,
                             'note'         => '',
-                            'reason'       => $order->reason
+                            'reason'       => $order->reason,
+                            'branch_id'    => $branch_id
                         ]);
 
                         Stock::create([
@@ -152,7 +153,8 @@ class PosController extends AdminController
                             'subtotal'        => 0,
                             'total'           => 0,
                             'sku'             => 'sku',
-                            'status'          => StockStatus::RECEIVED
+                            'status'          => StockStatus::RECEIVED,
+                            'branch_id'       => $branch_id
                         ]);
                     }
                 }
@@ -208,12 +210,14 @@ class PosController extends AdminController
         try {
             DB::transaction(function () use ($order, $request) {
                 $payment_method = $request->integer('payment_method');
+                $branch_id = $request->integer('branch_id');
                 PosPayment::create([
                     'order_id'          => $order->id,
                     'date'              => now(),
                     'reference_no'      => time(),
                     'amount'            => $order->total,
                     'payment_method_id' => $payment_method,
+                    'branch_id'         => $branch_id,
                     'register_id'       => register()->id
                 ]);
 
@@ -224,6 +228,7 @@ class PosController extends AdminController
                     'charge'            => 0,
                     'description'       => 'Order Return/Exchange #' . $order->order_serial_no,
                     'payment_method_id' => $payment_method,
+                    'branch_id'         => $branch_id,
                 ]);
                 $order->update(['refund_status' => RefundStatus::REFUNDED]);
             });
@@ -355,42 +360,6 @@ class PosController extends AdminController
         ]);
     }
 
-    public function closeRegister1(Request $request)
-    {
-        $register = register();
-        $closing_amount = $request->integer('closing_amount');
-
-        $money_in = $register->posPayments()->sum('amount');
-
-        $money_out = $register->expensesPayments()->sum('amount');
-
-        $expectedFloat = $register->opening_float + $money_in - $money_out;
-
-        $difference = $closing_amount - $expectedFloat;
-
-        $register->update([
-            'expected_float' => $expectedFloat,
-            'closing_float'  => $closing_amount,
-            'difference'     => $difference,
-            'status'         => RegisterStatus::CLOSED->value,
-            'closed_at'      => now(),
-        ]);
-
-        if ($request->notes) {
-            $register->update([
-                'notes' => $request->notes
-            ]);
-        }
-
-        return response()->json([
-            'message' => 'Register closed successfully',
-            'audit'   => [
-                'expected'    => $expectedFloat,
-                'actual'      => $closing_amount,
-                'discrepancy' => $difference
-            ]
-        ]);
-    }
 
     public function makeSale(Request $request, CommissionCalculator $commissionCalculator)
     {
@@ -424,7 +393,7 @@ class PosController extends AdminController
 
     public function storeCustomer(
         CustomerRequest $request
-    ): Response|CustomerResource|Application|ResponseFactory
+    )
     {
         try {
             $customer = $this->customerService->store($request);

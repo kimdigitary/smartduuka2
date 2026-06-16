@@ -646,7 +646,6 @@ Route::middleware([
             Route::get('/', [StockController::class, 'index']);
             Route::get('/takings', [StockController::class, 'takings']);
             Route::get('/expiryList', [StockController::class, 'expiryList']);
-//                Route::get( '/expiryList/export' , [ StockController::class , 'expiryReportExport' ] );
             Route::get('/transfers', [StockController::class, 'stockTransfers']);
             Route::get('/reconciliations', [StockController::class, 'stockReconciliations']);
             Route::post('/transfer/cancelOrAccept', [StockController::class, 'cancelOrAccept']);

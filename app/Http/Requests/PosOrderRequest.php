@@ -1,32 +1,33 @@
 <?php
 
-    namespace App\Http\Requests;
+namespace App\Http\Requests;
 
-    use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Foundation\Http\FormRequest;
 
-    class PosOrderRequest extends FormRequest
+class PosOrderRequest extends FormRequest
+{
+    public function authorize(): bool
     {
-        public function authorize() : bool
-        {
-            return TRUE;
-        }
-
-        public function rules() : array
-        {
-            return [
-                'customer_id' => [ 'required' , 'numeric' , 'not_in:0' ] ,
-                'subtotal'    => [ 'required' , 'numeric' ] ,
-                'tax'         => [ 'required' , 'numeric' ] ,
-                'total'       => [ 'required' , 'numeric' ] ,
-                'items'       => [ 'required' , 'string' ] ,
-                'received'    => [ 'required' , 'numeric:' ] ,
-                'debt_amount' => [ 'sometimes' , 'numeric:' ] ,
-                'change'      => [ 'required' , 'numeric:' ] ,
-                'discount'    => [ 'sometimes' , 'numeric:' ] ,
-                'payments'    => [ 'required' , 'string:' ] ,
-                'order_type'  => [ 'required' , 'numeric::' ] ,
-                'paymentType' => [ 'required' , 'numeric::' ] ,
-                'channel'     => [ 'required' , 'numeric::' ] ,
-            ];
-        }
+        return TRUE;
     }
+
+    public function rules(): array
+    {
+        return [
+            'customer_id' => ['required', 'numeric', 'not_in:0'],
+            'subtotal'    => ['required', 'numeric'],
+            'tax'         => ['required', 'numeric'],
+            'total'       => ['required', 'numeric'],
+            'items'       => ['required', 'string'],
+            'received'    => ['required', 'numeric:'],
+            'debt_amount' => ['sometimes', 'numeric:'],
+            'change'      => ['required', 'numeric:'],
+            'discount'    => ['sometimes', 'numeric:'],
+            'payments'    => ['required', 'string:'],
+            'order_type'  => ['required', 'numeric::'],
+            'paymentType' => ['required', 'numeric::'],
+            'channel'     => ['required', 'numeric::'],
+            'branch_id'   => ['required', 'integer', 'min:1'],
+        ];
+    }
+}
