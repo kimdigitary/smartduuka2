@@ -26,6 +26,7 @@
                 $payment->amount ,
                 $payment->description ,
             );
+            info($response);
 
             if ( ( $response[ 'Status' ] ?? '' ) === 'OK' ) {
                 return PaymentResult::pending(
