@@ -43,13 +43,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Smartisan\Settings\Facades\Settings;
 
-
 #[Middleware('sales.limit', only: ['store', 'quotationStore', 'returnOrderStore'])]
 class PosController extends AdminController
 {
     use ApiResponse;
 
     private OrderService $orderService;
+
     private CustomerService $customerService;
 
     public function __construct(OrderService $order, CustomerService $customerService)
@@ -65,7 +65,7 @@ class PosController extends AdminController
         try {
             return new OrderResource($this->orderService->posOrderStore($request));
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -74,7 +74,7 @@ class PosController extends AdminController
         try {
             return $this->orderService->quotationStore($request);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -83,7 +83,7 @@ class PosController extends AdminController
         try {
             return $this->orderService->quotationUpdate($order, $request);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -92,7 +92,7 @@ class PosController extends AdminController
         try {
             return $this->orderService->updateQuotationStatus($order, $request);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -101,7 +101,7 @@ class PosController extends AdminController
         try {
             return new OrderResource($this->orderService->returnOrderStore($request));
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -114,10 +114,10 @@ class PosController extends AdminController
             if ($status == ReturnStatus::APPROVED->value && $order->return_status !== ReturnStatus::APPROVED->value) {
                 foreach ($order->orderProducts as $order_product) {
                     $stock = Stock::where([
-                        'item_id'      => $order_product->item_id,
-                        'item_type'    => $order_product->item_type,
+                        'item_id' => $order_product->item_id,
+                        'item_type' => $order_product->item_type,
                         'warehouse_id' => $order->warehouse_id,
-                        'status'       => StockStatus::RECEIVED
+                        'status' => StockStatus::RECEIVED,
                     ])->first();
 
                     if ($order_product->is_return && $stock && $order_product->return_type->value == ReturnType::RESELLABLE->value) {
@@ -126,50 +126,50 @@ class PosController extends AdminController
 
                     if ($order_product->is_return && $order_product->return_type->value == ReturnType::DAMAGED->value) {
                         $damage = Damage::create([
-                            'date'         => now(),
-                            'reference_no' => 'D-' . time(),
-                            'subtotal'     => 0,
-                            'creator_id'   => auth()->id(),
-                            'tax'          => 0,
-                            'discount'     => 0,
-                            'total'        => 0,
-                            'note'         => '',
-                            'reason'       => $order->reason,
-                            'branch_id'    => $branch_id
+                            'date' => now(),
+                            'reference_no' => 'D-'.time(),
+                            'subtotal' => 0,
+                            'creator_id' => auth()->id(),
+                            'tax' => 0,
+                            'discount' => 0,
+                            'total' => 0,
+                            'note' => '',
+                            'reason' => $order->reason,
+                            'branch_id' => $branch_id,
                         ]);
 
                         Stock::create([
-                            'model_type'      => Damage::class,
-                            'model_id'        => $damage->id,
-                            'warehouse_id'    => $order->warehouse_id,
-                            'item_type'       => $order_product->item_type,
-                            'product_id'      => $order_product->id,
+                            'model_type' => Damage::class,
+                            'model_id' => $damage->id,
+                            'warehouse_id' => $order->warehouse_id,
+                            'item_type' => $order_product->item_type,
+                            'product_id' => $order_product->id,
                             'variation_names' => 'variation_names',
-                            'item_id'         => $order_product->id,
-                            'price'           => 0,
-                            'quantity'        => -$order_product->return_quantity,
-                            'discount'        => 0,
-                            'tax'             => 0,
-                            'subtotal'        => 0,
-                            'total'           => 0,
-                            'sku'             => 'sku',
-                            'status'          => StockStatus::RECEIVED,
-                            'branch_id'       => $branch_id
+                            'item_id' => $order_product->id,
+                            'price' => 0,
+                            'quantity' => -$order_product->return_quantity,
+                            'discount' => 0,
+                            'tax' => 0,
+                            'subtotal' => 0,
+                            'total' => 0,
+                            'sku' => 'sku',
+                            'status' => StockStatus::RECEIVED,
+                            'branch_id' => $branch_id,
                         ]);
                     }
                 }
 
                 $notificationSettings = Settings::group('notification')->all();
-                $adminEmail = $notificationSettings['admin_email'] ?? NULL;
-                $adminPhone = $notificationSettings['admin_phone'] ?? NULL;
+                $adminEmail = $notificationSettings['admin_email'] ?? null;
+                $adminPhone = $notificationSettings['admin_phone'] ?? null;
 
                 $originalOrder = $order->originalOrder ?? Order::find($order->original_order_id);
 
-                $returnItems = json_decode($request->returnItems, TRUE) ?? [];
-                $exchangeItems = json_decode($request->exchangeItems, TRUE) ?? [];
+                $returnItems = json_decode($request->returnItems, true) ?? [];
+                $exchangeItems = json_decode($request->exchangeItems, true) ?? [];
 
-                $totalReturnValue = collect($returnItems)->sum(fn($i) => $i['qty'] * $i['price']);
-                $totalExchangeValue = collect($exchangeItems)->sum(fn($i) => $i['qty'] * $i['price']);
+                $totalReturnValue = collect($returnItems)->sum(fn ($i) => $i['qty'] * $i['price']);
+                $totalExchangeValue = collect($exchangeItems)->sum(fn ($i) => $i['qty'] * $i['price']);
 
                 $order->loadMissing('user');
 
@@ -178,10 +178,10 @@ class PosController extends AdminController
                     ->route('whatsapp', $adminPhone)
                     ->notify(new RefundProcessed(
                         title: 'Refund / Return Processed',
-                        message: "A return has been processed against order #{$originalOrder?->order_serial_no} by " . auth()->user()->name . '.',
+                        message: "A return has been processed against order #{$originalOrder?->order_serial_no} by ".auth()->user()->name.'.',
                         returnOrderNo: $order->order_serial_no,
                         originalOrderNo: $originalOrder?->order_serial_no ?? 'N/A',
-                        customerName: $order->user?->name ?? NULL,
+                        customerName: $order->user?->name ?? null,
                         createdBy: auth()->user()->name,
                         orderDate: $order->order_datetime?->format('d M Y, H:i:s') ?? now()->format('d M Y, H:i:s'),
                         totalReturnValue: $totalReturnValue,
@@ -191,17 +191,17 @@ class PosController extends AdminController
                         exchangeItemCount: count($exchangeItems),
                         refundStatus: $order->refund_status?->label() ?? $order->refund_status?->value,
                         returnStatus: $order->return_status?->label() ?? $order->return_status?->value,
-                        reason: $request->input('reason') ?: NULL,
+                        reason: $request->input('reason') ?: null,
                     ));
             }
 
             if ($status == ReturnStatus::REJECTED->value || $status == ReturnStatus::CANCELED->value) {
-                $order->originalOrder()->update(['is_returned' => FALSE]);
+                $order->originalOrder()->update(['is_returned' => false]);
             }
             $order->update(['return_status' => $status]);
 
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -212,29 +212,29 @@ class PosController extends AdminController
                 $payment_method = $request->integer('payment_method');
                 $branch_id = $request->integer('branch_id');
                 PosPayment::create([
-                    'order_id'          => $order->id,
-                    'date'              => now(),
-                    'reference_no'      => time(),
-                    'amount'            => $order->total,
+                    'order_id' => $order->id,
+                    'date' => now(),
+                    'reference_no' => time(),
+                    'amount' => $order->total,
                     'payment_method_id' => $payment_method,
-                    'branch_id'         => $branch_id,
-                    'register_id'       => register()->id
+                    'branch_id' => $branch_id,
+                    'register_id' => register()->id,
                 ]);
 
                 PaymentMethodTransaction::create([
-                    'amount'            => $order->total,
-                    'item_type'         => Order::class,
-                    'item_id'           => $order->id,
-                    'charge'            => 0,
-                    'description'       => 'Order Return/Exchange #' . $order->order_serial_no,
+                    'amount' => $order->total,
+                    'item_type' => Order::class,
+                    'item_id' => $order->id,
+                    'charge' => 0,
+                    'description' => 'Order Return/Exchange #'.$order->order_serial_no,
                     'payment_method_id' => $payment_method,
-                    'branch_id'         => $branch_id,
+                    'branch_id' => $branch_id,
                 ]);
                 $order->update(['refund_status' => RefundStatus::REFUNDED]);
             });
 
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -243,7 +243,7 @@ class PosController extends AdminController
         try {
             return new OrderResource($this->orderService->posOrderUpdate($order, $request));
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -252,9 +252,9 @@ class PosController extends AdminController
         $user = $request->user();
         Register::create([
             'opening_float' => $request->integer('amount'),
-            'status'        => RegisterStatus::OPEN,
-            'user_id'       => $user->id,
-            'branch_id'     => branchId(),
+            'status' => RegisterStatus::OPEN,
+            'user_id' => $user->id,
+            'branch_id' => branchId(),
         ]);
     }
 
@@ -271,10 +271,10 @@ class PosController extends AdminController
 
         $register->update([
             'expected_float' => $expectedFloat,
-            'closing_float'  => $closing_amount,
-            'difference'     => $difference,
-            'status'         => RegisterStatus::CLOSED->value,
-            'closed_at'      => now(),
+            'closing_float' => $closing_amount,
+            'difference' => $difference,
+            'status' => RegisterStatus::CLOSED->value,
+            'closed_at' => now(),
         ]);
 
         if ($request->notes) {
@@ -284,15 +284,16 @@ class PosController extends AdminController
         // --- Replicate RegisterResource calculations ---
         $register->loadMissing(['orders.orderProducts.item', 'posPayments.paymentMethod', 'expensesPayments.expense', 'walletTransactions']);
 
-        $allProducts = $register->orders->flatMap(fn($order) => $order->orderProducts);
+        $allProducts = $register->orders->flatMap(fn ($order) => $order->orderProducts);
 
-        $groupedItems = $allProducts->groupBy(fn($item) => $item->item_id . '-' . $item->item_type)
+        $groupedItems = $allProducts->groupBy(fn ($item) => $item->item_id.'-'.$item->item_type)
             ->map(function ($group) {
                 $firstItem = $group->first()->item;
                 $totalQuantity = $group->sum('quantity');
+
                 return [
                     'total_sales' => $group->sum('total'),
-                    'total_cost'  => $totalQuantity * ($firstItem->buying_price ?? 0),
+                    'total_cost' => $totalQuantity * ($firstItem->buying_price ?? 0),
                 ];
             });
 
@@ -304,11 +305,12 @@ class PosController extends AdminController
         $expenses = $register->expensesPayments->sum(function (ExpensePayment $ep) {
             $expense = $ep->expense;
             if ($expense && (
-                    $expense->expense_nature === ExpenseNature::OPERATIONAL ||
-                    (isset($expense->expense_nature->value) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value)
-                )) {
+                $expense->expense_nature === ExpenseNature::OPERATIONAL ||
+                (isset($expense->expense_nature->value) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value)
+            )) {
                 return $ep->amount;
             }
+
             return 0;
         });
 
@@ -319,13 +321,13 @@ class PosController extends AdminController
             ->sum('balance');
 
         $deposits = $register->orders()->where('payment_type', '<>', PaymentType::CASH)->get()
-            ->sum(fn($order) => $order->posPayments()->sum('amount'));
+            ->sum(fn ($order) => $order->posPayments()->sum('amount'));
 
         $walletTransactions = $register->walletTransactions()->sum('amount');
 
         $notificationSettings = Settings::group('notification')->all();
-        $adminEmail = $notificationSettings['admin_email'] ?? NULL;
-        $adminPhone = $notificationSettings['admin_phone'] ?? NULL;
+        $adminEmail = $notificationSettings['admin_email'] ?? null;
+        $adminPhone = $notificationSettings['admin_phone'] ?? null;
 
         Notification::route('mail', $adminEmail)
             ->route('sms', $adminPhone)
@@ -352,21 +354,20 @@ class PosController extends AdminController
 
         return response()->json([
             'message' => 'Register closed successfully',
-            'audit'   => [
-                'expected'    => $expectedFloat,
-                'actual'      => $closing_amount,
-                'discrepancy' => $difference
-            ]
+            'audit' => [
+                'expected' => $expectedFloat,
+                'actual' => $closing_amount,
+                'discrepancy' => $difference,
+            ],
         ]);
     }
-
 
     public function makeSale(Request $request, CommissionCalculator $commissionCalculator)
     {
         try {
             return new OrderDetailsResource($this->orderService->posOrderMakeSale($request, $commissionCalculator));
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -375,7 +376,7 @@ class PosController extends AdminController
         try {
             return $this->orderService->makeQuotationSale($order, $request);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -385,34 +386,35 @@ class PosController extends AdminController
             $order = Order::find($request->order_id);
             $order->update(['status' => OrderStatus::CANCELED]);
             $order->stocks()->update(['status' => StockStatus::CANCELED]);
+
             return new OrderResource($order);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
     public function storeCustomer(
         CustomerRequest $request
-    )
-    {
+    ) {
         try {
             $customer = $this->customerService->store($request);
+
             return new CustomerResource($customer);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
     public function updateCustomer(
         CustomerRequest $request,
-        User            $customer
-    ): Response|CustomerResource|Application|ResponseFactory
-    {
+        User $customer
+    ): Response|CustomerResource|Application|ResponseFactory {
         try {
             $customer = $this->customerService->update($request, $customer);
+
             return new CustomerResource($customer);
         } catch (Exception $exception) {
-            return response(['status' => FALSE, 'message' => $exception->getMessage()], 422);
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
 
@@ -424,9 +426,11 @@ class PosController extends AdminController
     public function registerDetails()
     {
         $register = auth()->user()?->openRegister();
-        if (!$register) {
+        info(auth()->user());
+        if (! $register) {
             return response()->json(['message' => 'No open register found'], 404);
         }
+
         return new RegisterResource($register->load(['user', 'posPayments', 'orders.orderProducts.item', 'expenses', 'walletTransactions']));
     }
 
@@ -444,10 +448,11 @@ class PosController extends AdminController
                         $stock = Stock::where(['item_type' => Product::class, 'item_id' => $order_product->item_id])->first();
                         $stock->increment('quantity', $order_product->quantity);
                     }
-                    activity()->on(auth()->user())->log('Deleted Order: ' . $order->order_serial_no);
+                    activity()->on(auth()->user())->log('Deleted Order: '.$order->order_serial_no);
                     $order->delete();
                 }
-                return response()->json(['status' => TRUE, 'message' => 'Orders deleted successfully']);
+
+                return response()->json(['status' => true, 'message' => 'Orders deleted successfully']);
             });
         } catch (Exception $e) {
             return $this->APIError(422, 'Error', $e->getMessage());
@@ -461,14 +466,14 @@ class PosController extends AdminController
                 $ids = $request->array('ids');
                 foreach ($ids as $id) {
                     $order = Order::find($id);
-                    $order->originalOrder()->update(['is_returned' => FALSE]);
+                    $order->originalOrder()->update(['is_returned' => false]);
                     $order->delete();
                 }
             });
         } catch (Exception $e) {
-            return response(['status' => FALSE, 'message' => $e->getMessage()], 422);
+            return response(['status' => false, 'message' => $e->getMessage()], 422);
         } catch (\Throwable $e) {
-            return response(['status' => FALSE, 'message' => $e->getMessage()], 422);
+            return response(['status' => false, 'message' => $e->getMessage()], 422);
         }
     }
 }

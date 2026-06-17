@@ -27,7 +27,7 @@ class CreditDepositPurchaseController extends Controller
 
         // Check if the CreditDepositPurchase exists
         if ($creditDepositPurchase->isEmpty()) {
-//                return response()->json([ 'error' => 'Credit deposit purchase not found' ] , 404);
+            //                return response()->json([ 'error' => 'Credit deposit purchase not found' ] , 404);
             return response()->json(['payments' => []]);
         }
 
@@ -38,6 +38,7 @@ class CreditDepositPurchaseController extends Controller
             $payment['balance'] = AppLibrary::currencyAmountFormat($payment['balance']);
             $payment['created_at'] = date('M d, Y', strtotime($payment['created_at']));
             $payment['updated_at'] = date('M d, Y', strtotime($payment['updated_at']));
+
             return $payment;
         });
 
@@ -52,7 +53,7 @@ class CreditDepositPurchaseController extends Controller
 
             $totalAmountPaid = 0;
 
-            $payments = json_decode($request->payments, TRUE);
+            $payments = json_decode($request->payments, true);
             foreach ($payments as $p) {
                 $amount = $p['amount'];
                 $net_amount = $amount - $change;
@@ -60,22 +61,22 @@ class CreditDepositPurchaseController extends Controller
                     $payment = PaymentMethod::find($p['id']);
 
                     PosPayment::create([
-                        'order_id'          => $order->id,
-                        'date'              => now(),
-                        'reference_no'      => $p['reference'] ?? time(),
-                        'amount'            => $net_amount,
-                        'pos_payment_type'  => PosPaymentType::DEBT,
+                        'order_id' => $order->id,
+                        'date' => now(),
+                        'reference_no' => $p['reference'] ?? time(),
+                        'amount' => $net_amount,
+                        'pos_payment_type' => PosPaymentType::DEBT,
                         'payment_method_id' => $p['id'],
-                        'register_id'       => auth()->user()?->openRegister()->id
+                        'register_id' => auth()->user()?->openRegister()->id,
                     ]);
 
                     PaymentMethodTransaction::create([
-                        'amount'            => $net_amount,
-                        'charge'            => 0,
-                        'description'       => 'Order Payment #' . $order->order_serial_no,
+                        'amount' => $net_amount,
+                        'charge' => 0,
+                        'description' => 'Order Payment #'.$order->order_serial_no,
                         'payment_method_id' => $payment->id,
-                        'item_type'         => Order::class,
-                        'item_id'           => $order->id
+                        'item_type' => Order::class,
+                        'item_id' => $order->id,
                     ]);
 
                     $totalAmountPaid += $net_amount;
@@ -87,7 +88,7 @@ class CreditDepositPurchaseController extends Controller
             if ($fullySettled) {
                 $order->update([
                     'payment_status' => PaymentStatus::PAID,
-                    'payment_type'   => PaymentType::CASH,
+                    'payment_type' => PaymentType::CASH,
                 ]);
             }
 
@@ -95,8 +96,8 @@ class CreditDepositPurchaseController extends Controller
             $order->loadMissing('user');
 
             $notificationSettings = Settings::group('notification')->all();
-            $adminEmail = $notificationSettings['admin_email'] ?? NULL;
-            $adminPhone = $notificationSettings['admin_phone'] ?? NULL;
+            $adminEmail = $notificationSettings['admin_email'] ?? null;
+            $adminPhone = $notificationSettings['admin_phone'] ?? null;
 
             Notification::route('mail', $adminEmail)
                 ->route('sms', $adminPhone)
@@ -120,6 +121,42 @@ class CreditDepositPurchaseController extends Controller
     {
         return DB::transaction(function () use ($order, $request) {
             $amount = $request->integer('amount');
+            $net_amount = $amount;
+            if ($amount > 0) {
+                $payment = PaymentMethod::find($request->integer('payment_method'));
+
+                $p = PosPayment::create([
+                    'order_id' => $order->id,
+                    'date' => now(),
+                    'reference_no' => time(),
+                    'amount' => $net_amount,
+                    'pos_payment_type' => PosPaymentType::DEBT,
+                    'payment_method_id' => $payment->id,
+                    'register_id' => auth()->user()?->openRegister()->id,
+                    'branch_id' => branchId(),
+                ]);
+                $p->update(['reference_no' => recordId('PP', $p)]);
+
+                PaymentMethodTransaction::create([
+                    'amount' => $net_amount,
+                    'charge' => 0,
+                    'description' => 'Order Payment #'.$order->order_serial_no,
+                    'payment_method_id' => $payment->id,
+                    'item_type' => Order::class,
+                    'item_id' => $order->id,
+                    'branch_id' => branchId(),
+                ]);
+            }
+
+            $order->unsetRelation('posPayments');
+
+            if ($order->balance <= 0) {
+                $order->update([
+                    'payment_status' => PaymentStatus::PAID,
+                    'payment_type' => PaymentType::CASH,
+                ]);
+            }
+
             $order->load([
                 'orderProducts.item' => function ($query) {
                     $query->withTrashed();
@@ -128,41 +165,8 @@ class CreditDepositPurchaseController extends Controller
                 'creator',
                 'paymentMethods.paymentMethod',
                 'originalOrder',
-                'posPayments.paymentMethod'
+                'posPayments.paymentMethod',
             ]);
-            $net_amount = $amount;
-            if ($amount > 0) {
-                $payment = PaymentMethod::find($request->integer('payment_method'));
-
-                $p = PosPayment::create([
-                    'order_id'          => $order->id,
-                    'date'              => now(),
-                    'reference_no'      => time(),
-                    'amount'            => $net_amount,
-                    'pos_payment_type'  => PosPaymentType::DEBT,
-                    'payment_method_id' => $payment->id,
-                    'register_id'       => auth()->user()?->openRegister()->id,
-                    'branch_id'         => branchId()
-                ]);
-                $p->update(['reference_no' => recordId('PP', $p)]);
-
-                PaymentMethodTransaction::create([
-                    'amount'            => $net_amount,
-                    'charge'            => 0,
-                    'description'       => 'Order Payment #' . $order->order_serial_no,
-                    'payment_method_id' => $payment->id,
-                    'item_type'         => Order::class,
-                    'item_id'           => $order->id,
-                    'branch_id'         => branchId()
-                ]);
-            }
-
-            if ($order->balance <= 0) {
-                $order->update([
-                    'payment_status' => PaymentStatus::PAID,
-                    'payment_type'   => PaymentType::CASH,
-                ]);
-            }
 
             return new OrderResource($order);
         });

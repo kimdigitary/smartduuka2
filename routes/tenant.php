@@ -92,6 +92,7 @@ use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
@@ -100,7 +101,7 @@ Route::middleware([
     'api',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
-    DynamicSanctumConfiguration::class
+    DynamicSanctumConfiguration::class,
 ])->group(function () {
 
     Route::get('/', function () {
@@ -121,6 +122,7 @@ Route::middleware([
     'api',
     InitializeTenancyByDomain::class,
     PreventAccessFromCentralDomains::class,
+    DynamicSanctumConfiguration::class,
 ])->prefix('api')->group(function () {
 
     Route::get('/debug-token', function (Request $request) {
@@ -131,13 +133,13 @@ Route::middleware([
             'tenant' => tenant('id'),
             'token_raw' => $token,
             'found' => $found ? 'YES' : 'NO',
-            'pat_table_exist' => \Illuminate\Support\Facades\Schema::hasTable('personal_access_tokens'),
+            'pat_table_exist' => Schema::hasTable('personal_access_tokens'),
         ]);
     });
 
     Route::get('/ping', function () {
         return response()->json([
-            'success' => TRUE,
+            'success' => true,
             'message' => 'Tenant workspace is reachable',
         ]);
     });
@@ -167,16 +169,16 @@ Route::middleware([
         Route::post('/login', [LoginController::class, 'login'])->name('auth.login');
         Route::post('token', [LoginController::class, 'token']);
 
-
         Route::middleware('auth:sanctum')->group(function () {
             Route::post('/logout', [LoginController::class, 'logout']);
         });
 
         Route::post('/authcheck', function () {
             if (Auth::check()) {
-                return response()->json(['status' => TRUE]);
+                return response()->json(['status' => true]);
             }
-            return response()->json(['status' => FALSE]);
+
+            return response()->json(['status' => false]);
         });
     });
 
@@ -192,7 +194,7 @@ Route::middleware([
             ->name('forgot-password');
     });
 
-    Route::prefix('admin')->name('admin.')->middleware(['local.auth', 'auth:sanctum', 'subscribed', 'verify.branchid:POST,PUT,PATCH'])->group(function () {
+    Route::prefix('admin')->name('admin.')->middleware(['auth:sanctum', 'subscribed', 'verify.branchid:POST,PUT,PATCH'])->group(function () {
         Route::prefix('timezone')->name('timezone.')->group(function () {
             Route::get('/', [TimezoneController::class, 'index']);
         });
@@ -443,7 +445,7 @@ Route::middleware([
             Route::delete('/', [ProductController::class, 'destroy']);
             Route::post('/upload-image/{product}', [ProductController::class, 'uploadImage']);
             Route::get('/delete-image/{product}/{index}', [ProductController::class, 'deleteImage']);
-//                Route::get( '/export' , [ ProductController::class , 'export' ] );
+            //                Route::get( '/export' , [ ProductController::class , 'export' ] );
             Route::get('/generate-sku/{barcodeMethod}', [ProductController::class, 'generateSku']);
             Route::post('/offer/{product}', [ProductController::class, 'productOffer']);
             Route::get('/purchasable-product', [ProductController::class, 'purchasableProducts']);
@@ -477,7 +479,7 @@ Route::middleware([
             Route::post('/', [AdministratorController::class, 'store']);
             Route::match(['post', 'put', 'patch'], '/{administrator}', [AdministratorController::class, 'update']);
             Route::delete('/delete', [AdministratorController::class, 'destroy']);
-//                Route::get( '/export' , [ AdministratorController::class , 'export' ] );
+            //                Route::get( '/export' , [ AdministratorController::class , 'export' ] );
             Route::post('/change-password/{administrator}', [AdministratorController::class, 'changePassword']);
             Route::post('/change-image/{administrator}', [AdministratorController::class, 'changeImage']);
             Route::get('/my-order/{administrator}', [AdministratorController::class, 'myOrder']);
@@ -491,7 +493,7 @@ Route::middleware([
         Route::prefix('country')->name('country.')->group(function () {
             Route::get('/', [CountryController::class, 'index'])->name('index');
             Route::get('/list', [CountryController::class, 'list'])->name('list');
-//                Route::get( '/show/{country}' , [ CountryController::class , 'show' ] )->name( 'show' );
+            //                Route::get( '/show/{country}' , [ CountryController::class , 'show' ] )->name( 'show' );
             Route::post('/', [CountryController::class, 'store'])->name('store');
             Route::delete('/{country}', [CountryController::class, 'destroy'])->name('destroy');
             Route::match(['put', 'patch', 'post'], '/{country}', [CountryController::class, 'update'])->name('update');
@@ -506,7 +508,7 @@ Route::middleware([
             Route::get('/', [StateController::class, 'index']);
             Route::get('/{country:id}', [StateController::class, 'state']);
             Route::get('/simple-lists', [StateController::class, 'simpleLists']);
-//                Route::get( '/show/{state}' , [ StateController::class , 'show' ] );
+            //                Route::get( '/show/{state}' , [ StateController::class , 'show' ] );
             Route::post('/', [StateController::class, 'store']);
             Route::delete('/{state}', [StateController::class, 'destroy']);
             Route::match(['put', 'patch', 'post'], '/{state}', [StateController::class, 'update']);
@@ -527,7 +529,7 @@ Route::middleware([
             Route::get('/', [CustomerController::class, 'index']);
             Route::get('/simple', [CustomerController::class, 'index']);
             Route::get('/list', [CustomerController::class, 'list']);
-//                Route::get( '/simple' , [ CustomerController::class , 'simpleCustomers' ] );
+            //                Route::get( '/simple' , [ CustomerController::class , 'simpleCustomers' ] );
             Route::get('/pos', [CustomerController::class, 'posCustomers']);
             Route::get('/debtPayments', [CustomerController::class, 'debtPayments']);
             Route::post('/', [CustomerController::class, 'store']);
@@ -557,7 +559,7 @@ Route::middleware([
             Route::match(['put', 'patch'], '/{warehouse}', [WarehouseController::class, 'update']);
             Route::delete('/{warehouse}', [WarehouseController::class, 'destroy']);
             Route::delete('/delete', [WarehouseController::class, 'destroy']);
-//                Route::get( '/export' , [ WarehouseController::class , 'export' ] );
+            //                Route::get( '/export' , [ WarehouseController::class , 'export' ] );
         });
 
         Route::prefix('employee')->name('employee.')->group(function () {
@@ -566,7 +568,7 @@ Route::middleware([
             Route::get('/show/{employee}', [EmployeeController::class, 'show']);
             Route::match(['put', 'patch'], '/{employee}', [EmployeeController::class, 'update']);
             Route::delete('delete', [EmployeeController::class, 'destroy']);
-//                Route::get( '/export' , [ EmployeeController::class , 'export' ] );
+            //                Route::get( '/export' , [ EmployeeController::class , 'export' ] );
             Route::post('/change-password/{employee}', [EmployeeController::class, 'changePassword']);
             Route::post('/change-image/{employee}', [EmployeeController::class, 'changeImage']);
             Route::get('/my-order/{employee}', [EmployeeController::class, 'myOrder']);
@@ -624,7 +626,7 @@ Route::middleware([
             Route::get('/show/{purchase}', [PurchaseController::class, 'show']);
             Route::get('/edit/{purchase}', [PurchaseController::class, 'edit']);
             Route::match(['post', 'put', 'patch'], '/update/{purchase}', [PurchaseController::class, 'update']);
-//                Route::get( '/export' , [ PurchaseController::class , 'export' ] );
+            //                Route::get( '/export' , [ PurchaseController::class , 'export' ] );
             Route::get('/download-attachment/{purchase}', [PurchaseController::class, 'downloadAttachment']);
             Route::get('/payment/{type}/{purchase}', [PurchaseController::class, 'paymentHistory']);
             Route::post('/payment/{purchase}', [PurchaseController::class, 'payment'])->middleware('register');
@@ -638,7 +640,7 @@ Route::middleware([
             Route::post('/', [IngredientsController::class, 'store']);
             Route::match(['post', 'put', 'patch'], '/{ingredient}', [IngredientsController::class, 'update']);
             Route::delete('/{ingredient}', [IngredientsController::class, 'destroy']);
-//                Route::get( '/export' , [ ProductController::class , 'export' ] );
+            //                Route::get( '/export' , [ ProductController::class , 'export' ] );
         });
         Route::resource('stockTransfer', StockTransferController::class);
 
@@ -725,8 +727,8 @@ Route::middleware([
         Route::apiResource('bookings', BookingController::class)->except('destroy');
         Route::delete('bookings', [BookingController::class, 'destroy']);
 
-        Route::apiResource('serviceCategories', ServicecategoryController::class)->except('destroy');
-        Route::delete('serviceCategories', [ServicecategoryController::class, 'destroy']);
+        Route::apiResource('serviceCategories', ServiceCategoryController::class)->except('destroy');
+        Route::delete('serviceCategories', [ServiceCategoryController::class, 'destroy']);
 
         Route::prefix('pos')->name('pos.')->group(function () {
             Route::post('/', [PosController::class, 'store'])->middleware('register');

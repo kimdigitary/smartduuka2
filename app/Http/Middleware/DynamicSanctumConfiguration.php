@@ -1,27 +1,24 @@
 <?php
 
-    namespace App\Http\Middleware;
+namespace App\Http\Middleware;
 
-    use Closure;
-    use Illuminate\Http\Request;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
-    class DynamicSanctumConfiguration
+class DynamicSanctumConfiguration
+{
+    public function handle(Request $request, Closure $next): Response
     {
+        $isTenantRequest = tenancy()->initialized;
 
-        public function handle(Request $request , Closure $next)
-        {
-            if ( tenancy()->initialized ) {
-                config( [
-                    'auth.guards.sanctum.provider' => 'users' ,
-                    'sanctum.guard'                => [ 'web' ] ,
-                ] );
-            }
-            else {
-                config( [
-                    'auth.guards.sanctum.provider' => 'central_users' ,
-                    'sanctum.guard'                => [ 'central' ] ,
-                ] );
-            }
-            return $next( $request );
-        }
+        config([
+            'auth.guards.sanctum.provider' => $isTenantRequest ? 'users' : 'central_users',
+            'sanctum.guard' => $request->bearerToken()
+                ? []
+                : [$isTenantRequest ? 'web' : 'central'],
+        ]);
+
+        return $next($request);
     }
+}
