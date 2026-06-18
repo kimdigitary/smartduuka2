@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -24,7 +25,7 @@ use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
 
 class User extends Authenticatable implements HasMedia, Syncable
 {
-    use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, InteractsWithMedia, Notifiable, ResourceSyncing;
+    use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, InteractsWithMedia, Notifiable, ResourceSyncing, SoftDeletes;
 
     protected $table = 'users';
 

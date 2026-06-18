@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\Status;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Stancl\Tenancy\Contracts\SyncMaster;
@@ -15,12 +16,14 @@ use Stancl\Tenancy\Database\Models\TenantPivot;
 class CentralUser extends Authenticatable implements SyncMaster
 {
     // Note that we force the central connection on this model
-    use ResourceSyncing, CentralConnection, HasApiTokens;
+    use CentralConnection, HasApiTokens, ResourceSyncing, SoftDeletes;
 
-//        use InteractsWithMedia , HasApiTokens , HasFactory , HasRoles , Notifiable , ResourceSyncing , ForgetsCacheOnCRUD;
+    //        use InteractsWithMedia , HasApiTokens , HasFactory , HasRoles , Notifiable , ResourceSyncing , ForgetsCacheOnCRUD;
 
     protected $guarded = [];
-    public $timestamps = FALSE;
+
+    public $timestamps = false;
+
     public $table = 'users';
 
     protected $casts = ['status' => Status::class];
@@ -49,7 +52,7 @@ class CentralUser extends Authenticatable implements SyncMaster
     protected function phone(): Attribute
     {
         return Attribute::make(
-            get: fn(?string $value) => formatPhoneNumber($value),
+            get: fn (?string $value) => formatPhoneNumber($value),
         );
     }
 
