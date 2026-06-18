@@ -61,22 +61,24 @@ class CreditDepositPurchaseController extends Controller
                     $payment = PaymentMethod::find($p['id']);
 
                     PosPayment::create([
-                        'order_id' => $order->id,
-                        'date' => now(),
-                        'reference_no' => $p['reference'] ?? time(),
-                        'amount' => $net_amount,
-                        'pos_payment_type' => PosPaymentType::DEBT,
+                        'order_id'          => $order->id,
+                        'date'              => now(),
+                        'reference_no'      => $p['reference'] ?? time(),
+                        'amount'            => $net_amount,
+                        'branch_id'         => branchId(),
+                        'pos_payment_type'  => PosPaymentType::DEBT,
                         'payment_method_id' => $p['id'],
-                        'register_id' => auth()->user()?->openRegister()->id,
+                        'register_id'       => auth()->user()?->openRegister()->id,
                     ]);
 
                     PaymentMethodTransaction::create([
-                        'amount' => $net_amount,
-                        'charge' => 0,
-                        'description' => 'Order Payment #'.$order->order_serial_no,
+                        'amount'            => $net_amount,
+                        'charge'            => 0,
+                        'description'       => 'Order Payment #' . $order->order_serial_no,
                         'payment_method_id' => $payment->id,
-                        'item_type' => Order::class,
-                        'item_id' => $order->id,
+                        'item_type'         => Order::class,
+                        'item_id'           => $order->id,
+                        'branch_id'         => branchId(),
                     ]);
 
                     $totalAmountPaid += $net_amount;
@@ -88,7 +90,11 @@ class CreditDepositPurchaseController extends Controller
             if ($fullySettled) {
                 $order->update([
                     'payment_status' => PaymentStatus::PAID,
-                    'payment_type' => PaymentType::CASH,
+                    'payment_type'   => PaymentType::CASH,
+                ]);
+            } else {
+                $order->update([
+                    'payment_status' => PaymentStatus::PARTIALLY_PAID,
                 ]);
             }
 
@@ -126,25 +132,25 @@ class CreditDepositPurchaseController extends Controller
                 $payment = PaymentMethod::find($request->integer('payment_method'));
 
                 $p = PosPayment::create([
-                    'order_id' => $order->id,
-                    'date' => now(),
-                    'reference_no' => time(),
-                    'amount' => $net_amount,
-                    'pos_payment_type' => PosPaymentType::DEBT,
+                    'order_id'          => $order->id,
+                    'date'              => now(),
+                    'reference_no'      => time(),
+                    'amount'            => $net_amount,
+                    'pos_payment_type'  => PosPaymentType::DEBT,
                     'payment_method_id' => $payment->id,
-                    'register_id' => auth()->user()?->openRegister()->id,
-                    'branch_id' => branchId(),
+                    'register_id'       => auth()->user()?->openRegister()->id,
+                    'branch_id'         => branchId(),
                 ]);
                 $p->update(['reference_no' => recordId('PP', $p)]);
 
                 PaymentMethodTransaction::create([
-                    'amount' => $net_amount,
-                    'charge' => 0,
-                    'description' => 'Order Payment #'.$order->order_serial_no,
+                    'amount'            => $net_amount,
+                    'charge'            => 0,
+                    'description'       => 'Order Payment #' . $order->order_serial_no,
                     'payment_method_id' => $payment->id,
-                    'item_type' => Order::class,
-                    'item_id' => $order->id,
-                    'branch_id' => branchId(),
+                    'item_type'         => Order::class,
+                    'item_id'           => $order->id,
+                    'branch_id'         => branchId(),
                 ]);
             }
 
@@ -153,7 +159,7 @@ class CreditDepositPurchaseController extends Controller
             if ($order->balance <= 0) {
                 $order->update([
                     'payment_status' => PaymentStatus::PAID,
-                    'payment_type' => PaymentType::CASH,
+                    'payment_type'   => PaymentType::CASH,
                 ]);
             }
 
