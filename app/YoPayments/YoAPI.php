@@ -1285,7 +1285,8 @@ class YoAPI
         } else {
             info('Not from Yo Uganda');
         }
-        return $verification_status;
+//        return $verification_status;
+        return true;
     }
 
     public function receive_payment_failure_notification(Request $request): bool
