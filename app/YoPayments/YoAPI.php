@@ -231,7 +231,7 @@ class YoAPI
             $this->public_key_file = app_path('YoPayments/Yo_Uganda_Public_Sandbox_Certificate.crt');
         } else {
             $this->YOURL = $this->production_url;
-            $this->public_key_file = app_path('YoPayments/public_key.pem');
+            $this->public_key_file = app_path('YoPayments/Yo_Uganda_Public_Certificate.crt');
             $this->private_key_file_location = app_path('YoPayments/private_key.pem');
         }
     }
@@ -1285,8 +1285,7 @@ class YoAPI
         } else {
             info('Not from Yo Uganda');
         }
-//        return $verification_status;
-        return true;
+        return $verification_status;
     }
 
     public function receive_payment_failure_notification(Request $request): bool
