@@ -8,11 +8,11 @@ use SimpleXMLElement;
 
 class YoAPI
 {
-
     /**
      * The Yo! Payments API Username
      * Required.
      * You may obtain the API Username from the web interface of your Payment Account.
+     *
      * @var string
      */
     private $username;
@@ -21,6 +21,7 @@ class YoAPI
      * The Yo! Payments API Password
      * Required.
      * You may obtain the API Password from the web interface of your Payment Account.
+     *
      * @var string
      */
     private $password;
@@ -32,9 +33,10 @@ class YoAPI
      * fulfilled. "FALSE" maintains the connection till the request is complete.
      * Default: "FALSE"
      * Options: "FALSE", "TRUE".
+     *
      * @var string
      */
-    private $NonBlocking = "FALSE";
+    private $NonBlocking = 'FALSE';
 
     /**
      * The External Reference variable
@@ -42,9 +44,10 @@ class YoAPI
      * An External Reference is something which yourself and the beneficiary agree upon
      * e.g. an invoice number
      * Default: NULL
+     *
      * @var string
      */
-    private $external_reference = NULL;
+    private $external_reference = null;
 
     /**
      * The Internal Reference variable
@@ -52,9 +55,10 @@ class YoAPI
      * An Internal Reference is a reference code related to another Yo! Payments system transaction
      * If you are unsure about the meaning of this field, leave it as NULL
      * Default: NULL
+     *
      * @var string
      */
-    private $internal_reference = NULL;
+    private $internal_reference = null;
 
     /**
      * The Provider Reference Text variable
@@ -65,9 +69,10 @@ class YoAPI
      * upon completion of transactions. This parameter allows you to provide some text which will
      * be appended to any such confirmatory message sent to the subscriber.
      * Default: NULL
+     *
      * @var string
      */
-    private $provider_reference_text = NULL;
+    private $provider_reference_text = null;
 
     /**
      * The Instant Notification URL variable
@@ -79,9 +84,10 @@ class YoAPI
      * Any special XML Characters must be escaped or your request will fail
      * e.g. http://ipnurl?key1=This+value+has+encoded+white+spaces&amp;key2=value
      * Default: NULL
+     *
      * @var string
      */
-    private $instant_notification_url = NULL;
+    private $instant_notification_url = null;
 
     /**
      * The Failure Notification URL variable
@@ -93,9 +99,10 @@ class YoAPI
      * Any special XML Characters must be escaped or your request will fail
      * e.g. http://failureurl?key1=This+value+has+encoded+white+spaces&amp;key2=value
      * Default: NULL
+     *
      * @var string
      */
-    private $failure_notification_url = NULL;
+    private $failure_notification_url = null;
 
     /**
      * The Authentication Signature Base64 variable
@@ -104,9 +111,10 @@ class YoAPI
      * Contact Yo! Payments support services for clarification on the cases where this parameter
      * is required.
      * Default: NULL
+     *
      * @var string
      */
-    private $authentication_signature_base64 = NULL;
+    private $authentication_signature_base64 = null;
 
     /**
      * The Deposit Transaction Type variable
@@ -115,6 +123,7 @@ class YoAPI
      * Set to "PULL" if following up on the status of a pull deposit funds transaction
      * Default: "PULL"
      * Options: "PULL", "PUSH"
+     *
      * @var string
      */
     private $deposit_transaction_type = 'PULL';
@@ -127,39 +136,38 @@ class YoAPI
      * * "https://paymentsapi1.yo.co.ug/ybs/task.php",
      * * "https://paymentsapi2.yo.co.ug/ybs/task.php",
      * * "https://sandbox.yo.co.ug/services/yopaymentsdev/task.php" For Sandbox tests
+     *
      * @var string
      */
-    private $YOURL = "https://paymentsapi1.yo.co.ug/ybs/task.php";
+    private $YOURL = 'https://paymentsapi1.yo.co.ug/ybs/task.php';
 
     /*
     * This is the sandbox API URL
     */
-    private $sandbox_url = "https://sandbox.yo.co.ug/services/yopaymentsdev/task.php";
+    private $sandbox_url = 'https://sandbox.yo.co.ug/services/yopaymentsdev/task.php';
 
     /*
     * This is the production URL
     */
-    private $production_url = "https://paymentsapi1.yo.co.ug/ybs/task.php";
+    private $production_url = 'https://paymentsapi1.yo.co.ug/ybs/task.php';
 
     /*
     * This is the certificate file. Should be in the same
     * directory as this Lib file.
     */
-    private $public_key_file = "public_key.pem";
-
+    private $public_key_file = 'public_key.pem';
 
     /*
     * This is the certificate file to use in verifying the signature from Sandbox IPNs
     */
-    private $public_key_file_for_sandbox = "public_key.pem";
+    private $public_key_file_for_sandbox = 'public_key.pem';
 
     /*
     * This is the certificate file to use in verifying the signature from Production IPNs
     */
-    private $public_key_file_for_production = "public_key.pem";
+    private $public_key_file_for_production = 'public_key.pem';
 
-
-    private $transaction_limit_account_identifier = NULL;
+    private $transaction_limit_account_identifier = null;
 
     /**
      * The Public Key Authentication Nonce
@@ -170,9 +178,10 @@ class YoAPI
      * Reg Expression: [a-zA-Z0-9,-+]
      * Default: NULL
      * It must be unique for each API request made
+     *
      * @var string
      */
-    private $public_key_authentication_nonce = NULL;
+    private $public_key_authentication_nonce = null;
 
     /**
      * The Public Key Authentication Signature
@@ -192,9 +201,10 @@ class YoAPI
      * 2. The above concatenated string in 1 should be SHA1 hashed
      * 3. The SHA1 hash should be RSA signed using the private key associated with your public key
      * 4. Base64-encode the RSA signature calculated in 3 above
+     *
      * @var string
      */
-    private $public_key_authentication_signature_base64 = NULL;
+    private $public_key_authentication_signature_base64 = null;
 
     /**
      * The location of the private key used to sign the public auth key
@@ -205,6 +215,7 @@ class YoAPI
      * Reg Expression: [a-zA-Z0-9,-+]
      * Default: NULL
      * It must be unique for each API request made
+     *
      * @var string
      */
     private $private_key_file_location = 'private_key.pem';
@@ -212,21 +223,17 @@ class YoAPI
     /*
     * Set this to sandbox if you are working with sandbox.
     */
-    private $mode = "production";
-
+    private $mode = 'production';
 
     /**
      * YoAPI constructor.
-     *
-     * @param string $username
-     * @param string $password
      */
-    public function __construct(string $username, string $password, string $mode = "production")
+    public function __construct(string $username, string $password, string $mode = 'production')
     {
         $this->username = $username;
         $this->password = $password;
 
-        if (strcmp($mode, "sandbox") == 0) {
+        if (strcmp($mode, 'sandbox') == 0) {
             $this->YOURL = $this->sandbox_url;
             $this->public_key_file = app_path('YoPayments/Yo_Uganda_Public_Sandbox_Certificate.crt');
         } else {
@@ -239,8 +246,7 @@ class YoAPI
     /**
      * Set the API Username
      *
-     * @param string $username The Yo Payments API username to use
-     *
+     * @param  string  $username  The Yo Payments API username to use
      * @return void
      */
     public function set_username($username)
@@ -250,6 +256,7 @@ class YoAPI
 
     /**
      * Returns the API Username
+     *
      * @return string
      */
     public function get_username()
@@ -260,8 +267,7 @@ class YoAPI
     /**
      * Set the API Password
      *
-     * @param string $password The Yo Payments API Password to use
-     *
+     * @param  string  $password  The Yo Payments API Password to use
      * @return void
      */
     public function set_password($password)
@@ -271,6 +277,7 @@ class YoAPI
 
     /**
      * Returns the API Password
+     *
      * @return string
      */
     public function get_password()
@@ -281,8 +288,7 @@ class YoAPI
     /**
      * Set the YO URL
      *
-     * @param string $yoURL The URL to submit API requests to
-     *
+     * @param  string  $yoURL  The URL to submit API requests to
      * @return void
      */
     public function set_URL($yoURL)
@@ -292,6 +298,7 @@ class YoAPI
 
     /**
      * Returns the YO URL
+     *
      * @return string
      */
     public function get_URL()
@@ -302,8 +309,7 @@ class YoAPI
     /**
      * Set the PUBLIC KEY PATH
      *
-     * @param string $public_key_file_URL
-     *
+     * @param  string  $public_key_file_URL
      * @return void
      */
     public function set_public_key_file_URL($public_key_file_URL)
@@ -313,6 +319,7 @@ class YoAPI
 
     /**
      * Returns the PUBLIC KEY PATH
+     *
      * @return string
      */
     public function get_public_key_file_URL()
@@ -323,8 +330,7 @@ class YoAPI
     /**
      * Set the NonBlocking Variable
      *
-     * @param string $nonblocking TRUE for nonblocking API requests
-     *
+     * @param  string  $nonblocking  TRUE for nonblocking API requests
      * @return void
      */
     public function set_nonblocking($nonblocking)
@@ -334,6 +340,7 @@ class YoAPI
 
     /**
      * Returns the NonBlocking Variable
+     *
      * @return string
      */
     public function get_nonblocking()
@@ -344,8 +351,7 @@ class YoAPI
     /**
      * Set the External Reference
      *
-     * @param string $external_reference Used when submitting payment requests
-     *
+     * @param  string  $external_reference  Used when submitting payment requests
      * @return void
      */
     public function set_external_reference($external_reference)
@@ -355,6 +361,7 @@ class YoAPI
 
     /**
      * Returns the external_reference Variable
+     *
      * @return string
      */
     public function get_external_reference()
@@ -365,8 +372,7 @@ class YoAPI
     /**
      * Set the Internal Reference
      *
-     * @param string $internal_reference Used when submitting payment requests
-     *
+     * @param  string  $internal_reference  Used when submitting payment requests
      * @return void
      */
     public function set_internal_reference($internal_reference)
@@ -376,6 +382,7 @@ class YoAPI
 
     /**
      * Returns the internal_reference Variable
+     *
      * @return string
      */
     public function get_internal_reference()
@@ -386,8 +393,7 @@ class YoAPI
     /**
      * Set the Provider Reference
      *
-     * @param string $provider_reference_text Used when submitting payment requests
-     *
+     * @param  string  $provider_reference_text  Used when submitting payment requests
      * @return void
      */
     public function set_provider_reference_text($provider_reference_text)
@@ -397,6 +403,7 @@ class YoAPI
 
     /**
      * Returns the provider_reference_text Variable
+     *
      * @return string
      */
     public function get_provider_reference_text()
@@ -407,8 +414,7 @@ class YoAPI
     /**
      * Set the Instant Notification URL
      *
-     * @param string $instant_notification_url Useful for nonblocking requests
-     *
+     * @param  string  $instant_notification_url  Useful for nonblocking requests
      * @return void
      */
     public function set_instant_notification_url($instant_notification_url)
@@ -418,6 +424,7 @@ class YoAPI
 
     /**
      * Returns the instant_notification_url Variable
+     *
      * @return string
      */
     public function get_instant_notification_url()
@@ -428,8 +435,7 @@ class YoAPI
     /**
      * Set the Failure Notification URL
      *
-     * @param string $failure_notification_url Useful for nonblocking requests
-     *
+     * @param  string  $failure_notification_url  Useful for nonblocking requests
      * @return void
      */
     public function set_failure_notification_url($failure_notification_url)
@@ -439,6 +445,7 @@ class YoAPI
 
     /**
      * Returns the failure_notification_url Variable
+     *
      * @return string
      */
     public function get_failure_notification_url()
@@ -449,8 +456,7 @@ class YoAPI
     /**
      * Set the Authentication Signature Base64
      *
-     * @param string $authentication_signature_base64
-     *
+     * @param  string  $authentication_signature_base64
      * @return void
      */
     public function set_authentication_signature_base64($authentication_signature_base64)
@@ -460,6 +466,7 @@ class YoAPI
 
     /**
      * Returns the Authentication Signature Base64 Variable
+     *
      * @return string
      */
     public function get_authentication_signature_base64()
@@ -467,13 +474,11 @@ class YoAPI
         return $this->authentication_signature_base64;
     }
 
-
     /**
      * Set the Transaction Limit Account Identifier
      * Refer to your account administrator for using this feature
      *
-     * @param string $transaction_limit_account_identifier
-     *
+     * @param  string  $transaction_limit_account_identifier
      * @return void
      */
     public function set_transaction_limit_account_identifier($transaction_limit_account_identifier)
@@ -483,6 +488,7 @@ class YoAPI
 
     /**
      * Returns the Trasaction Limit Account Identifier Variable
+     *
      * @return string
      */
     public function get_transaction_limit_account_identifier()
@@ -494,8 +500,7 @@ class YoAPI
      * Set the Public key authentication nonce
      * Refer to your account administrator for using this feature
      *
-     * @param string $public_key_authentication_nonce
-     *
+     * @param  string  $public_key_authentication_nonce
      * @return void
      */
     public function set_public_key_authentication_nonce($public_key_authentication_nonce)
@@ -505,6 +510,7 @@ class YoAPI
 
     /**
      * Returns the Public Key Authentication Nonce Variable
+     *
      * @return string
      */
     public function get_public_key_authentication_nonce()
@@ -516,8 +522,7 @@ class YoAPI
      * Set the Public Key Authentication Base64-Encoded Signature
      * Refer to your account administrator for using this feature
      *
-     * @param string $public_key_authentication_signature_base64
-     *
+     * @param  string  $public_key_authentication_signature_base64
      * @return void
      */
     public function set_public_key_authentication_signature_base64($public_key_authentication_signature_base64)
@@ -527,6 +532,7 @@ class YoAPI
 
     /**
      * Returns the Public Key Authentication Base64-Encoded Signature Variable
+     *
      * @return string
      */
     public function get_public_key_authentication_signature_base64()
@@ -538,8 +544,7 @@ class YoAPI
      * Set the Private Key File Variable
      * Refer to your account administrator for using this feature
      *
-     * @param string $private_key_file_location
-     *
+     * @param  string  $private_key_file_location
      * @return void
      */
     public function set_private_key_file_location($private_key_file_location)
@@ -549,6 +554,7 @@ class YoAPI
 
     /**
      * Returns the Private Key File Variable
+     *
      * @return string
      */
     public function get_private_key_file_location()
@@ -564,10 +570,9 @@ class YoAPI
      * request to complete the transaction.
      * This request is not supported by all mobile money operator networks
      *
-     * @param string $msisdn the mobile money phone number in the format 256772123456
-     * @param double $amount the amount of money to deposit into your account (floats are supported)
-     * @param string $narrative the reason for the mobile money user to deposit funds
-     *
+     * @param  string  $msisdn  the mobile money phone number in the format 256772123456
+     * @param  float  $amount  the amount of money to deposit into your account (floats are supported)
+     * @param  string  $narrative  the reason for the mobile money user to deposit funds
      * @return array
      */
     public function ac_deposit_funds($msisdn, $amount, $narrative)
@@ -576,30 +581,30 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acdepositfunds</Method>';
-        $xml .= '<NonBlocking>' . $this->NonBlocking . '</NonBlocking>';
-        $xml .= '<Account>' . $msisdn . '</Account>';
-        $xml .= '<Amount>' . $amount . '</Amount>';
-        $xml .= '<Narrative>' . $narrative . '</Narrative>';
-        if ($this->external_reference != NULL) {
-            $xml .= '<ExternalReference>' . $this->external_reference . '</ExternalReference>';
+        $xml .= '<NonBlocking>'.$this->NonBlocking.'</NonBlocking>';
+        $xml .= '<Account>'.$msisdn.'</Account>';
+        $xml .= '<Amount>'.$amount.'</Amount>';
+        $xml .= '<Narrative>'.$narrative.'</Narrative>';
+        if ($this->external_reference != null) {
+            $xml .= '<ExternalReference>'.$this->external_reference.'</ExternalReference>';
         }
-        if ($this->internal_reference != NULL) {
-            $xml .= '<InternalReference>' . $this->internal_reference . '</InternalReference>';
+        if ($this->internal_reference != null) {
+            $xml .= '<InternalReference>'.$this->internal_reference.'</InternalReference>';
         }
-        if ($this->provider_reference_text != NULL) {
-            $xml .= '<ProviderReferenceText>' . $this->provider_reference_text . '</ProviderReferenceText>';
+        if ($this->provider_reference_text != null) {
+            $xml .= '<ProviderReferenceText>'.$this->provider_reference_text.'</ProviderReferenceText>';
         }
-        if ($this->instant_notification_url != NULL) {
-            $xml .= '<InstantNotificationUrl>' . $this->instant_notification_url . '</InstantNotificationUrl>';
+        if ($this->instant_notification_url != null) {
+            $xml .= '<InstantNotificationUrl>'.$this->instant_notification_url.'</InstantNotificationUrl>';
         }
-        if ($this->failure_notification_url != NULL) {
-            $xml .= '<FailureNotificationUrl>' . $this->failure_notification_url . '</FailureNotificationUrl>';
+        if ($this->failure_notification_url != null) {
+            $xml .= '<FailureNotificationUrl>'.$this->failure_notification_url.'</FailureNotificationUrl>';
         }
-        if ($this->authentication_signature_base64 != NULL) {
-            $xml .= '<AuthenticationSignatureBase64>' . $this->authentication_signature_base64 . '</AuthenticationSignatureBase64>';
+        if ($this->authentication_signature_base64 != null) {
+            $xml .= '<AuthenticationSignatureBase64>'.$this->authentication_signature_base64.'</AuthenticationSignatureBase64>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -610,24 +615,24 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['StatusMessage'] = (string)$response->StatusMessage;
-        $result['TransactionStatus'] = (string)$response->TransactionStatus;
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['StatusMessage'] = (string) $response->StatusMessage;
+        $result['TransactionStatus'] = (string) $response->TransactionStatus;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
-        if (!empty($response->TransactionReference)) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if (! empty($response->TransactionReference)) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if (!empty($response->MNOTransactionReferenceId)) {
-            $result['MNOTransactionReferenceId'] = (string)$response->MNOTransactionReferenceId;
+        if (! empty($response->MNOTransactionReferenceId)) {
+            $result['MNOTransactionReferenceId'] = (string) $response->MNOTransactionReferenceId;
         }
-        if (!empty($response->IssuedReceiptNumber)) {
-            $result['IssuedReceiptNumber'] = (string)$response->IssuedReceiptNumber;
+        if (! empty($response->IssuedReceiptNumber)) {
+            $result['IssuedReceiptNumber'] = (string) $response->IssuedReceiptNumber;
         }
 
         return $result;
@@ -639,27 +644,26 @@ class YoAPI
      * Its particularly useful where the NonBlocking is set to TRUE.
      * It can also be used to check on any other transaction on the system.
      *
-     * @param string $transaction_reference the response from the Yo! Payments Gateway that uniquely identifies the transaction whose status you are checking
-     * @param string $private_transaction_reference The External Reference that was used to carry out a transaction
-     *
+     * @param  string  $transaction_reference  the response from the Yo! Payments Gateway that uniquely identifies the transaction whose status you are checking
+     * @param  string  $private_transaction_reference  The External Reference that was used to carry out a transaction
      * @return array
      */
-    public function ac_transaction_check_status($transaction_reference, $private_transaction_reference = NULL)
+    public function ac_transaction_check_status($transaction_reference, $private_transaction_reference = null)
     {
         $xml = '';
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>actransactioncheckstatus</Method>';
-        if ($transaction_reference != NULL) {
-            $xml .= '<TransactionReference>' . $transaction_reference . '</TransactionReference>';
+        if ($transaction_reference != null) {
+            $xml .= '<TransactionReference>'.$transaction_reference.'</TransactionReference>';
         }
-        if ($private_transaction_reference != NULL) {
-            $xml .= '<PrivateTransactionReference>' . $private_transaction_reference . '</PrivateTransactionReference>';
+        if ($private_transaction_reference != null) {
+            $xml .= '<PrivateTransactionReference>'.$private_transaction_reference.'</PrivateTransactionReference>';
         }
-        $xml .= '<DepositTransactionType>' . $this->deposit_transaction_type . '</DepositTransactionType>';
+        $xml .= '<DepositTransactionType>'.$this->deposit_transaction_type.'</DepositTransactionType>';
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
 
@@ -669,39 +673,39 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['StatusMessage'] = (string)$response->StatusMessage;
-        $result['TransactionStatus'] = (string)$response->TransactionStatus;
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['StatusMessage'] = (string) $response->StatusMessage;
+        $result['TransactionStatus'] = (string) $response->TransactionStatus;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
-        if (!empty($response->TransactionReference)) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if (! empty($response->TransactionReference)) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if (!empty($response->MNOTransactionReferenceId)) {
-            $result['MNOTransactionReferenceId'] = (string)$response->MNOTransactionReferenceId;
+        if (! empty($response->MNOTransactionReferenceId)) {
+            $result['MNOTransactionReferenceId'] = (string) $response->MNOTransactionReferenceId;
         }
-        if (!empty($response->Amount)) {
-            $result['Amount'] = (string)$response->Amount;
+        if (! empty($response->Amount)) {
+            $result['Amount'] = (string) $response->Amount;
         }
-        if (!empty($response->AmountFormatted)) {
-            $result['AmountFormatted'] = (string)$response->AmountFormatted;
+        if (! empty($response->AmountFormatted)) {
+            $result['AmountFormatted'] = (string) $response->AmountFormatted;
         }
-        if (!empty($response->CurrencyCode)) {
-            $result['CurrencyCode'] = (string)$response->CurrencyCode;
+        if (! empty($response->CurrencyCode)) {
+            $result['CurrencyCode'] = (string) $response->CurrencyCode;
         }
-        if (!empty($response->TransactionInitiationDate)) {
-            $result['TransactionInitiationDate'] = (string)$response->TransactionInitiationDate;
+        if (! empty($response->TransactionInitiationDate)) {
+            $result['TransactionInitiationDate'] = (string) $response->TransactionInitiationDate;
         }
-        if (!empty($response->TransactionCompletionDate)) {
-            $result['TransactionCompletionDate'] = (string)$response->TransactionCompletionDate;
+        if (! empty($response->TransactionCompletionDate)) {
+            $result['TransactionCompletionDate'] = (string) $response->TransactionCompletionDate;
         }
-        if (!empty($response->IssuedReceiptNumber)) {
-            $result['IssuedReceiptNumber'] = (string)$response->IssuedReceiptNumber;
+        if (! empty($response->IssuedReceiptNumber)) {
+            $result['IssuedReceiptNumber'] = (string) $response->IssuedReceiptNumber;
         }
 
         return $result;
@@ -710,18 +714,17 @@ class YoAPI
     /**
      * Transfer funds from your Payment Account to another Yo! Payments Account
      *
-     * @param string $currency_code
-     *                                    Options
-     *                                    * "UGX-MTNMM" -> Uganda Shillings - MTN Mobile Money
-     *                                    * "UGX-MTNAT" -> Uganda Shillings - MTN Airtime
-     *                                    * "UGX-WTLAT" -> Uganda Shillings - Warid Airtime
-     *                                    * "UGX-OULAT" -> Uganda Shillings - Orange Airtime
-     *                                    * "UGX-AIRAT" -> Uganda Shillings - Airtel Airtime
-     * @param double $amount The amount to be transferred
-     * @param int $beneficiary_account Account number of Yo! Payments User
-     * @param string $beneficiary_email Email Address of the recipient of funds
-     * @param string $narrative Textual narrative about the transaction
-     *
+     * @param  string  $currency_code
+     *                                 Options
+     *                                 * "UGX-MTNMM" -> Uganda Shillings - MTN Mobile Money
+     *                                 * "UGX-MTNAT" -> Uganda Shillings - MTN Airtime
+     *                                 * "UGX-WTLAT" -> Uganda Shillings - Warid Airtime
+     *                                 * "UGX-OULAT" -> Uganda Shillings - Orange Airtime
+     *                                 * "UGX-AIRAT" -> Uganda Shillings - Airtel Airtime
+     * @param  float  $amount  The amount to be transferred
+     * @param  int  $beneficiary_account  Account number of Yo! Payments User
+     * @param  string  $beneficiary_email  Email Address of the recipient of funds
+     * @param  string  $narrative  Textual narrative about the transaction
      * @return array
      */
     public function ac_internal_transfer($currency_code, $amount, $beneficiary_account, $beneficiary_email, $narrative)
@@ -730,19 +733,19 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acinternaltransfer</Method>';
-        $xml .= '<CurrencyCode>' . $currency_code . '</CurrencyCode>';
-        $xml .= '<Amount>' . $amount . '</Amount>';
-        $xml .= '<BeneficiaryAccount>' . $beneficiary_account . '</BeneficiaryAccount>';
-        $xml .= '<BeneficiaryEmail>' . $beneficiary_email . '</BeneficiaryEmail>';
-        $xml .= '<Narrative>' . $narrative . '</Narrative>';
-        if ($this->internal_reference != NULL) {
-            $xml .= '<InternalReference>' . $this->internal_reference . '</InternalReference>';
+        $xml .= '<CurrencyCode>'.$currency_code.'</CurrencyCode>';
+        $xml .= '<Amount>'.$amount.'</Amount>';
+        $xml .= '<BeneficiaryAccount>'.$beneficiary_account.'</BeneficiaryAccount>';
+        $xml .= '<BeneficiaryEmail>'.$beneficiary_email.'</BeneficiaryEmail>';
+        $xml .= '<Narrative>'.$narrative.'</Narrative>';
+        if ($this->internal_reference != null) {
+            $xml .= '<InternalReference>'.$this->internal_reference.'</InternalReference>';
         }
-        if ($this->external_reference != NULL) {
-            $xml .= '<ExternalReference>' . $this->external_reference . '</ExternalReference>';
+        if ($this->external_reference != null) {
+            $xml .= '<ExternalReference>'.$this->external_reference.'</ExternalReference>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -753,24 +756,24 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['StatusMessage'] = (string)$response->StatusMessage;
-        $result['TransactionStatus'] = (string)$response->TransactionStatus;
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['StatusMessage'] = (string) $response->StatusMessage;
+        $result['TransactionStatus'] = (string) $response->TransactionStatus;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
-        if (!empty($response->TransactionReference)) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if (! empty($response->TransactionReference)) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if (!empty($response->MNOTransactionReferenceId)) {
-            $result['MNOTransactionReferenceId'] = (string)$response->MNOTransactionReferenceId;
+        if (! empty($response->MNOTransactionReferenceId)) {
+            $result['MNOTransactionReferenceId'] = (string) $response->MNOTransactionReferenceId;
         }
-        if (!empty($response->IssuedReceiptNumber)) {
-            $result['IssuedReceiptNumber'] = (string)$response->IssuedReceiptNumber;
+        if (! empty($response->IssuedReceiptNumber)) {
+            $result['IssuedReceiptNumber'] = (string) $response->IssuedReceiptNumber;
         }
 
         return $result;
@@ -779,6 +782,7 @@ class YoAPI
     /**
      * Get the current balance of your Yo! Payments Account
      * Returned array contains an array of balances (including airtime)
+     *
      * @return array
      */
     public function ac_acct_balance()
@@ -787,8 +791,8 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acacctbalance</Method>';
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -799,23 +803,23 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
         $balances = [];
         if (isset($response->Balance->Currency)) {
             foreach ($response->Balance->Currency as $currency) {
-                $balances[] = ['code' => (string)$currency->Code, 'balance' => (string)$currency->Balance];
+                $balances[] = ['code' => (string) $currency->Code, 'balance' => (string) $currency->Balance];
             }
         }
         $result['balance'] = $balances;
-        if (!empty($response->StatusMessage)) {
-            $result['StatusMessage'] = (string)$response->StatusMessage;
+        if (! empty($response->StatusMessage)) {
+            $result['StatusMessage'] = (string) $response->StatusMessage;
         }
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
 
         return $result;
@@ -824,61 +828,60 @@ class YoAPI
     /**
      * Return an array of transactions which were carried out on your account for a certain period of time
      *
-     * @param string $start_date format YYYY-MM-DD HH:MM:SS
-     * @param string $end_date format YYYY-MM-DD HH:MM:SS
-     * @param string $transaction_status
-     *                                   Options
-     *                                   * "FAILED"
-     *                                   * "PENDING"
-     *                                   * "INDETERMINATE"
-     *                                   * "SUCCEEDED"
-     *                                   * "FAILED,SUCCEEDED" (comma separated)
-     * @param string $currency_code
-     *                                   Options
-     *                                   * "UGX-MTNMM" -> Uganda Shillings - MTN Mobile Money
-     *                                   * "UGX-WARIDMM" -> Uganda Shillings - Airtel Money
-     *                                   * "UGX-MTNAT" -> Uganda Shillings - MTN Airtime
-     *                                   * "UGX-WTLAT" -> Uganda Shillings - Warid Airtime
-     *                                   * "UGX-OULAT" -> Uganda Shillings - Orange Airtime
-     *                                   * "UGX-AIRAT" -> Uganda Shillings - Airtel Airtime
-     * @param int $result_set_limit A value of 0 returns all. Default limit = 15
-     * @param string $transaction_entry_designation
-     *                                   Options
-     *                                   * "TRANSACTION"
-     *                                   * "CHARGES"
-     *                                   * "ANY"
-     * @param string $external_reference Filter using this external_reference
-     *
+     * @param  string  $start_date  format YYYY-MM-DD HH:MM:SS
+     * @param  string  $end_date  format YYYY-MM-DD HH:MM:SS
+     * @param  string  $transaction_status
+     *                                      Options
+     *                                      * "FAILED"
+     *                                      * "PENDING"
+     *                                      * "INDETERMINATE"
+     *                                      * "SUCCEEDED"
+     *                                      * "FAILED,SUCCEEDED" (comma separated)
+     * @param  string  $currency_code
+     *                                 Options
+     *                                 * "UGX-MTNMM" -> Uganda Shillings - MTN Mobile Money
+     *                                 * "UGX-WARIDMM" -> Uganda Shillings - Airtel Money
+     *                                 * "UGX-MTNAT" -> Uganda Shillings - MTN Airtime
+     *                                 * "UGX-WTLAT" -> Uganda Shillings - Warid Airtime
+     *                                 * "UGX-OULAT" -> Uganda Shillings - Orange Airtime
+     *                                 * "UGX-AIRAT" -> Uganda Shillings - Airtel Airtime
+     * @param  int  $result_set_limit  A value of 0 returns all. Default limit = 15
+     * @param  string  $transaction_entry_designation
+     *                                                 Options
+     *                                                 * "TRANSACTION"
+     *                                                 * "CHARGES"
+     *                                                 * "ANY"
+     * @param  string  $external_reference  Filter using this external_reference
      * @return array
      */
-    public function ac_get_ministatement($start_date = NULL, $end_date = NULL, $transaction_status = NULL, $currency_code = NULL, $result_set_limit = NULL, $transaction_entry_designation = 'ANY', $external_reference = NULL)
+    public function ac_get_ministatement($start_date = null, $end_date = null, $transaction_status = null, $currency_code = null, $result_set_limit = null, $transaction_entry_designation = 'ANY', $external_reference = null)
     {
         // Do a string to time formatting to get the date format required
         $xml = '';
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acgetministatement</Method>';
-        if ($start_date != NULL) {
-            $xml .= '<StartDate>' . $start_date . '</StartDate>';
+        if ($start_date != null) {
+            $xml .= '<StartDate>'.$start_date.'</StartDate>';
         }
-        if ($end_date != NULL) {
-            $xml .= '<EndDate>' . $end_date . '</EndDate>';
+        if ($end_date != null) {
+            $xml .= '<EndDate>'.$end_date.'</EndDate>';
         }
-        if ($transaction_status != NULL) {
-            $xml .= '<TransactionStatus>' . $transaction_status . '</TransactionStatus>';
+        if ($transaction_status != null) {
+            $xml .= '<TransactionStatus>'.$transaction_status.'</TransactionStatus>';
         }
-        if ($currency_code != NULL) {
-            $xml .= '<CurrencyCode>' . $currency_code . '</CurrencyCode>';
+        if ($currency_code != null) {
+            $xml .= '<CurrencyCode>'.$currency_code.'</CurrencyCode>';
         }
-        if ($result_set_limit != NULL) {
-            $xml .= '<ResultSetLimit>' . $result_set_limit . '</ResultSetLimit>';
+        if ($result_set_limit != null) {
+            $xml .= '<ResultSetLimit>'.$result_set_limit.'</ResultSetLimit>';
         }
-        $xml .= '<TransactionEntryDesignation>' . $transaction_entry_designation . '</TransactionEntryDesignation>';
-        if ($external_reference != NULL) {
-            $xml .= '<ExternalReference>' . $external_reference . '</ExternalReference>';
+        $xml .= '<TransactionEntryDesignation>'.$transaction_entry_designation.'</TransactionEntryDesignation>';
+        if ($external_reference != null) {
+            $xml .= '<ExternalReference>'.$external_reference.'</ExternalReference>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -889,49 +892,49 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['TotalTransactions'] = (string)$response->TotalTransactions;
-        $result['ReturnedTransactions'] = (string)$response->ReturnedTransactions;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['TotalTransactions'] = (string) $response->TotalTransactions;
+        $result['ReturnedTransactions'] = (string) $response->ReturnedTransactions;
 
         $transactions = [];
-        if ($response->Transactions->Transaction != NULL) {
+        if ($response->Transactions->Transaction != null) {
             foreach ($response->Transactions->Transaction as $transaction) {
                 $transaction_detail = [];
-                $transaction_detail['TransactionSystemId'] = (string)$transaction->TransactionSystemId;
-                $transaction_detail['TransactionReference'] = (string)$transaction->TransactionReference;
-                $transaction_detail['TransactionStatus'] = (string)$transaction->TransactionStatus;
-                $transaction_detail['InitiationDate'] = (string)$transaction->InitiationDate;
-                $transaction_detail['CompletionDate'] = (string)$transaction->CompletionDate;
-                $transaction_detail['NarrativeBase64'] = (string)$transaction->NarrativeBase64[0];
-                $transaction_detail['Currency'] = (string)$transaction->Currency;
-                $transaction_detail['Amount'] = (string)$transaction->Amount;
-                $transaction_detail['Balance'] = (string)$transaction->Balance;
-                $transaction_detail['GeneralType'] = (string)$transaction->GeneralType;
-                $transaction_detail['DetailedType'] = (string)$transaction->DetailedType;
-                if (!empty($transaction->BeneficiaryMsisdn)) {
-                    $transaction_detail['BeneficiaryMsisdn'] = (string)$transaction->BeneficiaryMsisdn;
+                $transaction_detail['TransactionSystemId'] = (string) $transaction->TransactionSystemId;
+                $transaction_detail['TransactionReference'] = (string) $transaction->TransactionReference;
+                $transaction_detail['TransactionStatus'] = (string) $transaction->TransactionStatus;
+                $transaction_detail['InitiationDate'] = (string) $transaction->InitiationDate;
+                $transaction_detail['CompletionDate'] = (string) $transaction->CompletionDate;
+                $transaction_detail['NarrativeBase64'] = (string) $transaction->NarrativeBase64[0];
+                $transaction_detail['Currency'] = (string) $transaction->Currency;
+                $transaction_detail['Amount'] = (string) $transaction->Amount;
+                $transaction_detail['Balance'] = (string) $transaction->Balance;
+                $transaction_detail['GeneralType'] = (string) $transaction->GeneralType;
+                $transaction_detail['DetailedType'] = (string) $transaction->DetailedType;
+                if (! empty($transaction->BeneficiaryMsisdn)) {
+                    $transaction_detail['BeneficiaryMsisdn'] = (string) $transaction->BeneficiaryMsisdn;
                 }
-                $transaction_detail['BeneficiaryBase64'] = (string)$transaction->BeneficiaryBase64;
-                if (!empty($transaction->SenderMsisdn)) {
-                    $transaction_detail['SenderMsisdn'] = (string)$transaction->SenderMsisdn;
+                $transaction_detail['BeneficiaryBase64'] = (string) $transaction->BeneficiaryBase64;
+                if (! empty($transaction->SenderMsisdn)) {
+                    $transaction_detail['SenderMsisdn'] = (string) $transaction->SenderMsisdn;
                 }
-                $transaction_detail['SenderBase64'] = (string)$transaction->SenderBase64;
-                if (!empty($transaction->Base64TransactionExternalReference)) {
-                    $transaction_detail['Base64TransactionExternalReference'] = (string)$transaction->Base64TransactionExternalReference;
+                $transaction_detail['SenderBase64'] = (string) $transaction->SenderBase64;
+                if (! empty($transaction->Base64TransactionExternalReference)) {
+                    $transaction_detail['Base64TransactionExternalReference'] = (string) $transaction->Base64TransactionExternalReference;
                 }
-                $transaction_detail['TransactionEntryDesignation'] = (string)$transaction->TransactionEntryDesignation;
+                $transaction_detail['TransactionEntryDesignation'] = (string) $transaction->TransactionEntryDesignation;
 
                 $transactions[] = $transaction_detail;
             }
         }
         $result['Transactions'] = $transactions;
 
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
 
         return $result;
@@ -940,10 +943,9 @@ class YoAPI
     /**
      * Send airtime to a mobile phone user
      *
-     * @param string $msisdn the mobile phone number in the format 256772123456
-     * @param int $amount the amount of airtime to be sent to the mobile user
-     * @param string $narrative textual narrative about the transfer
-     *
+     * @param  string  $msisdn  the mobile phone number in the format 256772123456
+     * @param  int  $amount  the amount of airtime to be sent to the mobile user
+     * @param  string  $narrative  textual narrative about the transfer
      * @return array
      */
     public function ac_send_airtime_mobile($msisdn, $amount, $narrative)
@@ -952,21 +954,21 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acsendairtimemobile</Method>';
-        $xml .= '<NonBlocking>' . $this->NonBlocking . '</NonBlocking>';
-        $xml .= '<Account>' . $msisdn . '</Account>';
-        $xml .= '<Amount>' . $amount . '</Amount>';
-        $xml .= '<Narrative>' . $narrative . '</Narrative>';
-        if ($this->external_reference != NULL) {
-            $xml .= '<ExternalReference>' . $this->external_reference . '</ExternalReference>';
+        $xml .= '<NonBlocking>'.$this->NonBlocking.'</NonBlocking>';
+        $xml .= '<Account>'.$msisdn.'</Account>';
+        $xml .= '<Amount>'.$amount.'</Amount>';
+        $xml .= '<Narrative>'.$narrative.'</Narrative>';
+        if ($this->external_reference != null) {
+            $xml .= '<ExternalReference>'.$this->external_reference.'</ExternalReference>';
         }
-        if ($this->internal_reference != NULL) {
-            $xml .= '<InternalReference>' . $this->internal_reference . '</InternalReference>';
+        if ($this->internal_reference != null) {
+            $xml .= '<InternalReference>'.$this->internal_reference.'</InternalReference>';
         }
-        if ($this->provider_reference_text != NULL) {
-            $xml .= '<ProviderReferenceText>' . $this->provider_reference_text . '</ProviderReferenceText>';
+        if ($this->provider_reference_text != null) {
+            $xml .= '<ProviderReferenceText>'.$this->provider_reference_text.'</ProviderReferenceText>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -977,24 +979,24 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['StatusMessage'] = (string)$response->StatusMessage;
-        $result['TransactionStatus'] = (string)$response->TransactionStatus;
-        if ($response->ErrorMessageCode != NULL) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['StatusMessage'] = (string) $response->StatusMessage;
+        $result['TransactionStatus'] = (string) $response->TransactionStatus;
+        if ($response->ErrorMessageCode != null) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if ($response->ErrorMessage != NULL) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if ($response->ErrorMessage != null) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
-        if ($response->TransactionReference != NULL) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if ($response->TransactionReference != null) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if ($response->MNOTransactionReferenceId != NULL) {
-            $result['MNOTransactionReferenceId'] = (string)$response->MNOTransactionReferenceId;
+        if ($response->MNOTransactionReferenceId != null) {
+            $result['MNOTransactionReferenceId'] = (string) $response->MNOTransactionReferenceId;
         }
-        if ($response->IssuedReceiptNumber != NULL) {
-            $result['IssuedReceiptNumber'] = (string)$response->IssuedReceiptNumber;
+        if ($response->IssuedReceiptNumber != null) {
+            $result['IssuedReceiptNumber'] = (string) $response->IssuedReceiptNumber;
         }
 
         return $result;
@@ -1003,17 +1005,16 @@ class YoAPI
     /**
      * Send airtime from your Yo! Payments account to another Yo! Payments user account
      *
-     * @param string $currency_code
-     *                          Options
-     *                          * "UGX-MTNAT" -> Uganda Shillings - MTN Airtime
-     *                          * "UGX-WTLAT" -> Uganda Shillings - Warid Airtime
-     *                          * "UGX-OULAT" -> Uganda Shillings - Orange Airtime
-     *                          * "UGX-AIRAT" -> Uganda Shillings - Airtel Airtime
-     * @param int $amount the amount of airtime to be sent to the beneficiary Yo! Payments User
-     * @param int $beneficiary_account
-     * @param string $beneficiary_email
-     * @param string $narrative textual narrative about the transfer
-     *
+     * @param  string  $currency_code
+     *                                 Options
+     *                                 * "UGX-MTNAT" -> Uganda Shillings - MTN Airtime
+     *                                 * "UGX-WTLAT" -> Uganda Shillings - Warid Airtime
+     *                                 * "UGX-OULAT" -> Uganda Shillings - Orange Airtime
+     *                                 * "UGX-AIRAT" -> Uganda Shillings - Airtel Airtime
+     * @param  int  $amount  the amount of airtime to be sent to the beneficiary Yo! Payments User
+     * @param  int  $beneficiary_account
+     * @param  string  $beneficiary_email
+     * @param  string  $narrative  textual narrative about the transfer
      * @return array
      */
     public function ac_send_airtime_internal($currency_code, $amount, $beneficiary_account, $beneficiary_email, $narrative)
@@ -1022,19 +1023,19 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acsendairtimeinternal</Method>';
-        $xml .= '<CurrencyCode>' . $currency_code . '</CurrencyCode>';
-        $xml .= '<Amount>' . $amount . '</Amount>';
-        $xml .= '<BeneficiaryAccount>' . $beneficiary_account . '</BeneficiaryAccount>';
-        $xml .= '<BeneficiaryEmail>' . $beneficiary_email . '</BeneficiaryEmail>';
-        $xml .= '<Narrative>' . $narrative . '</Narrative>';
-        if ($this->internal_reference != NULL) {
-            $xml .= '<InternalReference>' . $this->internal_reference . '</InternalReference>';
+        $xml .= '<CurrencyCode>'.$currency_code.'</CurrencyCode>';
+        $xml .= '<Amount>'.$amount.'</Amount>';
+        $xml .= '<BeneficiaryAccount>'.$beneficiary_account.'</BeneficiaryAccount>';
+        $xml .= '<BeneficiaryEmail>'.$beneficiary_email.'</BeneficiaryEmail>';
+        $xml .= '<Narrative>'.$narrative.'</Narrative>';
+        if ($this->internal_reference != null) {
+            $xml .= '<InternalReference>'.$this->internal_reference.'</InternalReference>';
         }
-        if ($this->external_reference != NULL) {
-            $xml .= '<ExternalReference>' . $this->external_reference . '</ExternalReference>';
+        if ($this->external_reference != null) {
+            $xml .= '<ExternalReference>'.$this->external_reference.'</ExternalReference>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -1045,24 +1046,24 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['StatusMessage'] = (string)$response->StatusMessage;
-        $result['TransactionStatus'] = (string)$response->TransactionStatus;
-        if ($response->ErrorMessageCode != NULL) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['StatusMessage'] = (string) $response->StatusMessage;
+        $result['TransactionStatus'] = (string) $response->TransactionStatus;
+        if ($response->ErrorMessageCode != null) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if ($response->ErrorMessage != NULL) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if ($response->ErrorMessage != null) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
-        if ($response->TransactionReference != NULL) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if ($response->TransactionReference != null) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if ($response->MNOTransactionReferenceId != NULL) {
-            $result['MNOTransactionReferenceId'] = (string)$response->MNOTransactionReferenceId;
+        if ($response->MNOTransactionReferenceId != null) {
+            $result['MNOTransactionReferenceId'] = (string) $response->MNOTransactionReferenceId;
         }
-        if ($response->IssuedReceiptNumber != NULL) {
-            $result['IssuedReceiptNumber'] = (string)$response->IssuedReceiptNumber;
+        if ($response->IssuedReceiptNumber != null) {
+            $result['IssuedReceiptNumber'] = (string) $response->IssuedReceiptNumber;
         }
 
         return $result;
@@ -1076,10 +1077,9 @@ class YoAPI
      * This request is not supported by all mobile money operator networks
      * This request requires permission that is granted by the issuance of an API Access Letter
      *
-     * @param string $msisdn the mobile money phone number in the format 256772123456
-     * @param double $amount the amount of money to withdraw from your account (floats are supported)
-     * @param string $narrative the reason for withdrawal of funds from your account
-     *
+     * @param  string  $msisdn  the mobile money phone number in the format 256772123456
+     * @param  float  $amount  the amount of money to withdraw from your account (floats are supported)
+     * @param  string  $narrative  the reason for withdrawal of funds from your account
      * @return array
      */
     public function ac_withdraw_funds($msisdn, $amount, $narrative)
@@ -1088,30 +1088,30 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acwithdrawfunds</Method>';
-        $xml .= '<NonBlocking>' . $this->NonBlocking . '</NonBlocking>';
-        $xml .= '<Account>' . $msisdn . '</Account>';
-        $xml .= '<Amount>' . $amount . '</Amount>';
-        $xml .= '<Narrative>' . $narrative . '</Narrative>';
-        if ($this->external_reference != NULL) {
-            $xml .= '<ExternalReference>' . $this->external_reference . '</ExternalReference>';
+        $xml .= '<NonBlocking>'.$this->NonBlocking.'</NonBlocking>';
+        $xml .= '<Account>'.$msisdn.'</Account>';
+        $xml .= '<Amount>'.$amount.'</Amount>';
+        $xml .= '<Narrative>'.$narrative.'</Narrative>';
+        if ($this->external_reference != null) {
+            $xml .= '<ExternalReference>'.$this->external_reference.'</ExternalReference>';
         }
-        if ($this->internal_reference != NULL) {
-            $xml .= '<InternalReference>' . $this->internal_reference . '</InternalReference>';
+        if ($this->internal_reference != null) {
+            $xml .= '<InternalReference>'.$this->internal_reference.'</InternalReference>';
         }
-        if ($this->provider_reference_text != NULL) {
-            $xml .= '<ProviderReferenceText>' . $this->provider_reference_text . '</ProviderReferenceText>';
+        if ($this->provider_reference_text != null) {
+            $xml .= '<ProviderReferenceText>'.$this->provider_reference_text.'</ProviderReferenceText>';
         }
-        if ($this->transaction_limit_account_identifier != NULL) {
-            $xml .= '<TransactionLimitAccountIdentifier>' . $this->transaction_limit_account_identifier . '</TransactionLimitAccountIdentifier>';
+        if ($this->transaction_limit_account_identifier != null) {
+            $xml .= '<TransactionLimitAccountIdentifier>'.$this->transaction_limit_account_identifier.'</TransactionLimitAccountIdentifier>';
         }
-        if ($this->public_key_authentication_nonce != NULL) {
-            $xml .= '<PublicKeyAuthenticationNonce>' . $this->public_key_authentication_nonce . '</PublicKeyAuthenticationNonce>';
+        if ($this->public_key_authentication_nonce != null) {
+            $xml .= '<PublicKeyAuthenticationNonce>'.$this->public_key_authentication_nonce.'</PublicKeyAuthenticationNonce>';
         }
-        if ($this->public_key_authentication_signature_base64 != NULL) {
-            $xml .= '<PublicKeyAuthenticationSignatureBase64>' . $this->public_key_authentication_signature_base64 . '</PublicKeyAuthenticationSignatureBase64>';
+        if ($this->public_key_authentication_signature_base64 != null) {
+            $xml .= '<PublicKeyAuthenticationSignatureBase64>'.$this->public_key_authentication_signature_base64.'</PublicKeyAuthenticationSignatureBase64>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -1122,24 +1122,24 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
-        $result['StatusMessage'] = (string)$response->StatusMessage;
-        $result['TransactionStatus'] = (string)$response->TransactionStatus;
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+        $result['StatusMessage'] = (string) $response->StatusMessage;
+        $result['TransactionStatus'] = (string) $response->TransactionStatus;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
-        if (!empty($response->TransactionReference)) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if (! empty($response->TransactionReference)) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if (!empty($response->MNOTransactionReferenceId)) {
-            $result['MNOTransactionReferenceId'] = (string)$response->MNOTransactionReferenceId;
+        if (! empty($response->MNOTransactionReferenceId)) {
+            $result['MNOTransactionReferenceId'] = (string) $response->MNOTransactionReferenceId;
         }
-        if (!empty($response->IssuedReceiptNumber)) {
-            $result['IssuedReceiptNumber'] = (string)$response->IssuedReceiptNumber;
+        if (! empty($response->IssuedReceiptNumber)) {
+            $result['IssuedReceiptNumber'] = (string) $response->IssuedReceiptNumber;
         }
 
         return $result;
@@ -1149,15 +1149,14 @@ class YoAPI
     /**
      * Purchase airtime using your Mobile Money Credit
      *
-     * @param string $airtime_currency_code the currency of the airtime you would like to buy
-     *                                      Options
-     *                                      * "UGX-MTNAT"
-     *                                      * "UGX-AIRAT"
-     *                                      * "UGX-OULAT"
-     *                                      * "UGX-UTLAT"
-     *                                      * "UGX-SMTAT"
-     * @param double $amount the amount of money to withdraw from your account (floats are supported)
-     *
+     * @param  string  $airtime_currency_code  the currency of the airtime you would like to buy
+     *                                         Options
+     *                                         * "UGX-MTNAT"
+     *                                         * "UGX-AIRAT"
+     *                                         * "UGX-OULAT"
+     *                                         * "UGX-UTLAT"
+     *                                         * "UGX-SMTAT"
+     * @param  float  $amount  the amount of money to withdraw from your account (floats are supported)
      * @return array
      */
     public function ac_user_purchase_airtimestock($airtime_currency_code, $amount)
@@ -1166,13 +1165,13 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acuserpurchaseairtimestock</Method>';
-        $xml .= '<AirtimeCurrencyCode>' . $airtime_currency_code . '</AirtimeCurrencyCode>';
-        $xml .= '<Amount>' . $amount . '</Amount>';
-        if ($this->external_reference != NULL) {
-            $xml .= '<TransactionReference>' . $this->external_reference . '</TransactionReference>';
+        $xml .= '<AirtimeCurrencyCode>'.$airtime_currency_code.'</AirtimeCurrencyCode>';
+        $xml .= '<Amount>'.$amount.'</Amount>';
+        if ($this->external_reference != null) {
+            $xml .= '<TransactionReference>'.$this->external_reference.'</TransactionReference>';
         }
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
@@ -1183,26 +1182,26 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
 
-        if (!empty($response->StatusMessage)) {
-            $result['StatusMessage'] = (string)$response->StatusMessage;
+        if (! empty($response->StatusMessage)) {
+            $result['StatusMessage'] = (string) $response->StatusMessage;
         }
-        if (!empty($response->TransactionReference)) {
-            $result['TransactionReference'] = (string)$response->TransactionReference;
+        if (! empty($response->TransactionReference)) {
+            $result['TransactionReference'] = (string) $response->TransactionReference;
         }
-        if (!empty($response->TotalCurrencyDebited)) {
-            $result['TotalCurrencyDebited'] = (string)$response->TotalCurrencyDebited;
+        if (! empty($response->TotalCurrencyDebited)) {
+            $result['TotalCurrencyDebited'] = (string) $response->TotalCurrencyDebited;
         }
-        if (!empty($response->CommissionAmount)) {
-            $result['CommissionAmount'] = (string)$response->CommissionAmount;
+        if (! empty($response->CommissionAmount)) {
+            $result['CommissionAmount'] = (string) $response->CommissionAmount;
         }
-        if (!empty($response->ErrorMessageCode)) {
-            $result['ErrorMessageCode'] = (string)$response->ErrorMessageCode;
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
         }
-        if (!empty($response->ErrorMessage)) {
-            $result['ErrorMessage'] = (string)$response->ErrorMessage;
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
 
         return $result;
@@ -1213,8 +1212,7 @@ class YoAPI
      * NOTE: Method is only available for MTN Uganda and Airtel Uganda networks only.
      * NOTE: A request has to be sent to support@yo.co.ug to get permission to use this method
      *
-     * @param string $msisdn the phone number whose details you want to obtain in the format 2567XXXXXXXXXX
-     *
+     * @param  string  $msisdn  the phone number whose details you want to obtain in the format 2567XXXXXXXXXX
      * @return array
      */
     public function ac_get_msisdn_kyc_info($msisdn)
@@ -1223,10 +1221,10 @@ class YoAPI
         $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
         $xml .= '<AutoCreate>';
         $xml .= '<Request>';
-        $xml .= '<APIUsername>' . $this->username . '</APIUsername>';
-        $xml .= '<APIPassword>' . $this->password . '</APIPassword>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
         $xml .= '<Method>acgetmsisdnkycinfo</Method>';
-        $xml .= '<Msisdn>' . $msisdn . '</Msisdn>';
+        $xml .= '<Msisdn>'.$msisdn.'</Msisdn>';
         $xml .= '</Request>';
         $xml .= '</AutoCreate>';
 
@@ -1236,23 +1234,167 @@ class YoAPI
         $response = $simpleXMLObject->Response;
 
         $result = [];
-        $result['Status'] = (string)$response->Status;
-        $result['StatusCode'] = (string)$response->StatusCode;
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
 
-        if (!empty($response->StatusMessage)) {
-            $result['StatusMessage'] = (string)$response->StatusMessage;
+        if (! empty($response->StatusMessage)) {
+            $result['StatusMessage'] = (string) $response->StatusMessage;
         }
 
-        if (!empty($response->AccountInformation->PersonalInformation->Names->FirstName)) {
-            $result['FirstName'] = (string)$response->AccountInformation->PersonalInformation->Names->FirstName;
+        if (! empty($response->AccountInformation->PersonalInformation->Names->FirstName)) {
+            $result['FirstName'] = (string) $response->AccountInformation->PersonalInformation->Names->FirstName;
         }
 
-        if (!empty($response->AccountInformation->PersonalInformation->Names->MiddleName)) {
-            $result['MiddleName'] = (string)$response->AccountInformation->PersonalInformation->Names->MiddleName;
+        if (! empty($response->AccountInformation->PersonalInformation->Names->MiddleName)) {
+            $result['MiddleName'] = (string) $response->AccountInformation->PersonalInformation->Names->MiddleName;
         }
 
-        if (!empty($response->AccountInformation->PersonalInformation->Names->Surname)) {
-            $result['Surname'] = (string)$response->AccountInformation->PersonalInformation->Names->Surname;
+        if (! empty($response->AccountInformation->PersonalInformation->Names->Surname)) {
+            $result['Surname'] = (string) $response->AccountInformation->PersonalInformation->Names->Surname;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Submit a bank deposit request, notifying Yo! Payments that funds have
+     * been manually transferred into their bank account, along with proof
+     * of that transfer, so the funds can be credited (deposited) into your
+     * Yo! Payments wallet.
+     *
+     * @param  float  $total_deposit_amount  the total amount that was deposited in the bank
+     * @param  string  $narrative  a description of the bank deposit transaction
+     * @param  string  $bank_transfer_file_path  path to the proof-of-transfer file (e.g. scanned deposit slip), max 4MB
+     * @param  array  $amount_breakdown  array of ['currency_code' => string, 'amount' => float] specifying
+     *                                   how the total deposit amount should be allocated among currencies.
+     *                                   Only Mobile Money currencies are supported.
+     * @param  string|null  $request_tracking_id  optional identifier you can use to later track/check the status of this request
+     */
+    public function ac_submit_bank_deposit($total_deposit_amount, $narrative, $bank_transfer_file_path, array $amount_breakdown, $request_tracking_id = null): array
+    {
+        if (! file_exists($bank_transfer_file_path)) {
+            throw new Exception('Bank transfer file could not be found at: '.$bank_transfer_file_path);
+        }
+
+        if (filesize($bank_transfer_file_path) > 4 * 1024 * 1024) {
+            throw new Exception('Bank transfer file exceeds the maximum allowed size of 4MB');
+        }
+
+        $bank_transfer_file_name = basename($bank_transfer_file_path);
+        $bank_transfer_file_content_base64 = base64_encode(file_get_contents($bank_transfer_file_path));
+
+        $xml = '';
+        $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml .= '<AutoCreate>';
+        $xml .= '<Request>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
+        $xml .= '<Method>acsubmitbankdeposit</Method>';
+        if ($request_tracking_id != null) {
+            $xml .= '<RequestTrackingId>'.$request_tracking_id.'</RequestTrackingId>';
+        }
+        $xml .= '<TotalDepositAmount>'.$total_deposit_amount.'</TotalDepositAmount>';
+        $xml .= '<Narrative>'.$narrative.'</Narrative>';
+        $xml .= '<BankTransferFileName>'.$bank_transfer_file_name.'</BankTransferFileName>';
+        $xml .= '<BankTransferFileContentBase64>'.$bank_transfer_file_content_base64.'</BankTransferFileContentBase64>';
+        $xml .= '<AmountBreakDown>';
+        foreach ($amount_breakdown as $allocation) {
+            $xml .= '<CurrencyAllocation>';
+            $xml .= '<CurrencyCode>'.$allocation['currency_code'].'</CurrencyCode>';
+            $xml .= '<Amount>'.$allocation['amount'].'</Amount>';
+            $xml .= '</CurrencyAllocation>';
+        }
+        $xml .= '</AmountBreakDown>';
+        $xml .= '</Request>';
+        $xml .= '</AutoCreate>';
+
+        $xml_response = $this->get_xml_response($xml);
+
+        $simpleXMLObject = new SimpleXMLElement($xml_response);
+        $response = $simpleXMLObject->Response;
+
+        $result = [];
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+
+        if (! empty($response->StatusMessage)) {
+            $result['StatusMessage'] = (string) $response->StatusMessage;
+        }
+        if (! empty($response->BankDepositRequestReference)) {
+            $result['BankDepositRequestReference'] = (string) $response->BankDepositRequestReference;
+        }
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
+        }
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check the status of a previously submitted bank deposit request.
+     * Either $bank_deposit_request_reference or $request_tracking_id must be provided.
+     *
+     * @param  string|null  $bank_deposit_request_reference  the reference returned by ac_submit_bank_deposit
+     * @param  string|null  $request_tracking_id  the RequestTrackingId used when submitting the deposit
+     * @return array
+     */
+    public function ac_bank_deposit_check_status($bank_deposit_request_reference = null, $request_tracking_id = null)
+    {
+        if ($bank_deposit_request_reference == null && $request_tracking_id == null) {
+            throw new Exception('Either bank_deposit_request_reference or request_tracking_id must be provided');
+        }
+
+        $xml = '';
+        $xml .= '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml .= '<AutoCreate>';
+        $xml .= '<Request>';
+        $xml .= '<APIUsername>'.$this->username.'</APIUsername>';
+        $xml .= '<APIPassword>'.$this->password.'</APIPassword>';
+        $xml .= '<Method>acbankdepositcheckstatus</Method>';
+        if ($request_tracking_id != null) {
+            $xml .= '<RequestTrackingId>'.$request_tracking_id.'</RequestTrackingId>';
+        }
+        if ($bank_deposit_request_reference != null) {
+            $xml .= '<BankDepositRequestReference>'.$bank_deposit_request_reference.'</BankDepositRequestReference>';
+        }
+        $xml .= '</Request>';
+        $xml .= '</AutoCreate>';
+
+        $xml_response = $this->get_xml_response($xml);
+
+        $simpleXMLObject = new SimpleXMLElement($xml_response);
+        $response = $simpleXMLObject->Response;
+
+        $result = [];
+        $result['Status'] = (string) $response->Status;
+        $result['StatusCode'] = (string) $response->StatusCode;
+
+        if (! empty($response->StatusMessage)) {
+            $result['StatusMessage'] = (string) $response->StatusMessage;
+        }
+        if (! empty($response->ProcessingStatus)) {
+            $result['ProcessingStatus'] = (string) $response->ProcessingStatus;
+        }
+
+        if (! empty($response->Notes->Note)) {
+            $notes = [];
+            foreach ($response->Notes->Note as $note) {
+                $notes[] = [
+                    'DateTime' => (string) $note->DateTime,
+                    'Text' => (string) $note->Text,
+                ];
+            }
+            $result['Notes'] = $notes;
+        }
+
+        if (! empty($response->ErrorMessageCode)) {
+            $result['ErrorMessageCode'] = (string) $response->ErrorMessageCode;
+        }
+        if (! empty($response->ErrorMessage)) {
+            $result['ErrorMessage'] = (string) $response->ErrorMessage;
         }
 
         return $result;
@@ -1260,57 +1402,59 @@ class YoAPI
 
     public function receive_payment_notification_offficial()
     {
-        $verification_status = FALSE;
+        $verification_status = false;
 
         if ($this->verify_payment_notification()) {
-            $verification_status = TRUE;
+            $verification_status = true;
         }
 
         return [
-            'is_verified'  => $verification_status,
-            'date_time'    => $_POST['date_time'],
-            'amount'       => $_POST['amount'],
-            'narrative'    => $_POST['narrative'],
-            'network_ref'  => $_POST['network_ref'],
+            'is_verified' => $verification_status,
+            'date_time' => $_POST['date_time'],
+            'amount' => $_POST['amount'],
+            'narrative' => $_POST['narrative'],
+            'network_ref' => $_POST['network_ref'],
             'external_ref' => $_POST['external_ref'],
-            'msisdn'       => $_POST['msisdn']
+            'msisdn' => $_POST['msisdn'],
         ];
     }
 
     public function receive_payment_notification(Request $request): bool
     {
-        $verification_status = FALSE;
+        $verification_status = false;
         if ($this->verify_payment_notification($request)) {
-            $verification_status = TRUE;
+            $verification_status = true;
         } else {
             info('Not from Yo Uganda');
         }
+
         return $verification_status;
     }
 
     public function receive_payment_failure_notification(Request $request): bool
     {
-        $verification_status = FALSE;
+        $verification_status = false;
 
         if ($this->verify_payment_failure_notification($request)) {
-            $verification_status = TRUE;
+            $verification_status = true;
         }
+
         return $verification_status;
     }
 
     public function generate_public_key_authentication_signature($msisdn, $amount, $narrative)
     {
-        if ($this->public_key_authentication_nonce == NULL) {
+        if ($this->public_key_authentication_nonce == null) {
             throw new Exception('Public key authentication nonce is not set. Please set it to continue');
         }
 
-        if ($this->private_key_file_location == NULL) {
+        if ($this->private_key_file_location == null) {
             throw new Exception('Private key file location cannot be NULL');
         }
 
         $fh = fopen($this->private_key_file_location, 'r');
-        if ($fh === FALSE) {
-            throw new Exception('Private key file could not be opened. Confirm your file location ' . $this->private_key_file_location);
+        if ($fh === false) {
+            throw new Exception('Private key file could not be opened. Confirm your file location '.$this->private_key_file_location);
         }
 
         $private_key = fread($fh, 8192);
@@ -1322,7 +1466,7 @@ class YoAPI
             throw new Exception('Private key is invalid');
         }
 
-        $data = $this->username . $amount . $msisdn . $narrative . $this->external_reference . $this->public_key_authentication_nonce;
+        $data = $this->username.$amount.$msisdn.$narrative.$this->external_reference.$this->public_key_authentication_nonce;
 
         $sha1_ = sha1($data);
 
@@ -1339,13 +1483,13 @@ class YoAPI
         curl_setopt($soap_do, CURLOPT_URL, $this->YOURL);
         curl_setopt($soap_do, CURLOPT_CONNECTTIMEOUT, 120);
         curl_setopt($soap_do, CURLOPT_TIMEOUT, 120);
-        curl_setopt($soap_do, CURLOPT_RETURNTRANSFER, TRUE);
-        curl_setopt($soap_do, CURLOPT_POST, TRUE);
+        curl_setopt($soap_do, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($soap_do, CURLOPT_POST, true);
         curl_setopt($soap_do, CURLOPT_POSTFIELDS, $xml);
         curl_setopt($soap_do, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($soap_do, CURLOPT_SSL_VERIFYHOST, 0);
-        curl_setopt($soap_do, CURLOPT_VERBOSE, FALSE);
-        curl_setopt($soap_do, CURLOPT_HTTPHEADER, ['Content-Type: text/xml', 'Content-transfer-encoding: text', 'Content-Length: ' . strlen($xml)]);
+        curl_setopt($soap_do, CURLOPT_VERBOSE, false);
+        curl_setopt($soap_do, CURLOPT_HTTPHEADER, ['Content-Type: text/xml', 'Content-transfer-encoding: text', 'Content-Length: '.strlen($xml)]);
 
         $xml_response = curl_exec($soap_do);
         curl_close($soap_do);
@@ -1355,36 +1499,40 @@ class YoAPI
 
     protected function verify_payment_notification(Request $request): bool
     {
-        $data = $request->input('date_time') .
-            $request->input('amount') .
-            $request->input('narrative') .
-            $request->input('network_ref') .
-            $request->input('external_ref') .
+        $data = $request->input('date_time').
+            $request->input('amount').
+            $request->input('narrative').
+            $request->input('network_ref').
+            $request->input('external_ref').
             $request->input('msisdn');
 
         $signature = base64_decode($request->input('signature'));
 
         $keyPath = $this->public_key_file;
-        if (!file_exists($keyPath)) {
+        if (! file_exists($keyPath)) {
             info('Public key file does not exist');
-            return FALSE;
+
+            return false;
         }
         $key_id = openssl_pkey_get_public(file_get_contents($keyPath));
-        if (!$key_id) {
+        if (! $key_id) {
             info('Public key could not be loaded');
-            return FALSE;
+
+            return false;
         }
+
         return openssl_verify($data, $signature, $key_id) === 1;
     }
 
-
     protected function verify_payment_failure_notification(Request $request): bool
     {
-        $data = $request->failed_transaction_reference . $request->transaction_init_date;
+        $data = $request->failed_transaction_reference.$request->transaction_init_date;
         $signature = base64_decode($request->verification);
         $keyPath = $this->public_key_file;
         $key_id = openssl_pkey_get_public(file_get_contents($keyPath));
-        if (!$key_id) return FALSE;
+        if (! $key_id) {
+            return false;
+        }
 
         $verified = openssl_verify($data, $signature, $key_id);
 
@@ -1394,12 +1542,12 @@ class YoAPI
     protected function verify_payment_failure_notification_official()
     {
         $post_data = file_get_contents('php://input');
-        $data = $_POST['failed_transaction_reference'] . $_POST['transaction_init_date'];
+        $data = $_POST['failed_transaction_reference'].$_POST['transaction_init_date'];
 
         $signature = base64_decode($_POST['verification']);
         $fh = fopen($this->public_key_file, 'r');
-        if ($fh === FALSE) {
-            return FALSE;
+        if ($fh === false) {
+            return false;
         }
 
         $key = fread($fh, 8192);
@@ -1408,9 +1556,9 @@ class YoAPI
         $verified = openssl_verify($data, $signature, $key_id);
 
         if ($verified == 1) {
-            return TRUE;
+            return true;
         }
 
-        return FALSE;
+        return false;
     }
 }

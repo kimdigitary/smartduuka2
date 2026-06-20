@@ -55,51 +55,54 @@ function project()
 function tenantUserId(Request $request)
 {
     $user = $request->user();
+
     return User::where('email', $user->email)->first()->id;
 }
 
 function formatPhoneNumber(string|int|null $phone): ?string
 {
-    if ($phone === NULL) {
-        return NULL;
+    if ($phone === null) {
+        return null;
     }
 
-    $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone) ?? '';
+    $cleanPhone = preg_replace('/[^0-9]/', '', (string) $phone) ?? '';
 
     if ($cleanPhone === '') {
-        return NULL;
+        return null;
     }
 
     if (strlen($cleanPhone) === 10 && str_starts_with($cleanPhone, '0')) {
-        return '+256' . substr($cleanPhone, 1);
+        return '+256'.substr($cleanPhone, 1);
     }
 
     if (strlen($cleanPhone) === 9) {
-        return '+256' . $cleanPhone;
+        return '+256'.$cleanPhone;
     }
 
     if (strlen($cleanPhone) === 12 && str_starts_with($cleanPhone, '256')) {
-        return '+' . $cleanPhone;
+        return '+'.$cleanPhone;
     }
 
-    return '+' . ltrim($cleanPhone, '+');
+    return '+'.ltrim($cleanPhone, '+');
 }
 
-function tenantContext(callable $callback, int|Tenant|string|null $tenant = NULL): mixed
+function tenantContext(callable $callback, int|Tenant|string|null $tenant = null): mixed
 {
     $previousTenant = tenancy()->tenant;
     try {
         tenancy()->initialize($tenant ?? tenantId());
+
         return $callback();
     } catch (TenantCouldNotBeIdentifiedById $exception) {
-        info('Functions.php: ' . $exception->getMessage());
-        return NULL;
+        info('Functions.php: '.$exception->getMessage());
+
+        return null;
     } finally {
         if ($previousTenant) {
             try {
                 tenancy()->initialize($previousTenant);
             } catch (TenantCouldNotBeIdentifiedById $e) {
-                info('Functions.php: ' . $e->getMessage());
+                info('Functions.php: '.$e->getMessage());
             }
         } else {
             tenancy()->end();
@@ -114,7 +117,8 @@ function centralContext(callable $callback): mixed
         return tenancy()->central($callback);
     } catch (Exception $exception) {
         info($exception->getMessage());
-        return NULL;
+
+        return null;
     } finally {
         try {
             if ($previousTenant) {
@@ -129,12 +133,12 @@ function centralContext(callable $callback): mixed
 function numericToAssociativeArrayBuilder($array): array
 {
     $i = 0;
-    $parentId = NULL;
-    $parentIncrementId = NULL;
+    $parentId = null;
+    $parentIncrementId = null;
     $buildArray = [];
     if (count($array)) {
         foreach ($array as $arr) {
-            if (!$arr['parent']) {
+            if (! $arr['parent']) {
                 $parentId = $arr['id'];
                 $parentIncrementId = $i;
                 $buildArray[$i] = $arr;
@@ -148,69 +152,83 @@ function numericToAssociativeArrayBuilder($array): array
     }
     if ($buildArray) {
         foreach ($buildArray as $key => $build) {
-            if ($build['url'] == '#' && !isset($build['children'])) {
+            if ($build['url'] == '#' && ! isset($build['children'])) {
                 unset($buildArray[$key]);
             }
         }
     }
+
     return $buildArray;
 }
 
 function isDev(): bool
 {
-    return ((bool)config('app.dev')) === TRUE;
+    return ((bool) config('app.dev')) === true;
 }
-
 
 function eventConfig(string $event)
 {
     $events = Settings::group('notification')->get('events') ?? [];
     if (is_array($events) && isset($events[0]) && is_string($events[0])) {
-        $decodedEvents = json_decode($events[0], TRUE);
+        $decodedEvents = json_decode($events[0], true);
     } elseif (is_string($events)) {
-        $decodedEvents = json_decode($events, TRUE);
+        $decodedEvents = json_decode($events, true);
     } else {
         $decodedEvents = $events;
     }
-    return collect($decodedEvents)->firstWhere('id', $event);
+
+    return collect($decodedEvents)->firstWhere('id', $event) ?? [
+        'id' => $event,
+        'channels' => [
+            'email' => false,
+            'sms' => false,
+            'whatsapp' => false,
+            'system' => true,
+        ],
+    ];
 }
 
 function notificationChannels(object $notifiable, string $event): array
 {
     $eventConfig = eventConfig($event);
-    if (!$eventConfig || !isset($eventConfig['channels'])) {
+    if (! $eventConfig || ! isset($eventConfig['channels'])) {
         return [];
     }
 
     $isAnonymous = $notifiable instanceof AnonymousNotifiable;
 
     $channelMap = [
-        'email'    => 'mail',
-        'sms'      => 'sms',
-        'whatsapp' => 'whatsapp',
-        'system'   => 'database',
+        'email' => ['mail'],
+        'sms' => ['sms'],
+        'whatsapp' => ['whatsapp'],
+        'system' => ['database', 'broadcast'],
     ];
 
     $channels = collect($channelMap)
-        ->filter(function ($channel, $key) use ($eventConfig, $isAnonymous) {
-            if (!($eventConfig['channels'][$key] ?? FALSE)) {
-                return FALSE;   // disabled in settings
+        ->filter(function (array $channels, string $key) use ($eventConfig) {
+            return (bool) ($eventConfig['channels'][$key] ?? false);
+        })
+        ->flatMap(function (array $channels) use ($isAnonymous) {
+            if ($isAnonymous) {
+                return array_diff($channels, ['database', 'broadcast']);
             }
-            if ($isAnonymous && $channel === 'database') {
-                return FALSE;   // database requires a real system user
-            }
-            return TRUE;
+
+            return $channels;
+        })
+        ->filter(function (string $channel) {
+            return $channel !== '';
         })
         ->values()
         ->all();
 
-    return !empty($channels) ? $channels : [];
+    return ! empty($channels) ? $channels : [];
 }
 
 function phoneNumber(): string
 {
     $code = Settings::group('company')->get('company_calling_code');
     $phone = substr(Settings::group('company')->get('company_phone') || '', -9);
+
     return "$code$phone";
 }
 
@@ -221,15 +239,15 @@ function normalisePhone(string $phone): string
     }
 
     if (str_starts_with($phone, '0')) {
-        return '256' . substr($phone, 1);
+        return '256'.substr($phone, 1);
     }
 
     return $phone;
 }
 
-function recordId(string $prefix, Model $model, $pad = NULL): string
+function recordId(string $prefix, Model $model, $pad = null): string
 {
-    return $prefix . '-' . Str::padLeft($model->id, $pad ?? 6, '0');
+    return $prefix.'-'.Str::padLeft($model->id, $pad ?? 6, '0');
 }
 
 function permissionWithAccess(&$permissions, $rolePermissions): object
@@ -237,19 +255,21 @@ function permissionWithAccess(&$permissions, $rolePermissions): object
     if ($permissions) {
         foreach ($permissions as $permission) {
             if (isset($rolePermissions[$permission->id])) {
-                $permission->access = TRUE;
+                $permission->access = true;
             } else {
-                $permission->access = FALSE;
+                $permission->access = false;
             }
         }
     }
+
     return $permissions;
 }
 
 function isDistributor()
 {
     $user = Auth::user();
-    return $user->roles->some(fn($role) => $role->id == Role::DISTRIBUTOR);
+
+    return $user->roles->some(fn ($role) => $role->id == Role::DISTRIBUTOR);
 }
 
 function parseDate(string $date): string
@@ -265,17 +285,19 @@ function toCarbonDate(string $date): Carbon
 function ledgerCode(): int|string
 {
     $last_ledger = Ledger::orderBy('id', 'desc')->first();
-    return !$last_ledger ? Str::padLeft(1, 5, '0') : Str::padLeft(((int)$last_ledger->code) + 1, 5, '0');
+
+    return ! $last_ledger ? Str::padLeft(1, 5, '0') : Str::padLeft(((int) $last_ledger->code) + 1, 5, '0');
 }
 
 function enabledWarehouse(): bool
 {
     $setting = Settings::group('module')->get('module_warehouse');
     if ($setting == 1) {
-        return TRUE;
+        return true;
     }
-    return TRUE;
-//        return FALSE;
+
+    return true;
+    //        return FALSE;
 }
 
 function moduleEnabled(string $key, string $group = 'module'): bool
@@ -290,10 +312,10 @@ function settingEnabled(string $key, string $group = SettingsEnum::APP_SETTINGS-
 
 function isEnabled(string $key, string $group): bool
 {
-    return filter_var(Settings::group($group)->get($key) ?? FALSE, FILTER_VALIDATE_BOOLEAN);
+    return filter_var(Settings::group($group)->get($key) ?? false, FILTER_VALIDATE_BOOLEAN);
 }
 
-function setting(string $key, string $group = SettingsEnum::APP_SETTINGS->value): string|null
+function setting(string $key, string $group = SettingsEnum::APP_SETTINGS->value): ?string
 {
     return Settings::group($group)->get($key);
 }
@@ -303,7 +325,9 @@ function hasFeature(string $tenantId, PlanFeature $feature): bool
     return tenancy()->central(function () use ($tenantId, $feature) {
         $plan = activeSubscription($tenantId);
 
-        if (!$plan) return FALSE;
+        if (! $plan) {
+            return false;
+        }
 
         return PlanFeatureMap::has($plan->name, $feature);
     });
@@ -321,7 +345,7 @@ function logo()
 
 function tenantSubscriptions(string $tenantId): Builder
 {
-    return centralContext(fn() => TenantSubscription::with('subscriptionPlan')
+    return centralContext(fn () => TenantSubscription::with('subscriptionPlan')
         ->where('expires_at', '>=', now())
         ->where('payment_status', SubscriptionPaymentStatus::Paid)
         ->where('status', Status::ACTIVE)
@@ -332,46 +356,50 @@ function tenantSubscriptions(string $tenantId): Builder
 
 function activeSubscription(string $tenantId): ?SubscriptionPlan
 {
-    return centralContext(fn() => tenantSubscriptions($tenantId)?->first()?->subscriptionPlan);
+    return centralContext(fn () => tenantSubscriptions($tenantId)?->first()?->subscriptionPlan);
 }
 
 function branchId(): int
 {
-    return (int)request()->header('X-BranchId');
+    return (int) request()->header('X-BranchId');
 }
 
-function tenantId(): string|null
+function tenantId(): ?string
 {
     return request()->header('X-TenantId');
 }
 
-function addPayment(?Order $order = NULL, int $amount = 0, int $payment_method = 0, ?string $reference = NULL, PosPaymentType $pos_payment_type =
+function addPayment(?Order $order = null, int $amount = 0, int $payment_method = 0, ?string $reference = null, PosPaymentType $pos_payment_type =
 PosPaymentType::SALE): void
 {
     $p = PosPayment::create([
-        'date'              => now(),
-        'reference_no'      => $reference ?? 'PP-' . time(),
-        'amount'            => $amount,
+        'date' => now(),
+        'reference_no' => $reference ?? 'PP-'.time(),
+        'amount' => $amount,
         'payment_method_id' => $payment_method,
-        'pos_payment_type'  => $pos_payment_type,
-        'register_id'       => register()?->id,
-        'branch_id'         => branchId()
+        'pos_payment_type' => $pos_payment_type,
+        'register_id' => register()?->id,
+        'branch_id' => branchId(),
     ]);
 
     $p->update(['reference_no' => recordId('PP', $p)]);
 
-    if ($order) $p->update(['order_id' => $order->id]);
+    if ($order) {
+        $p->update(['order_id' => $order->id]);
+    }
 
     $pmt = PaymentMethodTransaction::create([
-        'amount'            => $amount,
-        'charge'            => 0,
-        'description'       => 'Customer Payment ',
+        'amount' => $amount,
+        'charge' => 0,
+        'description' => 'Customer Payment ',
         'payment_method_id' => $payment_method,
-        'branch_id'         => branchId()
+        'branch_id' => branchId(),
     ]);
-    if ($order) $pmt->update([
-        'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #' . $order->order_serial_no,
-    ]);
+    if ($order) {
+        $pmt->update([
+            'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #'.$order->order_serial_no,
+        ]);
+    }
 }
 
 function datetime2(?Carbon $datetime): string
@@ -382,14 +410,14 @@ function datetime2(?Carbon $datetime): string
 function addToLedger(User $user, string $reference, float $bill_amount, float $paid)
 {
     return CustomerLedger::create([
-        'user_id'     => $user->id,
-        'date'        => now(),
-        'reference'   => time(),
+        'user_id' => $user->id,
+        'date' => now(),
+        'reference' => time(),
         'description' => $reference,
         'bill_amount' => $bill_amount,
-        'paid'        => $paid,
-        'branch_id'   => branchId(),
-        'balance'     => userCredit($user) - $paid
+        'paid' => $paid,
+        'branch_id' => branchId(),
+        'balance' => userCredit($user) - $paid,
     ]);
 }
 
@@ -400,53 +428,60 @@ function userCredit(User $user)
         ->value('total_credits');
 }
 
-function register(): Register|null
+function register(): ?Register
 {
     $tenant = tenant('id');
-    if ($tenant) return auth()->user()?->openRegister();
-    else return NULL;
+    if ($tenant) {
+        return auth()->user()?->openRegister();
+    } else {
+        return null;
+    }
 }
 
 function orderLabel(Order $order): string
 {
     if ($order->status == OrderStatus::PENDING) {
         return 'Quotation';
-    } else if ($order->payment_status == PaymentStatus::UNPAID || $order->payment_status == PaymentStatus::PARTIALLY_PAID) {
+    } elseif ($order->payment_status == PaymentStatus::UNPAID || $order->payment_status == PaymentStatus::PARTIALLY_PAID) {
         return 'Invoice';
-    } else if ($order->payment_status == PaymentStatus::PAID) {
+    } elseif ($order->payment_status == PaymentStatus::PAID) {
         return 'Receipt';
-    } else return '';
+    } else {
+        return '';
+    }
 }
 
 function orderName(Order $order): string
 {
     $order_serial_no = $order->order_serial_no;
     $label = orderLabel($order);
-    return $order->user->name . ' ' . $label . '#' . $order_serial_no;
+
+    return $order->user->name.' '.$label.'#'.$order_serial_no;
 }
 
-function addToCustomerWalletTransaction(User $customer, float $amount, CustomerWalletTransactionType $typ, int $payment_method_id, string $reference = NULL)
+function addToCustomerWalletTransaction(User $customer, float $amount, CustomerWalletTransactionType $typ, int $payment_method_id, ?string $reference = null)
 {
     $transaction = CustomerWalletTransaction::create([
-        'user_id'           => $customer->id,
-        'branch_id'         => branchId(),
-        'reference'         => '',
-        'amount'            => $amount,
-        'type'              => $typ,
+        'user_id' => $customer->id,
+        'branch_id' => branchId(),
+        'reference' => '',
+        'amount' => $amount,
+        'type' => $typ,
         'payment_method_id' => $payment_method_id,
-        'register_id'       => register()?->id,
-        'balance'           => 0
+        'register_id' => register()?->id,
+        'balance' => 0,
     ]);
     $transaction->update(['reference' => $reference ?? walletTransactionReferenceNo($transaction)]);
     $customer->refresh();
     $transaction->update(['balance' => walletBalance($customer)]);
-    addPayment(NULL, $amount, $payment_method_id, NULL, PosPaymentType::DEPOSIT);
+    addPayment(null, $amount, $payment_method_id, null, PosPaymentType::DEPOSIT);
+
     return $transaction;
 }
 
 function walletBalance(User $user): float
 {
-    return (float)$user->walletTransactions()->sum('amount');
+    return (float) $user->walletTransactions()->sum('amount');
 }
 
 function orderSerialNo(Order $order): string
@@ -459,7 +494,8 @@ function orderSerialNo(Order $order): string
         PaymentType::QUOTATION => 'QT-',
         default => 'ORD-'
     };
-    return $prefix . Str::padLeft($id, Pad::LENGTH, '0');
+
+    return $prefix.Str::padLeft($id, Pad::LENGTH, '0');
 }
 
 function walletTransactionReferenceNo(CustomerWalletTransaction $wallet_transaction): string
@@ -471,16 +507,17 @@ function walletTransactionReferenceNo(CustomerWalletTransaction $wallet_transact
         CustomerWalletTransactionType::PURCHASE => 'WP-',
         default => 'WT-'
     };
-    return $prefix . Str::padLeft($id, Pad::LENGTH, '0');
+
+    return $prefix.Str::padLeft($id, Pad::LENGTH, '0');
 }
 
 function validateAndCorrectChecksum($code, $type): string
 {
-    $code = (string)$code;
+    $code = (string) $code;
 
     if ($type === BarcodeType::EAN_13) {
         if (strlen($code) !== 13) {
-            throw new \Exception('EAN-13 must be 13 digits long.');
+            throw new Exception('EAN-13 must be 13 digits long.');
         }
 
         $digits = str_split($code);
@@ -488,7 +525,7 @@ function validateAndCorrectChecksum($code, $type): string
 
         // Calculate the checksum for EAN-13
         for ($i = 0; $i < 12; $i++) {
-            $digit = (int)$digits[$i];
+            $digit = (int) $digits[$i];
             $checksum += ($i % 2 === 0) ? $digit : $digit * 3;
         }
 
@@ -497,7 +534,7 @@ function validateAndCorrectChecksum($code, $type): string
         // Compare the calculated checksum with the 13th digit
         if ($calculatedChecksum != $digits[12]) {
             // If the checksum is invalid, correct it
-            return substr($code, 0, 12) . $calculatedChecksum;
+            return substr($code, 0, 12).$calculatedChecksum;
         }
 
         return $code; // The checksum is already correct
@@ -506,7 +543,7 @@ function validateAndCorrectChecksum($code, $type): string
     if ($type === BarcodeType::UPC_A) {
         // UPC-A requires 12 digits (11 digits + 1 checksum)
         if (strlen($code) !== 12) {
-            throw new \Exception('UPC-A must be 12 digits long.');
+            throw new Exception('UPC-A must be 12 digits long.');
         }
 
         $digits = str_split($code);
@@ -514,7 +551,7 @@ function validateAndCorrectChecksum($code, $type): string
 
         // Calculate the checksum for UPC-A
         for ($i = 0; $i < 11; $i++) {
-            $digit = (int)$digits[$i];
+            $digit = (int) $digits[$i];
             $checksum += ($i % 2 === 0) ? $digit * 3 : $digit;
         }
 
@@ -523,18 +560,19 @@ function validateAndCorrectChecksum($code, $type): string
         // Compare the calculated checksum with the 12th digit
         if ($calculatedChecksum != $digits[11]) {
             // If the checksum is invalid, correct it
-            return substr($code, 0, 11) . $calculatedChecksum;
+            return substr($code, 0, 11).$calculatedChecksum;
         }
+
         return $code; // The checksum is already correct
     }
 
-    throw new \Exception('Unsupported barcode type.');
+    throw new Exception('Unsupported barcode type.');
 }
 
 function validateAndCorrectEAN13Checksum($ean13)
 {
     if (strlen($ean13) !== 13) {
-        throw new \Exception('EAN-13 must be 13 digits long.');
+        throw new Exception('EAN-13 must be 13 digits long.');
     }
 
     $digits = str_split($ean13);
@@ -542,7 +580,7 @@ function validateAndCorrectEAN13Checksum($ean13)
 
     // Calculate the checksum
     for ($i = 0; $i < 12; $i++) {
-        $digit = (int)$digits[$i];
+        $digit = (int) $digits[$i];
         $checksum += ($i % 2 === 0) ? $digit : $digit * 3;
     }
 
@@ -551,7 +589,8 @@ function validateAndCorrectEAN13Checksum($ean13)
     // Compare the calculated checksum with the 13th digit
     if ($calculatedChecksum != $digits[12]) {
         // If the checksum is invalid, correct it
-        $correctedEAN13 = substr($ean13, 0, 12) . $calculatedChecksum;
+        $correctedEAN13 = substr($ean13, 0, 12).$calculatedChecksum;
+
         return $correctedEAN13;
     }
 
@@ -565,12 +604,13 @@ function royaltyPointsExchangeRate(): float|int
     if ($exchange_rate) {
         $points_value = $exchange_rate->value / $exchange_rate->points;
     }
+
     return $points_value;
 }
 
 function clean_amount(string $value): int
 {
-    return (int)preg_replace('/\D/', '', $value);
+    return (int) preg_replace('/\D/', '', $value);
 }
 
 function currency($value): string
@@ -585,10 +625,10 @@ function format_currency_short($n): string
     if ($n < 1000) {
         $format = number_format($n, $precision);
         $suffix = '';
-    } else if ($n < 1000000) {
+    } elseif ($n < 1000000) {
         $format = number_format($n / 1000, $precision);
         $suffix = 'K';
-    } else if ($n < 1000000000) {
+    } elseif ($n < 1000000000) {
         $format = number_format($n / 1000000, $precision);
         $suffix = 'M';
     } else {
@@ -597,38 +637,46 @@ function format_currency_short($n): string
     }
 
     if (config('system.currency_position') == CurrencyPosition::RIGHT) {
-        return $format . $suffix . ' ' . currencySymbol();
+        return $format.$suffix.' '.currencySymbol();
     }
-    return currencySymbol() . ' ' . $format . $suffix;
+
+    return currencySymbol().' '.$format.$suffix;
 }
 
 function currencySymbol(): string
 {
     return Cache::rememberForever(CacheEnum::CURRENCY_SYMBOL, function () {
         $currency = Currency::find(Settings::group('site')->get(CacheEnum::CURRENCY_SYMBOL));
+
         return $currency->symbol ?? 'UGX';
     });
 }
 
 function datetime($value): string
 {
-    if (!$value) return '';
+    if (! $value) {
+        return '';
+    }
+
     return AppLibrary::datetime2($value);
 }
 
 function siteDate($value): string
 {
-    if (!$value) return '';
+    if (! $value) {
+        return '';
+    }
+
     return AppLibrary::date($value);
 }
 
 function transformGroup($group)
 {
     return [
-        'id'       => $group->id,
-        'name'     => $group->name,
-        'ledgers'  => $group->ledger,
-        'children' => $group->childrenRecursive->map(fn($child) => transformGroup($child)),
+        'id' => $group->id,
+        'name' => $group->name,
+        'ledgers' => $group->ledger,
+        'children' => $group->childrenRecursive->map(fn ($child) => transformGroup($child)),
     ];
 }
 
@@ -657,8 +705,8 @@ function updateCoa(): void
                 ['name' => $payment_account->name, 'parent_id' => $current_assets->id],
                 [
                     'currency_id' => $payment_account->currency_id,
-                    'type'        => 'debit',
-                    'code'        => $code,
+                    'type' => 'debit',
+                    'code' => $code,
                 ]
             );
         }
@@ -666,24 +714,24 @@ function updateCoa(): void
 
     $ledgers = [
         [
-            'name'      => 'Stock value',
+            'name' => 'Stock value',
             'parent_id' => $current_assets?->id,
-            'type'      => 'debit',
+            'type' => 'debit',
         ],
         [
-            'name'      => 'Sales',
+            'name' => 'Sales',
             'parent_id' => $revenue?->id,
-            'type'      => 'credit',
+            'type' => 'credit',
         ],
         [
-            'name'      => 'Sales return',
+            'name' => 'Sales return',
             'parent_id' => $revenue?->id,
-            'type'      => 'debit',
+            'type' => 'debit',
         ],
         [
-            'name'      => 'Cost of Sales',
+            'name' => 'Cost of Sales',
             'parent_id' => $revenue?->id,
-            'type'      => 'debit',
+            'type' => 'debit',
         ],
     ];
 
@@ -693,8 +741,8 @@ function updateCoa(): void
                 ['name' => $ledger['name'], 'parent_id' => $ledger['parent_id']],
                 [
                     'currency_id' => $default_currency->id,
-                    'type'        => $ledger['type'],
-                    'code'        => $code,
+                    'type' => $ledger['type'],
+                    'code' => $code,
                 ]
             );
         }
@@ -727,15 +775,20 @@ function phpToDateFnsFormat(string $phpFormat): string
     // Convert the format string
     return preg_replace_callback('/[a-zA-Z]/', function ($matches) use ($replacements) {
         $char = $matches[0];
+
         return $replacements[$char] ?? $char;
     }, $phpFormat);
 }
 
-function activityLog(string $description, string $app_id = NULL, Model|null $model = NULL): void
+function activityLog(string $description, ?string $app_id = null, ?Model $model = null): void
 {
     $activity = activity();
-    if ($model) $activity->performedOn($model);
-    if ($app_id) $activity->withProperties(['app_id' => $app_id, 'branch_id' => request('branch_id')]);
+    if ($model) {
+        $activity->performedOn($model);
+    }
+    if ($app_id) {
+        $activity->withProperties(['app_id' => $app_id, 'branch_id' => request('branch_id')]);
+    }
     $activity->log($description);
 }
 
@@ -744,24 +797,24 @@ function activityLog(string $description, string $app_id = NULL, Model|null $mod
 //        activity()->log( $description );
 //    }
 
-function statusLabel($status): string|null
+function statusLabel($status): ?string
 {
     return match ($status) {
         Status::ACTIVE => 'Active',
         Status::INACTIVE => 'Inactive',
         Status::CANCELED => 'Canceled',
         Status::UNDER_MAINTENANCE => 'Under Maintenance',
-        default => NULL
+        default => null
     };
 }
 
-function stockStatusLabel($status): string|null
+function stockStatusLabel($status): ?string
 {
     return match ($status) {
         StockStatus::OUT_OF_STOCK => 'Out of Stock',
         StockStatus::LOW_STOCK => 'Low Stock',
         StockStatus::IN_STOCK => 'In stock',
-        default => NULL
+        default => null
     };
 }
 //    function hasActiveSubscription
