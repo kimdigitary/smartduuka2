@@ -395,6 +395,7 @@ class DashboardService
             } else {
                 // Daily grouping
                 $period = CarbonPeriod::create($startDate, $endDate);
+
                 foreach ($period as $date) {
                     $categories[] = ['label' => $date->format('M d')];
 
