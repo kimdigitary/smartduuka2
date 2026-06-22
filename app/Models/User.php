@@ -8,6 +8,8 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentType;
 use App\Enums\Status;
 use App\Traits\ForgetsCacheOnCRUD;
+use IFRS\Interfaces\Recyclable;
+use IFRS\Traits\IFRSUser;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,9 +25,9 @@ use Spatie\Permission\Traits\HasRoles;
 use Stancl\Tenancy\Contracts\Syncable;
 use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
 
-class User extends Authenticatable implements HasMedia, Syncable
+class User extends Authenticatable implements HasMedia, Recyclable, Syncable
 {
-    use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, InteractsWithMedia, Notifiable, ResourceSyncing, SoftDeletes;
+    use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, IFRSUser, InteractsWithMedia, Notifiable, ResourceSyncing, SoftDeletes;
 
     protected $table = 'users';
 
@@ -99,7 +101,6 @@ class User extends Authenticatable implements HasMedia, Syncable
 
     public function creditAndDeposit(): HasMany
     {
-        //            return $this->orders()->active()->whereIn( 'payment_type' , [ PaymentType::CREDIT , PaymentType::DEPOSIT ] );
         return $this->orders()->whereIn('payment_type', [PaymentType::CREDIT->value, PaymentType::DEPOSIT->value]);
     }
 
@@ -337,5 +338,15 @@ class User extends Authenticatable implements HasMedia, Syncable
             // dynamic keys now receive the instance as an argument:
             fn(self $model) => "pos_customer.{$model->id}",
         ];
+    }
+
+    public static function bootRecycling()
+    {
+        // TODO: Implement bootRecycling() method.
+    }
+
+    public function recycled()
+    {
+        // TODO: Implement recycled() method.
     }
 }

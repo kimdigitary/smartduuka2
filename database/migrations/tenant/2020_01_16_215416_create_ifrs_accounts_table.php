@@ -7,6 +7,7 @@
  * @copyright Edward Mungai, 2020, Germany
  * @license MIT
  */
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -18,10 +19,10 @@ class CreateIfrsAccountsTable extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
         Schema::create(
-            config('ifrs.table_prefix').'accounts',
+            config('ifrs.table_prefix') . 'accounts',
             function (Blueprint $table) {
                 $table->bigIncrements('id');
 
@@ -31,9 +32,9 @@ class CreateIfrsAccountsTable extends Migration
                 $table->unsignedBigInteger('currency_id');
 
                 // constraints
-                $table->foreign('entity_id')->references('id')->on(config('ifrs.table_prefix').'entities');
-                $table->foreign('category_id')->references('id')->on(config('ifrs.table_prefix').'categories');
-                $table->foreign('currency_id')->references('id')->on(config('ifrs.table_prefix').'currencies');
+                $table->foreign('entity_id')->references('id')->on(config('ifrs.table_prefix') . 'entities');
+                $table->foreign('category_id')->references('id')->on(config('ifrs.table_prefix') . 'categories');
+                $table->foreign('currency_id')->references('id')->on(config('ifrs.table_prefix') . 'currencies');
 
                 // attributes
                 $table->integer('code');
@@ -62,6 +63,6 @@ class CreateIfrsAccountsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists(config('ifrs.table_prefix').'accounts');
+        Schema::dropIfExists(config('ifrs.table_prefix') . 'accounts');
     }
 }
