@@ -70,11 +70,11 @@ test('tenant branch contact fields are unique per tenant', function (string $col
         $column => $value,
     ]));
 
-    expect(TenantBranch::where($column, $value)->count())->toBe(2);
+    expect(TenantBranch::where($column, $value)->count())->toBe(2)
+        ->and(fn() => TenantBranch::create(tenantBranchContactAttributes('tenant-one', 'Branch Three', [
+            $column => $value,
+        ])))->toThrow(QueryException::class);
 
-    expect(fn() => TenantBranch::create(tenantBranchContactAttributes('tenant-one', 'Branch Three', [
-        $column => $value,
-    ])))->toThrow(QueryException::class);
 })->with([
     'email'   => ['email', 'shared@example.com'],
     'phone'   => ['phone', '+256700000001'],

@@ -8,7 +8,6 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentType;
 use App\Enums\Status;
 use App\Traits\ForgetsCacheOnCRUD;
-use IFRS\Interfaces\Recyclable;
 use IFRS\Traits\IFRSUser;
 use IFRS\Traits\ModelTablePrefix;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -26,7 +25,7 @@ use Spatie\Permission\Traits\HasRoles;
 use Stancl\Tenancy\Contracts\Syncable;
 use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
 
-class User extends Authenticatable implements HasMedia, Recyclable, Syncable
+class User extends Authenticatable implements HasMedia, Syncable
 {
     use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, IFRSUser, InteractsWithMedia, ModelTablePrefix, Notifiable, ResourceSyncing, SoftDeletes;
 
