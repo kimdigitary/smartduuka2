@@ -99,7 +99,6 @@ class User extends Authenticatable implements HasMedia, Syncable
 
     public function creditAndDeposit(): HasMany
     {
-        //            return $this->orders()->active()->whereIn( 'payment_type' , [ PaymentType::CREDIT , PaymentType::DEPOSIT ] );
         return $this->orders()->whereIn('payment_type', [PaymentType::CREDIT->value, PaymentType::DEPOSIT->value]);
     }
 
