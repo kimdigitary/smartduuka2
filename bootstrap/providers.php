@@ -13,5 +13,5 @@ return [
     TenancyServiceProvider::class,
     PaymentServiceProvider::class,
     LaravelServiceProvider::class,
-    IFRSServiceProvider::class,
+//    IFRSServiceProvider::class,
 ];

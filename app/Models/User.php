@@ -8,8 +8,6 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentType;
 use App\Enums\Status;
 use App\Traits\ForgetsCacheOnCRUD;
-use IFRS\Traits\IFRSUser;
-use IFRS\Traits\ModelTablePrefix;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,7 +25,7 @@ use Stancl\Tenancy\Database\Concerns\ResourceSyncing;
 
 class User extends Authenticatable implements HasMedia, Syncable
 {
-    use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, IFRSUser, InteractsWithMedia, ModelTablePrefix, Notifiable, ResourceSyncing, SoftDeletes;
+    use ForgetsCacheOnCRUD, HasApiTokens, HasFactory, HasRoles, InteractsWithMedia, Notifiable, ResourceSyncing, SoftDeletes;
 
     protected $table = 'users';
 
@@ -43,12 +41,12 @@ class User extends Authenticatable implements HasMedia, Syncable
     protected $hidden = ['password', 'remember_token', 'pin'];
 
     protected $casts = [
-        'id' => 'integer',
-        'status' => Status::class,
+        'id'                => 'integer',
+        'status'            => Status::class,
         'email_verified_at' => 'datetime',
-        'last_login_date' => 'datetime',
-        'force_reset' => 'boolean',
-        'is_reset' => 'boolean',
+        'last_login_date'   => 'datetime',
+        'force_reset'       => 'boolean',
+        'is_reset'          => 'boolean',
     ];
 
     public function getGlobalIdentifierKey()
@@ -79,7 +77,7 @@ class User extends Authenticatable implements HasMedia, Syncable
     protected function phone(): Attribute
     {
         return Attribute::make(
-            get: fn (?string $value) => formatPhoneNumber($value),
+            get: fn(?string $value) => formatPhoneNumber($value),
         );
     }
 
@@ -163,7 +161,7 @@ class User extends Authenticatable implements HasMedia, Syncable
 
             'credits' => function ($subquery) use ($orderDebtRaw, $creditTypes) {
                 $subquery->selectRaw("
-                (SELECT COALESCE($orderDebtRaw, 0) FROM orders WHERE orders.user_id = users.id AND orders.payment_type IN (".implode(',', $creditTypes).') AND orders.status NOT IN ('.OrderStatus::CANCELED->value.', '.OrderStatus::REJECTED->value.'))
+                (SELECT COALESCE($orderDebtRaw, 0) FROM orders WHERE orders.user_id = users.id AND orders.payment_type IN (" . implode(',', $creditTypes) . ') AND orders.status NOT IN (' . OrderStatus::CANCELED->value . ', ' . OrderStatus::REJECTED->value . '))
                 +
                 (SELECT COALESCE(SUM(amount), 0) FROM legacy_debts WHERE legacy_debts.user_id = users.id)
             ');
@@ -263,7 +261,7 @@ class User extends Authenticatable implements HasMedia, Syncable
             'total_legacy_debt' => LegacyDebt::selectRaw('COALESCE(SUM(amount), 0)')
                 ->whereColumn('user_id', 'users.id'),
         ])->selectRaw(
-            '( '.$orderDebtSub->toSql().' ) + ( '.$legacyDebtSub->toSql().' ) as total_credits',
+            '( ' . $orderDebtSub->toSql() . ' ) + ( ' . $legacyDebtSub->toSql() . ' ) as total_credits',
             array_merge($orderDebtSub->getBindings(), $legacyDebtSub->getBindings())
         );
     }
@@ -271,7 +269,7 @@ class User extends Authenticatable implements HasMedia, Syncable
     protected function register(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->openRegister(),
+            get: fn() => $this->openRegister(),
         );
     }
 
@@ -294,14 +292,14 @@ class User extends Authenticatable implements HasMedia, Syncable
             ->whereColumn('user_id', 'users.id');
 
         return $query->whereRaw(
-            '( ( '.$orderDebtSub->toSql().' ) + ( '.$legacyDebtSub->toSql().' ) ) > 0',
+            '( ( ' . $orderDebtSub->toSql() . ' ) + ( ' . $legacyDebtSub->toSql() . ' ) ) > 0',
             array_merge($orderDebtSub->getBindings(), $legacyDebtSub->getBindings())
         );
     }
 
     public function getImageAttribute(): string
     {
-        if (! empty($this->getFirstMediaUrl('profile'))) {
+        if (!empty($this->getFirstMediaUrl('profile'))) {
             return asset($this->getFirstMediaUrl('profile'));
         }
 
@@ -315,7 +313,7 @@ class User extends Authenticatable implements HasMedia, Syncable
 
     public function getThumbAttribute(): string
     {
-        if (! empty($this->getFirstMediaUrl('profile'))) {
+        if (!empty($this->getFirstMediaUrl('profile'))) {
             $profile = $this->getMedia('profile')->last();
 
             return $profile->getUrl('thumb');
@@ -337,17 +335,7 @@ class User extends Authenticatable implements HasMedia, Syncable
         return [
             CacheEnum::POS_CUSTOMERS,
             // dynamic keys now receive the instance as an argument:
-            fn (self $model) => "pos_customer.{$model->id}",
+            fn(self $model) => "pos_customer.{$model->id}",
         ];
-    }
-
-    public static function bootRecycling()
-    {
-        // TODO: Implement bootRecycling() method.
-    }
-
-    public function recycled()
-    {
-        // TODO: Implement recycled() method.
     }
 }
