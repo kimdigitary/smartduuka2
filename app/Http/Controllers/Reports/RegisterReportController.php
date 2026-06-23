@@ -1,74 +1,214 @@
 <?php
 
-    namespace App\Http\Controllers\Reports;
+namespace App\Http\Controllers\Reports;
 
-    use App\Enums\RegisterStatus;
-    use App\Http\Resources\RegisterResource;
-    use App\Models\Register;
-    use App\Models\Product;
-    use App\Models\ProductVariation;
-    use App\Models\Service;
-    use Illuminate\Http\Request;
-    use Illuminate\Database\Eloquent\Relations\MorphTo;
+use App\Enums\RegisterStatus;
+use App\Http\Resources\RegisterResource;
+use App\Models\Product;
+use App\Models\ProductVariation;
+use App\Models\Register;
+use App\Models\Service;
+use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
-    class RegisterReportController
+class RegisterReportController
+{
+    public function index(Request $request)
     {
-        public function index(Request $request)
-        {
-            $query  = Register::with( [
-                'user' ,
-                'orders.posPayments.paymentMethod' ,
-                'orders.taxes.tax' ,
-                'orders.orderProducts.item' => function (MorphTo $morphTo) {
-                    $morphTo->morphWith( [
-                        Product::class          => [ 'unit' , 'retailPrices' ] ,
-                        ProductVariation::class => [ 'product.unit' , 'productAttributeOption.productAttribute' , 'retailPrices' ] ,
-                        Service::class          => [] ,
-                    ] );
-                } ,
-                'posPayments.paymentMethod' ,
-                'expensesPayments.expense' ,
-                'walletTransactions' ,
-            ] );
+        DB::flushQueryLog();
+        DB::enableQueryLog();
 
-            if ( $request->filled( 'status' ) && $request->status !== 'all' ) {
-                $status = $request->status === 'open'
-                    ? RegisterStatus::OPEN
-                    : RegisterStatus::CLOSED;
+        $logQueries = function () {
+            $queries = DB::getQueryLog();
 
-                $query->where( 'status' , $status );
-            }
-
-            if ( $request->filled( 'start' ) && $request->filled( 'end' ) ) {
-                $query->whereBetween( 'created_at' , [
-                    $request->start . ' 00:00:00' ,
-                    $request->end . ' 23:59:59'
-                ] );
-            }
-
-            if ( $request->filled( 'query' ) ) {
-                $searchTerm = $request->input( 'query' );
-
-                $query->where( function ($q) use ($searchTerm) {
-                    $numericId = ltrim( str_replace( 'REG-' , '' , strtoupper( $searchTerm ) ) , '0' );
-
-                    if ( is_numeric( $numericId ) ) {
-                        $q->where( 'id' , $numericId );
+            foreach ($queries as $query) {
+                $bindings = array_map(function ($binding) {
+                    if ($binding instanceof \DateTimeInterface) {
+                        return "'" . $binding->format('Y-m-d H:i:s') . "'";
                     }
 
-                    $q->orWhereHas( 'user' , function ($userQuery) use ($searchTerm) {
-                        $userQuery->where( 'name' , 'ilike' , "%{$searchTerm}%" );
-                    } );
-                } );
+                    if (is_string($binding)) {
+                        return "'" . str_replace("'", "''", $binding) . "'";
+                    }
+
+                    if (is_bool($binding)) {
+                        return $binding ? 'true' : 'false';
+                    }
+
+                    if ($binding === null) {
+                        return 'null';
+                    }
+
+                    return $binding;
+                }, $query['bindings']);
+
+                $sql = Str::replaceArray('?', $bindings, $query['query']);
+
+                info('[REGISTER REPORT SQL]', [
+                    'sql' => $sql,
+                    'time_ms' => $query['time'] ?? null,
+                ]);
             }
 
-            if ( $request->boolean( 'unpaginated' ) ) {
-                $registers = $query->latest()->get();
-                return RegisterResource::collection( $registers );
-            }
+            DB::disableQueryLog();
+        };
 
-            $registers = $query->latest()->paginate( $request->input( 'per_page' , 15 ) );
+        $dateRange = $this->dateRange($request);
 
-            return RegisterResource::collection( $registers );
+        $query = Register::with($this->reportRelations($dateRange));
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $status = $request->status === 'open'
+                ? RegisterStatus::OPEN
+                : RegisterStatus::CLOSED;
+
+            $query->where('status', $status);
         }
+
+        if ($dateRange) {
+            $query->whereBetween('created_at', $dateRange);
+        }
+
+        if ($request->filled('query')) {
+            $searchTerm = $request->input('query');
+
+            $query->where(function ($q) use ($searchTerm) {
+                $numericId = $searchTerm
+                        |> strtoupper(...)
+                        |> (fn($x) => str_replace('REG-', '', $x))
+                        |> (fn($x) => ltrim($x, '0'));
+
+                if (is_numeric($numericId)) {
+                    $q->where('id', $numericId);
+                }
+
+                $q->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                    $userQuery->where('name', 'ilike', "%{$searchTerm}%");
+                });
+            });
+        }
+
+        if ($request->boolean('unpaginated')) {
+            $registers = $query->latest()->get();
+
+            $logQueries();
+
+            return RegisterResource::collection($registers);
+        }
+
+        $registers = $query->latest()->paginate($request->input('per_page', 15));
+
+        $logQueries();
+
+        return RegisterResource::collection($registers);
     }
+    public function index1(Request $request)
+    {
+        $dateRange = $this->dateRange($request);
+
+        $query = Register::with($this->reportRelations($dateRange));
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $status = $request->status === 'open'
+                ? RegisterStatus::OPEN
+                : RegisterStatus::CLOSED;
+
+            $query->where('status', $status);
+        }
+//        info($dateRange);
+
+        if ($dateRange) {
+            $query->whereBetween('created_at', $dateRange);
+        }
+
+
+        if ($request->filled('query')) {
+            $searchTerm = $request->input('query');
+
+            $query->where(function ($q) use ($searchTerm) {
+                $numericId = $searchTerm
+                        |> strtoupper(...)
+                        |> (fn($x) => str_replace('REG-', '', $x))
+                        |> (fn($x) => ltrim($x, '0'));
+
+                if (is_numeric($numericId)) {
+                    $q->where('id', $numericId);
+                }
+
+                $q->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                    $userQuery->where('name', 'ilike', "%{$searchTerm}%");
+                });
+            });
+        }
+
+        if ($request->boolean('unpaginated')) {
+            $registers = $query->latest()->get();
+
+            return RegisterResource::collection($registers);
+        }
+        info($query->toRawSql());
+        $registers = $query->latest()->paginate($request->input('per_page', 15));
+
+        return RegisterResource::collection($registers);
+    }
+
+    /**
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
+     * @return array<string, mixed>
+     */
+    protected function reportRelations(?array $dateRange): array
+    {
+        return [
+            'user',
+            'orders'                    => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'order_datetime', $dateRange),
+            'orders.posPayments'        => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'orders.posPayments.paymentMethod',
+            'orders.taxes.tax',
+            'orders.orderProducts.item' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    Product::class          => ['unit', 'retailPrices'],
+                    ProductVariation::class => ['product.unit', 'productAttributeOption.productAttribute', 'retailPrices'],
+                    Service::class          => [],
+                ]);
+            },
+            'posPayments'               => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'posPayments.paymentMethod',
+            'expensesPayments'          => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'expensesPayments.expense',
+            'walletTransactions'        => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'created_at', $dateRange),
+        ];
+    }
+
+    /**
+     * @return array{0: CarbonInterface, 1: CarbonInterface}|null
+     */
+    protected function dateRange(Request $request): ?array
+    {
+        if (!$request->filled('start') || !$request->filled('end')) {
+            return null;
+        }
+
+        return [
+            Carbon::parse($request->input('start'))->copy()->startOfDay(),
+            Carbon::parse($request->input('end'))->copy()->endOfDay(),
+        ];
+    }
+
+    /**
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
+     */
+    protected function constrainDateRange(Builder|Relation $query, string $column, ?array $dateRange): void
+    {
+        if ($dateRange === null) {
+            return;
+        }
+
+        $query->whereBetween($column, $dateRange);
+    }
+}
