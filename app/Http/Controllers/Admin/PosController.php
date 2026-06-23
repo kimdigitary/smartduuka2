@@ -426,7 +426,6 @@ class PosController extends AdminController
     public function registerDetails()
     {
         $register = auth()->user()?->openRegister();
-        info(auth()->user());
         if (! $register) {
             return response()->json(['message' => 'No open register found'], 404);
         }
