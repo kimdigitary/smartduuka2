@@ -58,12 +58,6 @@ class RegisterReportController
             });
         }
 
-        if ($request->boolean('unpaginated')) {
-            $registers = $query->latest()->get();
-
-            return RegisterResource::collection($registers);
-        }
-        info($query->toRawSql());
         $registers = $query->latest()->paginate($request->input('per_page', 15));
 
         return RegisterResource::collection($registers);
