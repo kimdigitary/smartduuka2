@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Reports\RegisterReportController;
 use App\Models\CustomerWalletTransaction;
+use App\Models\Expense;
 use App\Models\ExpensePayment;
 use App\Models\Order;
 use App\Models\PosPayment;
@@ -51,6 +52,7 @@ it('constrains report relation queries to the requested date range', function ()
         'orders.posPayments' => [PosPayment::query(), 'date'],
         'posPayments' => [PosPayment::query(), 'date'],
         'expensesPayments' => [ExpensePayment::query(), 'date'],
+        'expensesPayments.expense' => [Expense::query(), 'date'],
         'walletTransactions' => [CustomerWalletTransaction::query(), 'created_at'],
     ];
 
@@ -79,6 +81,7 @@ it('accepts relation instances when constraining eager loaded report relations',
         'orders.posPayments' => [$order->posPayments(), 'date'],
         'posPayments' => [$register->posPayments(), 'date'],
         'expensesPayments' => [$register->expensesPayments(), 'date'],
+        'expensesPayments.expense' => [(new ExpensePayment)->expense(), 'date'],
         'walletTransactions' => [$register->walletTransactions(), 'created_at'],
     ];
 
