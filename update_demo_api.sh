@@ -5,6 +5,7 @@ APP_DIR="$HOME/smartduuka"
 BACKEND_DIR="$APP_DIR/api_demo"
 REPO_URL="git@github-api:omodingmike/smartduuka2.git"
 BRANCH="dev"
+DEMO_TENANT="demoshop"
 # Explicitly using the demo compose file
 COMPOSE="docker compose -f docker-compose.demo.yml"
 
@@ -59,10 +60,9 @@ until $COMPOSE exec -T api_demo php artisan --version >/dev/null 2>&1; do
 done
 
 # Run demo tenant migrations
-log "🗄 Running demo tenant migrations..."
+log "🗄 Running demo tenant migrations for ${DEMO_TENANT}..."
 $COMPOSE exec -T api_demo php artisan migrate --force
-$COMPOSE exec -T api_demo php artisan tenants:migrate --force
-#$COMPOSE exec -T api_demo php artisan tenants:migrate --force --tenants=demoshop
+$COMPOSE exec -T api_demo php artisan tenants:migrate --force --tenants="$DEMO_TENANT"
 
 # Optimize Laravel for the demo environment
 $COMPOSE exec -T api_demo php artisan reset-notification-settings
@@ -73,10 +73,10 @@ $COMPOSE exec -T api_demo php artisan config:cache
 $COMPOSE exec -T api_demo php artisan db:seed --force --class=BillingCycleSeeder
 $COMPOSE exec -T api_demo php artisan db:seed --force --class=SubscriptionPlanSeeder
 $COMPOSE exec -T api_demo php artisan db:seed --force --class=BusinessOnBoardSeeder
-$COMPOSE exec -T api_demo php artisan tenants:seed --class=PermissionTableSeeder
+$COMPOSE exec -T api_demo php artisan tenants:seed --tenants="$DEMO_TENANT" --class=PermissionTableSeeder
 #$COMPOSE exec -T api_demo php artisan db:seed --class=TenantBranchSeeder --force
-$COMPOSE exec -T api_demo php artisan tenants:seed --class=SystemModuleSeeder
-$COMPOSE exec -T api_demo php artisan tenants:seed --class=RoleTableSeeder
+$COMPOSE exec -T api_demo php artisan tenants:seed --tenants="$DEMO_TENANT" --class=SystemModuleSeeder
+$COMPOSE exec -T api_demo php artisan tenants:seed --tenants="$DEMO_TENANT" --class=RoleTableSeeder
 $COMPOSE exec -T api_demo php artisan route:cache
 $COMPOSE exec -T api_demo php artisan view:cache
 
