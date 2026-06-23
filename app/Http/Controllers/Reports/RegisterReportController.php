@@ -14,11 +14,51 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class RegisterReportController
 {
     public function index(Request $request)
     {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $logQueries = function () {
+            $queries = DB::getQueryLog();
+
+            foreach ($queries as $query) {
+                $bindings = array_map(function ($binding) {
+                    if ($binding instanceof \DateTimeInterface) {
+                        return "'" . $binding->format('Y-m-d H:i:s') . "'";
+                    }
+
+                    if (is_string($binding)) {
+                        return "'" . str_replace("'", "''", $binding) . "'";
+                    }
+
+                    if (is_bool($binding)) {
+                        return $binding ? 'true' : 'false';
+                    }
+
+                    if ($binding === null) {
+                        return 'null';
+                    }
+
+                    return $binding;
+                }, $query['bindings']);
+
+                $sql = Str::replaceArray('?', $bindings, $query['query']);
+
+                info('[REGISTER REPORT SQL]', [
+                    'sql' => $sql,
+                    'time_ms' => $query['time'] ?? null,
+                ]);
+            }
+
+            DB::disableQueryLog();
+        };
+
         $dateRange = $this->dateRange($request);
 
         $query = Register::with($this->reportRelations($dateRange));
@@ -57,9 +97,62 @@ class RegisterReportController
         if ($request->boolean('unpaginated')) {
             $registers = $query->latest()->get();
 
+            $logQueries();
+
             return RegisterResource::collection($registers);
         }
 
+        $registers = $query->latest()->paginate($request->input('per_page', 15));
+
+        $logQueries();
+
+        return RegisterResource::collection($registers);
+    }
+    public function index1(Request $request)
+    {
+        $dateRange = $this->dateRange($request);
+
+        $query = Register::with($this->reportRelations($dateRange));
+
+        if ($request->filled('status') && $request->status !== 'all') {
+            $status = $request->status === 'open'
+                ? RegisterStatus::OPEN
+                : RegisterStatus::CLOSED;
+
+            $query->where('status', $status);
+        }
+//        info($dateRange);
+
+        if ($dateRange) {
+            $query->whereBetween('created_at', $dateRange);
+        }
+
+
+        if ($request->filled('query')) {
+            $searchTerm = $request->input('query');
+
+            $query->where(function ($q) use ($searchTerm) {
+                $numericId = $searchTerm
+                        |> strtoupper(...)
+                        |> (fn($x) => str_replace('REG-', '', $x))
+                        |> (fn($x) => ltrim($x, '0'));
+
+                if (is_numeric($numericId)) {
+                    $q->where('id', $numericId);
+                }
+
+                $q->orWhereHas('user', function ($userQuery) use ($searchTerm) {
+                    $userQuery->where('name', 'ilike', "%{$searchTerm}%");
+                });
+            });
+        }
+
+        if ($request->boolean('unpaginated')) {
+            $registers = $query->latest()->get();
+
+            return RegisterResource::collection($registers);
+        }
+        info($query->toRawSql());
         $registers = $query->latest()->paginate($request->input('per_page', 15));
 
         return RegisterResource::collection($registers);
