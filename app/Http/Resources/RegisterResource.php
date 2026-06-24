@@ -159,7 +159,7 @@ class RegisterResource extends JsonResource
             'closed_at' => $this->closed_at,
             'created_at' => AppLibrary::datetime2($this->created_at),
             'user_id' => $this->user_id,
-            'user' => new UserResource($this->whenLoaded('user')),
+            'user' => $this->userSummary(),
 
             // NEW: Exposing true trading sales to the frontend
             'total_sales_value' => $total_sales_value,
@@ -169,7 +169,7 @@ class RegisterResource extends JsonResource
             'sales' => $total_revenue,
             'sales_currency' => AppLibrary::currencyAmountFormat($total_revenue),
             'expense' => $expenses,
-            'expenses' => ExpenseResource::collection($expenses_items),
+            'expenses' => $expenses_items->map(fn ($expense) => $this->expenseSummary($expense))->values(),
             'expense_currency' => currency($expenses),
             'posPayments' => PosPaymentResource::collection($posPayments),
             'item_summary' => $groupedItems,
@@ -205,6 +205,48 @@ class RegisterResource extends JsonResource
     protected function loadedCollection(string $relation): Collection
     {
         return $this->modelRelationCollection($this->resource, $relation);
+    }
+
+    protected function userSummary(): ?array
+    {
+        $user = $this->modelRelation($this->resource, 'user');
+
+        if (! $user) {
+            return null;
+        }
+
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ];
+    }
+
+    protected function expenseSummary(mixed $expense): ?array
+    {
+        if (! $expense) {
+            return null;
+        }
+
+        $balance = (float) $expense->amount - (float) $expense->paid;
+
+        return [
+            'id' => $expense->id,
+            'expense_id' => $expense->expense_id ?? $expense->id,
+            'name' => $expense->name,
+            'expense_nature' => $expense->expense_nature,
+            'payment_status' => $expense->payment_status,
+            'amount' => $expense->amount,
+            'amount_currency' => AppLibrary::currencyAmountFormat($expense->amount),
+            'date' => $expense->date ? AppLibrary::datetime2($expense->date) : '',
+            'note' => $expense->note,
+            'expense_type' => $expense->expense_type,
+            'referenceNo' => $expense->reference_no,
+            'balance' => $balance,
+            'balance_currency' => AppLibrary::currencyAmountFormat($balance),
+            'paid' => $expense->paid,
+            'paid_currency' => AppLibrary::currencyAmountFormat($expense->paid),
+        ];
     }
 
     protected function modelRelationCollection(mixed $model, string $relation): Collection

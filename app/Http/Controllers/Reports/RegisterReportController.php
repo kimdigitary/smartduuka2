@@ -36,8 +36,9 @@ class RegisterReportController
         ]);
 
         $dateRange = $this->dateRange($request);
+        $includeOrders = $request->boolean('include_orders');
 
-        $query = $this->registerQuery($dateRange);
+        $query = $this->registerQuery($dateRange, $includeOrders);
 
         if ($request->filled('status') && $request->status !== 'all') {
             $status = $request->status === 'open'
@@ -76,25 +77,56 @@ class RegisterReportController
     /**
      * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
      */
-    protected function registerQuery(?array $dateRange): Builder
+    protected function registerQuery(?array $dateRange, bool $includeOrders = false): Builder
     {
         return Register::query()
             ->when($dateRange, fn (Builder $query) => $query->whereBetween('created_at', $dateRange))
-            ->with($this->reportRelations($dateRange));
+            ->with($this->reportRelations($dateRange, $includeOrders));
     }
 
     /**
      * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
      * @return array<string, mixed>
      */
-    protected function reportRelations(?array $dateRange): array
+    protected function reportRelations(?array $dateRange, bool $includeOrders = false): array
     {
-        return [
-            'user',
-            'orders' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'order_datetime', $dateRange),
-            'orders.posPayments' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
-            'orders.posPayments.paymentMethod',
-            'orders.taxes.tax',
+        $relations = [
+            'user:id,name,email',
+            'orders' => function (Builder|Relation $query) use ($dateRange): void {
+                $query->select([
+                    'id',
+                    'register_id',
+                    'total',
+                    'payment_type',
+                    'order_datetime',
+                    'status',
+                    'pre_order_status',
+                    'return_status',
+                    'order_type',
+                    'quotation_status',
+                ]);
+
+                $this->constrainDateRange($query, 'order_datetime', $dateRange);
+            },
+            'orders.posPayments' => function (Builder|Relation $query) use ($dateRange): void {
+                $query->select([
+                    'id',
+                    'order_id',
+                    'amount',
+                    'date',
+                ]);
+
+                $this->constrainDateRange($query, 'date', $dateRange);
+            },
+            'orders.orderProducts' => fn (Builder|Relation $query) => $query->select([
+                'id',
+                'order_id',
+                'item_id',
+                'item_type',
+                'quantity',
+                'quantity_picked',
+                'total',
+            ]),
             'orders.orderProducts.item' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
                     Product::class => ['unit', 'retailPrices'],
@@ -102,12 +134,81 @@ class RegisterReportController
                     Service::class => [],
                 ]);
             },
-            'posPayments' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
-            'posPayments.paymentMethod',
-            'expensesPayments' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
-            'expensesPayments.expense' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
-            'walletTransactions' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'created_at', $dateRange),
+            'posPayments' => function (Builder|Relation $query) use ($dateRange): void {
+                $query->select([
+                    'id',
+                    'register_id',
+                    'order_id',
+                    'payment_method_id',
+                    'date',
+                    'reference_no',
+                    'amount',
+                    'pos_payment_type',
+                ]);
+
+                $this->constrainDateRange($query, 'date', $dateRange);
+            },
+            'posPayments.paymentMethod' => fn (Builder|Relation $query) => $this->paymentMethodSummaryQuery($query),
+            'expensesPayments' => function (Builder|Relation $query) use ($dateRange): void {
+                $query->select([
+                    'id',
+                    'register_id',
+                    'expense_id',
+                    'amount',
+                    'date',
+                ]);
+
+                $this->constrainDateRange($query, 'date', $dateRange);
+            },
+            'expensesPayments.expense' => function (Builder|Relation $query) use ($dateRange): void {
+                $query->select([
+                    'id',
+                    'expense_id',
+                    'name',
+                    'amount',
+                    'date',
+                    'expense_nature',
+                    'payment_status',
+                    'paid',
+                    'expense_category_id',
+                    'expense_type',
+                    'reference_no',
+                    'note',
+                ]);
+
+                $this->constrainDateRange($query, 'date', $dateRange);
+            },
+            'walletTransactions' => function (Builder|Relation $query) use ($dateRange): void {
+                $query->select([
+                    'id',
+                    'register_id',
+                    'amount',
+                    'created_at',
+                ]);
+
+                $this->constrainDateRange($query, 'created_at', $dateRange);
+            },
         ];
+
+        if ($includeOrders) {
+            $relations['orders.posPayments.paymentMethod'] = fn (Builder|Relation $query) => $this->paymentMethodSummaryQuery($query);
+            $relations[] = 'orders.taxes.tax';
+        }
+
+        return $relations;
+    }
+
+    protected function paymentMethodSummaryQuery(Builder|Relation $query): void
+    {
+        $query
+            ->select(['id', 'name', 'merchant_code'])
+            ->withSum('transactions as preloaded_balance', 'amount')
+            ->withSum([
+                'transactions as preloaded_total_in' => fn (Builder $query) => $query->where('amount', '>', 0),
+            ], 'amount')
+            ->withSum([
+                'transactions as preloaded_total_out' => fn (Builder $query) => $query->where('amount', '<', 0),
+            ], 'amount');
     }
 
     protected function perPage(Request $request): int

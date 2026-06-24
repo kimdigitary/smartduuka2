@@ -6,6 +6,7 @@ use App\Models\CustomerWalletTransaction;
 use App\Models\Expense;
 use App\Models\ExpensePayment;
 use App\Models\Order;
+use App\Models\PaymentMethod;
 use App\Models\PosPayment;
 use App\Models\Product;
 use App\Models\Register;
@@ -24,9 +25,9 @@ function registerReportController(): RegisterReportController
             return $this->dateRange($request);
         }
 
-        public function publicReportRelations(?array $dateRange): array
+        public function publicReportRelations(?array $dateRange, bool $includeOrders = false): array
         {
-            return $this->reportRelations($dateRange);
+            return $this->reportRelations($dateRange, $includeOrders);
         }
 
         public function publicRegisterQuery(?array $dateRange)
@@ -89,6 +90,22 @@ it('constrains the base register query to the requested date range', function ()
 
     expect($where['type'])->toBe('between')
         ->and($where['values'])->toBe($dateRange);
+});
+
+it('omits expanded order-only relations from the default register report query', function () {
+    $relations = registerReportController()->publicReportRelations(null);
+
+    expect($relations)->not->toHaveKey('orders.posPayments.paymentMethod')
+        ->and($relations)->not->toContain('orders.taxes.tax');
+});
+
+it('includes expanded order relations only when requested', function () {
+    $relations = registerReportController()->publicReportRelations(null, includeOrders: true);
+
+    $relations['orders.posPayments.paymentMethod'](PaymentMethod::query());
+
+    expect($relations)->toHaveKey('orders.posPayments.paymentMethod')
+        ->and($relations)->toContain('orders.taxes.tax');
 });
 
 it('caps register report pagination size', function () {
