@@ -1,11 +1,13 @@
 <?php
 
 use App\Http\Controllers\Reports\RegisterReportController;
+use App\Http\Resources\RegisterResource;
 use App\Models\CustomerWalletTransaction;
 use App\Models\Expense;
 use App\Models\ExpensePayment;
 use App\Models\Order;
 use App\Models\PosPayment;
+use App\Models\Product;
 use App\Models\Register;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -30,6 +32,11 @@ function registerReportController(): RegisterReportController
         public function publicRegisterQuery(?array $dateRange)
         {
             return $this->registerQuery($dateRange);
+        }
+
+        public function publicPerPage(Request $request): int
+        {
+            return $this->perPage($request);
         }
     };
 }
@@ -82,6 +89,36 @@ it('constrains the base register query to the requested date range', function ()
 
     expect($where['type'])->toBe('between')
         ->and($where['values'])->toBe($dateRange);
+});
+
+it('caps register report pagination size', function () {
+    $perPage = registerReportController()->publicPerPage(Request::create('/', 'GET', [
+        'per_page' => 500,
+    ]));
+
+    expect($perPage)->toBe(50);
+});
+
+it('uses precomputed item report aggregates without fallback queries', function () {
+    $product = new Product([
+        'name' => 'Coffee',
+        'buying_price' => 10,
+    ]);
+    $product->id = 10;
+    $product->setAttribute('report_stock', 25);
+    $product->setAttribute('report_damages', 4);
+
+    $resource = new class(new Register) extends RegisterResource
+    {
+        public function publicReportAggregate($model, string $attribute): float
+        {
+            return $this->reportAggregate($model, $attribute);
+        }
+    };
+
+    expect($resource->publicReportAggregate($product, 'report_stock'))->toBe(25.0)
+        ->and($resource->publicReportAggregate($product, 'report_damages'))->toBe(4.0)
+        ->and($resource->publicReportAggregate($product, 'missing_report_value'))->toBe(0.0);
 });
 
 it('accepts relation instances when constraining eager loaded report relations', function () {
