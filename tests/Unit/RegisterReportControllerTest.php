@@ -26,6 +26,11 @@ function registerReportController(): RegisterReportController
         {
             return $this->reportRelations($dateRange);
         }
+
+        public function publicRegisterQuery(?array $dateRange)
+        {
+            return $this->registerQuery($dateRange);
+        }
     };
 }
 
@@ -64,6 +69,19 @@ it('constrains report relation queries to the requested date range', function ()
         expect($where['type'])->toBe('between')
             ->and($where['values'])->toBe($dateRange);
     }
+});
+
+it('constrains the base register query to the requested date range', function () {
+    $dateRange = [
+        Carbon::parse('2026-06-22')->startOfDay(),
+        Carbon::parse('2026-06-28')->endOfDay(),
+    ];
+
+    $query = registerReportController()->publicRegisterQuery($dateRange);
+    $where = collect($query->getQuery()->wheres)->firstWhere('column', 'created_at');
+
+    expect($where['type'])->toBe('between')
+        ->and($where['values'])->toBe($dateRange);
 });
 
 it('accepts relation instances when constraining eager loaded report relations', function () {

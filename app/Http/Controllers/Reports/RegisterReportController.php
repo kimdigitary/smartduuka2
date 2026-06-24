@@ -21,9 +21,7 @@ class RegisterReportController
     {
         $dateRange = $this->dateRange($request);
 
-        $query = Register::with($this->reportRelations($dateRange));
-
-        info((clone $query)->get());
+        $query = $this->registerQuery($dateRange);
 
         if ($request->filled('status') && $request->status !== 'all') {
             $status = $request->status === 'open'
@@ -31,11 +29,6 @@ class RegisterReportController
                 : RegisterStatus::CLOSED;
 
             $query->where('status', $status);
-        }
-
-        if ($dateRange) {
-//            $query->whereBetween('created_at', $dateRange);
-            info((clone $query)->get());
         }
 
         if ($request->filled('query')) {
@@ -56,11 +49,20 @@ class RegisterReportController
                 });
             });
         }
-        info((clone $query)->latest()->limit(5)->get());
 
         $registers = $query->latest()->paginate($request->input('per_page', 15));
 
         return RegisterResource::collection($registers);
+    }
+
+    /**
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
+     */
+    protected function registerQuery(?array $dateRange): Builder
+    {
+        return Register::query()
+            ->when($dateRange, fn(Builder $query) => $query->whereBetween('created_at', $dateRange))
+            ->with($this->reportRelations($dateRange));
     }
 
     /**
