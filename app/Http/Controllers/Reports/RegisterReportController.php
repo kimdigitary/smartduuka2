@@ -34,7 +34,7 @@ class RegisterReportController
         }
 
         if ($dateRange) {
-            $query->whereBetween('created_at', $dateRange);
+//            $query->whereBetween('created_at', $dateRange);
             info((clone $query)->get());
         }
 
