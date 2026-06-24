@@ -23,6 +23,8 @@ class RegisterReportController
 
         $query = Register::with($this->reportRelations($dateRange));
 
+        info((clone $query)->get());
+
         if ($request->filled('status') && $request->status !== 'all') {
             $status = $request->status === 'open'
                 ? RegisterStatus::OPEN
@@ -32,7 +34,8 @@ class RegisterReportController
         }
 
         if ($dateRange) {
-            $query->whereBetween('created_at', $dateRange);
+//            $query->whereBetween('created_at', $dateRange);
+            info((clone $query)->get());
         }
 
         if ($request->filled('query')) {
@@ -41,8 +44,8 @@ class RegisterReportController
             $query->where(function ($q) use ($searchTerm) {
                 $numericId = $searchTerm
                         |> strtoupper(...)
-                        |> (fn ($x) => str_replace('REG-', '', $x))
-                        |> (fn ($x) => ltrim($x, '0'));
+                        |> (fn($x) => str_replace('REG-', '', $x))
+                        |> (fn($x) => ltrim($x, '0'));
 
                 if (is_numeric($numericId)) {
                     $q->where('id', $numericId);
@@ -53,6 +56,7 @@ class RegisterReportController
                 });
             });
         }
+        info((clone $query)->latest()->limit(5)->get());
 
         $registers = $query->latest()->paginate($request->input('per_page', 15));
 
@@ -60,29 +64,29 @@ class RegisterReportController
     }
 
     /**
-     * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
      * @return array<string, mixed>
      */
     protected function reportRelations(?array $dateRange): array
     {
         return [
             'user',
-            'orders' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'order_datetime', $dateRange),
-            'orders.posPayments' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'orders'                    => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'order_datetime', $dateRange),
+            'orders.posPayments'        => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
             'orders.posPayments.paymentMethod',
             'orders.taxes.tax',
             'orders.orderProducts.item' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
-                    Product::class => ['unit', 'retailPrices'],
+                    Product::class          => ['unit', 'retailPrices'],
                     ProductVariation::class => ['product.unit', 'productAttributeOption.productAttribute', 'retailPrices'],
-                    Service::class => [],
+                    Service::class          => [],
                 ]);
             },
-            'posPayments' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'posPayments'               => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
             'posPayments.paymentMethod',
-            'expensesPayments' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
-            'expensesPayments.expense' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
-            'walletTransactions' => fn (Builder|Relation $query) => $this->constrainDateRange($query, 'created_at', $dateRange),
+            'expensesPayments'          => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'expensesPayments.expense'  => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'date', $dateRange),
+            'walletTransactions'        => fn(Builder|Relation $query) => $this->constrainDateRange($query, 'created_at', $dateRange),
         ];
     }
 
@@ -91,7 +95,7 @@ class RegisterReportController
      */
     protected function dateRange(Request $request): ?array
     {
-        if (! $request->filled('start') || ! $request->filled('end')) {
+        if (!$request->filled('start') || !$request->filled('end')) {
             return null;
         }
 
@@ -102,7 +106,7 @@ class RegisterReportController
     }
 
     /**
-     * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
      */
     protected function constrainDateRange(Builder|Relation $query, string $column, ?array $dateRange): void
     {
