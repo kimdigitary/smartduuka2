@@ -26,12 +26,12 @@ class RegisterReportController
     public function index(Request $request)
     {
         $request->validate([
-            'start' => ['nullable', 'date'],
-            'end' => ['nullable', 'date', 'after_or_equal:start'],
-            'status' => ['nullable', 'in:all,open,closed'],
-            'query' => ['nullable', 'string', 'max:255'],
-            'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
+            'start'          => ['nullable', 'date'],
+            'end'            => ['nullable', 'date', 'after_or_equal:start'],
+            'status'         => ['nullable', 'in:all,open,closed'],
+            'query'          => ['nullable', 'string', 'max:255'],
+            'page'           => ['nullable', 'integer', 'min:1'],
+            'per_page'       => ['nullable', 'integer', 'min:1', 'max:50'],
             'include_orders' => ['nullable', 'boolean'],
         ]);
 
@@ -54,8 +54,8 @@ class RegisterReportController
             $query->where(function ($q) use ($searchTerm) {
                 $numericId = $searchTerm
                         |> strtoupper(...)
-                        |> (fn ($x) => str_replace('REG-', '', $x))
-                        |> (fn ($x) => ltrim($x, '0'));
+                        |> (fn($x) => str_replace('REG-', '', $x))
+                        |> (fn($x) => ltrim($x, '0'));
 
                 if (is_numeric($numericId)) {
                     $q->where('id', $numericId);
@@ -75,24 +75,24 @@ class RegisterReportController
     }
 
     /**
-     * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
      */
     protected function registerQuery(?array $dateRange, bool $includeOrders = false): Builder
     {
         return Register::query()
-            ->when($dateRange, fn (Builder $query) => $query->whereBetween('created_at', $dateRange))
+            ->when($dateRange, fn(Builder $query) => $query->whereBetween('created_at', $dateRange))
             ->with($this->reportRelations($dateRange, $includeOrders));
     }
 
     /**
-     * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
      * @return array<string, mixed>
      */
     protected function reportRelations(?array $dateRange, bool $includeOrders = false): array
     {
         $relations = [
             'user:id,name,email',
-            'orders' => function (Builder|Relation $query) use ($dateRange): void {
+            'orders'                    => function (Builder|Relation $query) use ($dateRange): void {
                 $query->select([
                     'id',
                     'register_id',
@@ -108,7 +108,7 @@ class RegisterReportController
 
                 $this->constrainDateRange($query, 'order_datetime', $dateRange);
             },
-            'orders.posPayments' => function (Builder|Relation $query) use ($dateRange): void {
+            'orders.posPayments'        => function (Builder|Relation $query) use ($dateRange): void {
                 $query->select([
                     'id',
                     'order_id',
@@ -118,7 +118,7 @@ class RegisterReportController
 
                 $this->constrainDateRange($query, 'date', $dateRange);
             },
-            'orders.orderProducts' => fn (Builder|Relation $query) => $query->select([
+            'orders.orderProducts'      => fn(Builder|Relation $query) => $query->select([
                 'id',
                 'order_id',
                 'item_id',
@@ -129,12 +129,12 @@ class RegisterReportController
             ]),
             'orders.orderProducts.item' => function (MorphTo $morphTo) {
                 $morphTo->morphWith([
-                    Product::class => ['unit', 'retailPrices'],
+                    Product::class          => ['unit', 'retailPrices'],
                     ProductVariation::class => ['product.unit', 'productAttributeOption.productAttribute', 'retailPrices'],
-                    Service::class => [],
+                    Service::class          => [],
                 ]);
             },
-            'posPayments' => function (Builder|Relation $query) use ($dateRange): void {
+            'posPayments'               => function (Builder|Relation $query) use ($dateRange): void {
                 $query->select([
                     'id',
                     'register_id',
@@ -148,8 +148,8 @@ class RegisterReportController
 
                 $this->constrainDateRange($query, 'date', $dateRange);
             },
-            'posPayments.paymentMethod' => fn (Builder|Relation $query) => $this->paymentMethodSummaryQuery($query),
-            'expensesPayments' => function (Builder|Relation $query) use ($dateRange): void {
+            'posPayments.paymentMethod' => fn(Builder|Relation $query) => $this->paymentMethodSummaryQuery($query),
+            'expensesPayments'          => function (Builder|Relation $query) use ($dateRange): void {
                 $query->select([
                     'id',
                     'register_id',
@@ -160,7 +160,7 @@ class RegisterReportController
 
                 $this->constrainDateRange($query, 'date', $dateRange);
             },
-            'expensesPayments.expense' => function (Builder|Relation $query) use ($dateRange): void {
+            'expensesPayments.expense'  => function (Builder|Relation $query) use ($dateRange): void {
                 $query->select([
                     'id',
                     'expense_id',
@@ -178,7 +178,7 @@ class RegisterReportController
 
                 $this->constrainDateRange($query, 'date', $dateRange);
             },
-            'walletTransactions' => function (Builder|Relation $query) use ($dateRange): void {
+            'walletTransactions'        => function (Builder|Relation $query) use ($dateRange): void {
                 $query->select([
                     'id',
                     'register_id',
@@ -191,7 +191,7 @@ class RegisterReportController
         ];
 
         if ($includeOrders) {
-            $relations['orders.posPayments.paymentMethod'] = fn (Builder|Relation $query) => $this->paymentMethodSummaryQuery($query);
+            $relations['orders.posPayments.paymentMethod'] = fn(Builder|Relation $query) => $this->paymentMethodSummaryQuery($query);
             $relations[] = 'orders.taxes.tax';
         }
 
@@ -204,26 +204,26 @@ class RegisterReportController
             ->select(['id', 'name', 'merchant_code'])
             ->withSum('transactions as preloaded_balance', 'amount')
             ->withSum([
-                'transactions as preloaded_total_in' => fn (Builder $query) => $query->where('amount', '>', 0),
+                'transactions as preloaded_total_in' => fn(Builder $query) => $query->where('amount', '>', 0),
             ], 'amount')
             ->withSum([
-                'transactions as preloaded_total_out' => fn (Builder $query) => $query->where('amount', '<', 0),
+                'transactions as preloaded_total_out' => fn(Builder $query) => $query->where('amount', '<', 0),
             ], 'amount');
     }
 
     protected function perPage(Request $request): int
     {
-        return min(max((int) $request->input('per_page', 15), 1), 50);
+        return min(max((int)$request->input('per_page', 15), 1), 50);
     }
 
     protected function hydrateReportItemAggregates(Collection|EloquentCollection $registers): void
     {
         $items = $registers
-            ->flatMap(fn (Register $register) => $register->orders)
-            ->flatMap(fn ($order) => $order->orderProducts)
-            ->map(fn ($orderProduct) => $orderProduct->item)
-            ->filter(fn ($item) => $item instanceof Product || $item instanceof ProductVariation)
-            ->unique(fn (Model $item) => $item::class.':'.$item->getKey())
+            ->flatMap(fn(Register $register) => $register->orders)
+            ->flatMap(fn($order) => $order->orderProducts)
+            ->map(fn($orderProduct) => $orderProduct->item)
+            ->filter(fn($item) => $item instanceof Product || $item instanceof ProductVariation)
+            ->unique(fn(Model $item) => $item::class . ':' . $item->getKey())
             ->values();
 
         $this->applyReportAggregates($items, Product::class);
@@ -231,11 +231,11 @@ class RegisterReportController
     }
 
     /**
-     * @param  class-string<Product|ProductVariation>  $itemClass
+     * @param class-string<Product|ProductVariation> $itemClass
      */
     protected function applyReportAggregates(Collection|EloquentCollection $items, string $itemClass): void
     {
-        $items = $items->filter(fn ($item) => $item instanceof $itemClass);
+        $items = $items->filter(fn($item) => $item instanceof $itemClass);
 
         if ($items->isEmpty()) {
             return;
@@ -260,8 +260,8 @@ class RegisterReportController
             ->pluck('aggregate', 'item_id');
 
         $items->each(function (Product|ProductVariation $item) use ($stockByItem, $damagesByItem): void {
-            $item->setAttribute('report_stock', (float) ($stockByItem[$item->id] ?? 0));
-            $item->setAttribute('report_damages', (float) ($damagesByItem[$item->id] ?? 0));
+            $item->setAttribute('report_stock', (float)($stockByItem[$item->id] ?? 0));
+            $item->setAttribute('report_damages', (float)($damagesByItem[$item->id] ?? 0));
         });
     }
 
@@ -270,7 +270,7 @@ class RegisterReportController
      */
     protected function dateRange(Request $request): ?array
     {
-        if (! $request->filled('start') || ! $request->filled('end')) {
+        if (!$request->filled('start') || !$request->filled('end')) {
             return null;
         }
 
@@ -281,7 +281,7 @@ class RegisterReportController
     }
 
     /**
-     * @param  array{0: CarbonInterface, 1: CarbonInterface}|null  $dateRange
+     * @param array{0: CarbonInterface, 1: CarbonInterface}|null $dateRange
      */
     protected function constrainDateRange(Builder|Relation $query, string $column, ?array $dateRange): void
     {
