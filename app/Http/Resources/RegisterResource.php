@@ -95,27 +95,20 @@ class RegisterResource extends JsonResource
         $damages_value = $groupedItems->sum('damages_value');
 
         // --- 3. EXPENSES & NET PROFIT ---
-        // FIXED: Bulletproof Enum checking using ->value to prevent silent type-mismatch failures
-        $expenses_items = $expensesPayments->map(function (ExpensePayment $expense_payment) {
-            return $this->modelRelation($expense_payment, 'expense');
-        })->filter(function ($expense) {
-            return $expense && (
-                    $expense->expense_nature === ExpenseNature::OPERATIONAL ||
-                    (isset($expense->expense_nature->value) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value)
-                );
-        })->unique('id')->values();
-
-        $expenses = $expensesPayments->sum(function (ExpensePayment $expense_payment) {
+        // Single pass: resolve the operational expense (if any) for each payment once,
+        // then derive both the line items and the summed total from it.
+        $operationalPayments = $expensesPayments->filter(function (ExpensePayment $expense_payment) {
             $expense = $this->modelRelation($expense_payment, 'expense');
-            if ($expense && (
-                    $expense->expense_nature === ExpenseNature::OPERATIONAL ||
-                    (isset($expense->expense_nature->value) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value)
-                )) {
-                return $expense_payment->amount;
-            }
 
-            return 0;
+            return $expense && $this->isOperationalExpense($expense);
         });
+
+        $expenses_items = $operationalPayments
+            ->map(fn(ExpensePayment $expense_payment) => $this->modelRelation($expense_payment, 'expense'))
+            ->unique('id')
+            ->values();
+
+        $expenses = $operationalPayments->sum('amount');
 
         $net_profit = $profit - $expenses;
 
@@ -342,6 +335,14 @@ class RegisterResource extends JsonResource
     protected function paymentMethodName(mixed $payment): ?string
     {
         return $this->modelRelation($payment, 'paymentMethod')?->name;
+    }
+
+    // Bulletproof enum check: handles both enum instances and raw scalar values
+    // to prevent silent type-mismatch failures.
+    protected function isOperationalExpense(mixed $expense): bool
+    {
+        return $expense->expense_nature === ExpenseNature::OPERATIONAL ||
+            (isset($expense->expense_nature->value) && $expense->expense_nature->value === ExpenseNature::OPERATIONAL->value);
     }
 
     protected function reportAggregate(mixed $model, string $attribute): float

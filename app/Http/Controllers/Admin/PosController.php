@@ -24,6 +24,7 @@ use App\Models\Order;
 use App\Models\PaymentMethodTransaction;
 use App\Models\PosPayment;
 use App\Models\Product;
+use App\Models\ProductVariation;
 use App\Models\Register;
 use App\Models\Stock;
 use App\Models\User;
@@ -36,6 +37,7 @@ use Essa\APIToolKit\Api\ApiResponse;
 use Exception;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Routing\ResponseFactory;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Attributes\Controllers\Middleware;
@@ -430,7 +432,19 @@ class PosController extends AdminController
             return response()->json(['message' => 'No open register found'], 404);
         }
 
-        return new RegisterResource($register->load(['user', 'posPayments', 'orders.orderProducts.item', 'expenses', 'walletTransactions']));
+        return new RegisterResource($register->load([
+            'user',
+            'posPayments.paymentMethod',
+            'orders.posPayments',
+            'orders.orderProducts.item' => function (MorphTo $morphTo) {
+                $morphTo->morphWith([
+                    Product::class => ['unit', 'retailPrices'],
+                    ProductVariation::class => ['product.unit', 'productAttributeOption.productAttribute', 'retailPrices'],
+                ]);
+            },
+            'expensesPayments.expense',
+            'walletTransactions',
+        ]));
     }
 
     public function destroy(Request $request)

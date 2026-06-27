@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccountingController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\AdministratorAddressController;
 use App\Http\Controllers\Admin\AdministratorController;
@@ -561,6 +562,12 @@ Route::middleware([
             Route::delete('/delete', [WarehouseController::class, 'destroy']);
             //                Route::get( '/export' , [ WarehouseController::class , 'export' ] );
         });
+
+        Route::prefix('accounting')->name('accounting.')->group(function () {
+            Route::get('entity', [AccountingController::class, 'getEntity']);
+            Route::post('entity', [AccountingController::class, 'sveEntity']);
+        });
+
 
         Route::prefix('employee')->name('employee.')->group(function () {
             Route::get('/', [EmployeeController::class, 'index']);
