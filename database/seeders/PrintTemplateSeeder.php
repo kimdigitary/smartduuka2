@@ -2,40 +2,106 @@
 
     namespace Database\Seeders;
 
+    use App\Enums\DesignStyle;
+    use App\Enums\PageOrientation;
+    use App\Enums\TemplateType as TemplateTypeEnum;
+    use App\Enums\ThermalSize;
+    use App\Models\PrintTemplate;
     use App\Models\TemplateType;
     use Illuminate\Database\Seeder;
+    use Smartisan\Settings\Facades\Settings;
 
     class PrintTemplateSeeder extends Seeder
     {
         public function run() : void
         {
-            if ( TemplateType::query()->exists() ) {
+            // 1. Canonical template types. Their ids MUST match App\Enums\TemplateType
+            //    so that PrintTemplate.type, the controller's printing-settings mapping,
+            //    and the frontend `resolveTemplate()` all agree (esp. REPORT = 5).
+            //    upsert() keeps this idempotent and self-healing across deploys.
+            TemplateType::upsert( [
+                [ 'id' => TemplateTypeEnum::THERMAL->value , 'name' => 'Thermal Receipt' , 'icon' => 'FaReceipt' , 'description' => 'Standard 80mm/58mm roll for POS printers.' ] ,
+                [ 'id' => TemplateTypeEnum::A4->value , 'name' => 'A4 Invoice' , 'icon' => 'FaFileInvoice' , 'description' => 'Full-size document for B2B or large customers.' ] ,
+                [ 'id' => TemplateTypeEnum::KITCHEN->value , 'name' => 'Kitchen Ticket' , 'icon' => 'FaWrench' , 'description' => 'Kitchen / prep ticket without prices.' ] ,
+                [ 'id' => TemplateTypeEnum::PREORDER->value , 'name' => 'Pre-Order' , 'icon' => 'FaReceipt' , 'description' => 'Pre-order / fulfillment slip.' ] ,
+                [ 'id' => TemplateTypeEnum::REPORT->value , 'name' => 'System Report' , 'icon' => 'FaChartBar' , 'description' => 'Analytics and inventory tracking formats.' ] ,
+            ] , [ 'id' ] , [ 'name' , 'icon' , 'description' ] );
+
+            // 2. Seed one editable default template per printable type and activate it
+            //    in the `printing` settings group (what GET /printing returns). Skip if the
+            //    business already has templates so we never clobber their work.
+            if ( PrintTemplate::query()->exists() ) {
                 return;
             }
 
-            $templates = [
-                [
-                    'name'        => 'Thermal Receipt' ,
-                    'icon'        => 'FaReceipt' ,
-                    'description' => 'Standard 80mm/58mm roll for POS printers.' ,
-                ] ,
-                [
-                    'name'        => 'A4 Invoice' ,
-                    'icon'        => 'FaFileInvoice' ,
-                    'description' => 'Full-size document for B2B or large customers.' ,
-                ] ,
-                [
-                    'name'        => 'Repair / Service Ticket' ,
-                    'icon'        => 'FaWrench' ,
-                    'description' => 'Focuses on service tracking without prices.' ,
-                ] ,
-                [
-                    'name'        => 'System Report' ,
-                    'icon'        => 'FaChartBar' ,
-                    'description' => 'Analytics and Inventory tracking formats.' ,
-                ] ,
+            $company   = Settings::group( 'company' );
+            $storeName = $company->get( 'company_name' ) ?: 'Smart Duuka';
+            $address   = $company->get( 'company_address' ) ?: '';
+            $phone     = $company->get( 'company_phone' ) ?: '';
+
+            $shared = [
+                'is_default'       => TRUE ,
+                'store_name'       => $storeName ,
+                'address'          => $address ,
+                'phone'            => $phone ,
+                'logo_size'        => 50 ,
+                'show_quantity'    => TRUE ,
+                'show_price'       => TRUE ,
+                'show_tax'         => TRUE ,
+                'show_barcode'     => FALSE ,
+                'color_theme'      => '#000000' ,
+                'secondary_color'  => '#475569' ,
+                'thermal_size'     => ThermalSize::EIGHTY_MM->value ,
+                'page_orientation' => PageOrientation::Portrait->value ,
+                'has_borders'      => TRUE ,
+                'large_text'       => FALSE ,
             ];
 
-            TemplateType::query()->insert( $templates );
+            $defaults = [
+                array_merge( $shared , [
+                    'name'           => 'Standard Thermal Receipt' ,
+                    'type'           => TemplateTypeEnum::THERMAL->value ,
+                    'design'         => DesignStyle::CLASSIC->value ,
+                    'show_logo'      => FALSE ,
+                    'text_bold'      => TRUE ,
+                    'footer_message' => 'Thank you for your business!' ,
+                    'terms'          => NULL ,
+                ] ) ,
+                array_merge( $shared , [
+                    'name'           => 'Standard A4 Invoice' ,
+                    'type'           => TemplateTypeEnum::A4->value ,
+                    'design'         => DesignStyle::CLASSIC->value ,
+                    'show_logo'      => TRUE ,
+                    'text_bold'      => FALSE ,
+                    'footer_message' => 'Thank you for your business!' ,
+                    'terms'          => 'Goods once sold are not returnable.' ,
+                ] ) ,
+                array_merge( $shared , [
+                    'name'           => 'Standard Report' ,
+                    'type'           => TemplateTypeEnum::REPORT->value ,
+                    'design'         => DesignStyle::GRID_SYSTEM->value ,
+                    'show_logo'      => FALSE ,
+                    'text_bold'      => FALSE ,
+                    'footer_message' => 'Generated by Smart Duuka POS.' ,
+                    'terms'          => 'Internal use only.' ,
+                ] ) ,
+            ];
+
+            foreach ( $defaults as $data ) {
+                PrintTemplate::create( $data );
+
+                $key = match ( (int) $data[ 'type' ] ) {
+                    TemplateTypeEnum::THERMAL->value => 'Thermal' ,
+                    TemplateTypeEnum::A4->value      => 'A4' ,
+                    TemplateTypeEnum::REPORT->value  => 'Report' ,
+                    default                          => NULL ,
+                };
+
+                if ( $key ) {
+                    // Store the raw payload (numeric type/design/sizes) so the shape
+                    // matches what the editor's save writes and the frontend expects.
+                    Settings::group( 'printing' )->set( [ $key => $data ] );
+                }
+            }
         }
     }

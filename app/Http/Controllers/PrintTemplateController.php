@@ -59,23 +59,42 @@
 
         public function destroy(Request $request)
         {
+            // Clear the active printing slot for any default template being removed,
+            // otherwise GET /printing keeps serving a deleted template.
+            $templates = PrintTemplate::whereIn( 'id' , (array) $request->ids )->get();
+            foreach ( $templates as $template ) {
+                if ( $template->is_default ) {
+                    $key = $this->settingKey( (int) $template->type );
+                    if ( $key ) {
+                        Settings::group( 'printing' )->set( [ $key => NULL ] );
+                    }
+                }
+            }
+
             PrintTemplate::destroy( $request->ids );
             return response()->json();
         }
 
         private function updatePrintSettings(PrintTemplate $template , array $data) : void
         {
-            if ( $template->is_default ) {
-                $key = match ( $template->type ) {
-                    TemplateType::THERMAL->value => 'Thermal' ,
-                    TemplateType::A4->value      => 'A4' ,
-                    TemplateType::REPORT->value  => 'Report' ,
-                    default                      => 'unknown' ,
-                };
-
-                if ( $key ) {
-                    Settings::group( 'printing' )->set( [ $key => $data ] );
-                }
+            if ( ! $template->is_default ) {
+                return;
             }
+
+            $key = $this->settingKey( (int) $template->type );
+            if ( $key ) {
+                Settings::group( 'printing' )->set( [ $key => $data ] );
+            }
+        }
+
+        /** Map a template type id to its printing-settings key (Thermal / A4 / Report). */
+        private function settingKey(int $type) : ?string
+        {
+            return match ( $type ) {
+                TemplateType::THERMAL->value => 'Thermal' ,
+                TemplateType::A4->value      => 'A4' ,
+                TemplateType::REPORT->value  => 'Report' ,
+                default                      => NULL ,
+            };
         }
     }
