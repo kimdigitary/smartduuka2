@@ -217,9 +217,9 @@ class OrderService
                 })
                 ->groupBy('item_id', 'item_type')
                 ->orderByDesc('total_revenue')
-                ->paginate($per_page, ['*'], 'page', $page);
+                ->paginate(perPage: $per_page, page: $page);
 
-            return $products->through(function ($row) use ($start, $end) {
+            $products->through(function ($row) use ($start, $end) {
                 $item = $row->item;
 
                 $breakdowns = OrderProduct::query()
@@ -259,6 +259,18 @@ class OrderService
                 ];
             });
 
+            return [
+                'data' => $products->items(),
+                'meta' => [
+                    'current_page' => $products->currentPage(),
+                    'from'         => $products->firstItem(),
+                    'last_page'    => $products->lastPage(),
+                    'per_page'     => $products->perPage(),
+                    'to'           => $products->lastItem(),
+                    'total'        => $products->total(),
+                ],
+            ];
+
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception($exception->getMessage(), 422);
@@ -294,13 +306,25 @@ class OrderService
                 ->orderByDesc('total_revenue')
                 ->paginate($per_page, ['*'], 'page', $page);
 
-            return $customers->through(function ($row) {
+            $customers->through(function ($row) {
                 return [
                     'name'          => $row->user->name ?? 'Unknown Customer',
                     'total_orders'  => (int)$row->total_orders,
                     'total_revenue' => AppLibrary::currencyAmountFormat($row->total_revenue),
                 ];
             });
+
+            return [
+                'data' => $customers->items(),
+                'meta' => [
+                    'current_page' => $customers->currentPage(),
+                    'from'         => $customers->firstItem(),
+                    'last_page'    => $customers->lastPage(),
+                    'per_page'     => $customers->perPage(),
+                    'to'           => $customers->lastItem(),
+                    'total'        => $customers->total(),
+                ],
+            ];
 
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
@@ -351,13 +375,25 @@ class OrderService
                 ->orderByDesc('total_revenue')
                 ->paginate($per_page, ['*'], 'page', $page);
 
-            return $categories->through(function ($row) {
+            $categories->through(function ($row) {
                 return [
                     'category'      => $row->category_name ?? 'Uncategorized',
                     'quantity_sold' => (int)$row->total_sold,
                     'total_revenue' => AppLibrary::currencyAmountFormat($row->total_revenue),
                 ];
             });
+
+            return [
+                'data' => $categories->items(),
+                'meta' => [
+                    'current_page' => $categories->currentPage(),
+                    'from'         => $categories->firstItem(),
+                    'last_page'    => $categories->lastPage(),
+                    'per_page'     => $categories->perPage(),
+                    'to'           => $categories->lastItem(),
+                    'total'        => $categories->total(),
+                ],
+            ];
 
         } catch (Exception $exception) {
             Log::info($exception->getMessage());

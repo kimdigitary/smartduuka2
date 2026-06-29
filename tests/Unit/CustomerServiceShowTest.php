@@ -172,9 +172,27 @@ it('loads credit metrics when showing a route bound customer', function () {
         'updated_at' => now(),
     ]);
 
+    DB::table('orders')->insert([
+        'id' => 11,
+        'user_id' => 1,
+        'total' => 40,
+        'status' => OrderStatus::COMPLETED->value,
+        'payment_type' => PaymentType::CREDIT->value,
+        'order_datetime' => now()->subDay(),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
     DB::table('pos_payments')->insert([
         'order_id' => 10,
         'amount' => 25,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    DB::table('pos_payments')->insert([
+        'order_id' => 11,
+        'amount' => 50,
         'created_at' => now(),
         'updated_at' => now(),
     ]);

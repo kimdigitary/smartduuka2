@@ -44,8 +44,8 @@ class CustomerService
                 'media', 'debtPayments.paymentMethod', 'ledgers', 'addresses', 'unPaidOrders.posPayments.paymentMethod',
             ])
             ->role(EnumRole::CUSTOMER)
-            ->when($query, fn ($q) => $q->where('name', 'ilike', '%'.$query.'%'))
-            ->when($debtors, fn ($q) => $q->whereHasDebt())
+            ->when($query, fn($q) => $q->where('name', 'ilike', '%' . $query . '%'))
+            ->when($debtors, fn($q) => $q->whereHasDebt())
             ->orderByDesc('created_at');
     }
 
@@ -67,8 +67,8 @@ class CustomerService
                 'media', 'debtPayments.paymentMethod', 'ledgers', 'addresses', 'unPaidOrders.posPayments.paymentMethod',
             ])
             ->role(EnumRole::CUSTOMER)
-            ->when($query, fn ($q) => $q->where('name', 'ilike', '%'.$query.'%'))
-            ->when($debtors, fn ($q) => $q->whereHasDebt())
+            ->when($query, fn($q) => $q->where('name', 'ilike', '%' . $query . '%'))
+            ->when($debtors, fn($q) => $q->whereHasDebt())
             ->orderByDesc('created_at');
 
         if ($paginate) {
@@ -86,20 +86,20 @@ class CustomerService
         try {
             DB::transaction(function () use ($request) {
                 $this->user = User::create(array_filter([
-                    'username' => $request->phone ?? $request->name,
-                    'commission' => 0,
-                    'name' => $request->name,
-                    'type' => $request->type,
-                    'password' => bcrypt('password'),
+                    'username'          => $request->phone ?? $request->name,
+                    'commission'        => 0,
+                    'name'              => $request->name,
+                    'type'              => $request->type,
+                    'password'          => bcrypt('password'),
                     'email_verified_at' => now(),
-                    'status' => $request->status ?? Status::ACTIVE,
-                    'is_guest' => Ask::NO,
-                    'phone' => $request->phone,
-                    'phone2' => $request->phone2,
-                    'notes' => $request->notes,
-                    'email' => $request->email,
-                    'branch_id' => $request->branch_id,
-                ], fn ($v) => $v !== null));
+                    'status'            => $request->status ?? Status::ACTIVE,
+                    'is_guest'          => Ask::NO,
+                    'phone'             => $request->phone,
+                    'phone2'            => $request->phone2,
+                    'notes'             => $request->notes,
+                    'email'             => $request->email,
+                    'branch_id'         => $request->branch_id,
+                ], fn($v) => $v !== null));
 
                 $this->user->assignRole(EnumRole::CUSTOMER);
             });
@@ -120,14 +120,14 @@ class CustomerService
 
             DB::transaction(function () use ($customer, $request) {
                 $data = array_filter([
-                    'name' => $request->name,
-                    'type' => $request->type,
-                    'phone' => $request->phone,
+                    'name'   => $request->name,
+                    'type'   => $request->type,
+                    'phone'  => $request->phone,
                     'status' => $request->status,
-                    'email' => $request->email,
-                    'notes' => $request->notes,
+                    'email'  => $request->email,
+                    'notes'  => $request->notes,
                     'phone2' => $request->phone2,
-                ], fn ($v) => $v !== null);
+                ], fn($v) => $v !== null);
 
                 if ($request->password) {
                     $data['password'] = Hash::make($request->password);
@@ -153,10 +153,10 @@ class CustomerService
             return DB::transaction(function () use ($customer, $request) {
                 $amount = $request->validated()['amount'];
                 $payment_method = $request->validated()['method'];
-                $reference = 'DP-'.time();
+                $reference = 'DP-' . time();
 
                 $customer->load([
-                    'legacyDebts' => fn ($q) => $q
+                    'legacyDebts' => fn($q) => $q
                         ->whereNotIn('payment_status', [PaymentStatus::PAID])
                         ->orderByDesc('created_at'),
                 ]);
@@ -164,20 +164,20 @@ class CustomerService
                 $un_paid_orders = $customer->unPaidOrdersQuery()->get();
 
                 $payment = CustomerPayment::create([
-                    'date' => now(),
-                    'amount' => $amount,
-                    'payment_method_id' => $payment_method,
+                    'date'                  => now(),
+                    'amount'                => $amount,
+                    'payment_method_id'     => $payment_method,
                     'customer_payment_type' => CustomerPaymentType::DEBT,
-                    'user_id' => $customer->id,
-                    'balance' => userCredit($customer) - $amount,
-                    'branch_id' => branchId(),
+                    'user_id'               => $customer->id,
+                    'balance'               => max(0, userCredit($customer) - $amount),
+                    'branch_id'             => branchId(),
                 ]);
 
-                $runningBalance = (float) userCredit($customer);
+                $runningBalance = (float)userCredit($customer);
 
                 foreach ($customer->legacyDebts as $debt) {
                     if ($amount > 0) {
-                        $debtAmount = (float) $debt->amount;
+                        $debtAmount = (float)$debt->amount;
                         if ($amount >= $debtAmount) {
                             $debt->update(['amount' => 0, 'payment_status' => PaymentStatus::PAID, 'branch_id' => branchId()]);
                             addToLedger(
@@ -189,7 +189,7 @@ class CustomerService
                             $amount -= $debtAmount;
                             $runningBalance -= $debtAmount;
 
-                            addPayment(amount: $amount, payment_method: $payment_method, pos_payment_type: PosPaymentType::DEBT);
+                            addPayment(amount: $debtAmount, payment_method: $payment_method, pos_payment_type: PosPaymentType::DEBT);
                         } else {
                             $debt->decrement('amount', $amount);
                             $debt->update(['payment_status' => PaymentStatus::PARTIALLY_PAID]);
@@ -197,14 +197,14 @@ class CustomerService
                             $runningBalance -= $amount;
 
                             CustomerLedger::create([
-                                'user_id' => $customer->id,
-                                'date' => now(),
-                                'reference' => $reference,
+                                'user_id'     => $customer->id,
+                                'date'        => now(),
+                                'reference'   => $reference,
                                 'description' => 'Debt Payment',
                                 'bill_amount' => $debtAmount,
-                                'paid' => $amount,
-                                'balance' => $runningBalance,
-                                'branch_id' => branchId(),
+                                'paid'        => $amount,
+                                'balance'     => $runningBalance,
+                                'branch_id'   => branchId(),
                             ]);
 
                             $amount = 0;
@@ -214,41 +214,41 @@ class CustomerService
 
                 foreach ($un_paid_orders as $order) {
                     if ($amount > 0) {
-                        $balance = (float) $order->balance;
+                        $balance = (float)$order->balance;
                         if ($amount >= $balance) {
                             $order->update(['payment_status' => PaymentStatus::PAID]);
                             addPayment($order, $balance, $payment_method, $reference, PosPaymentType::DEBT);
                             $runningBalance -= $balance;
 
                             CustomerLedger::create([
-                                'user_id' => $customer->id,
-                                'date' => now(),
-                                'reference' => $reference,
+                                'user_id'     => $customer->id,
+                                'date'        => now(),
+                                'reference'   => $reference,
                                 'description' => 'Debt Payment',
                                 'bill_amount' => $balance,
-                                'paid' => $balance,
-                                'balance' => $runningBalance,
-                                'branch_id' => branchId(),
+                                'paid'        => $balance,
+                                'balance'     => $runningBalance,
+                                'branch_id'   => branchId(),
                             ]);
 
                             $amount -= $balance;
                         } else {
                             $order->update([
                                 'payment_status' => PaymentStatus::PARTIALLY_PAID,
-                                'paid' => $amount,
+                                'paid'           => $amount,
                             ]);
                             addPayment($order, $amount, $payment_method, $reference, PosPaymentType::DEBT);
                             $runningBalance -= $amount;
 
                             CustomerLedger::create([
-                                'user_id' => $customer->id,
-                                'date' => now(),
-                                'reference' => $reference,
+                                'user_id'     => $customer->id,
+                                'date'        => now(),
+                                'reference'   => $reference,
                                 'description' => 'Debt Payment',
                                 'bill_amount' => $balance,
-                                'paid' => $amount,
-                                'balance' => $runningBalance,
-                                'branch_id' => branchId(),
+                                'paid'        => $amount,
+                                'balance'     => $runningBalance,
+                                'branch_id'   => branchId(),
                             ]);
 
                             $amount = 0;
@@ -289,11 +289,11 @@ class CustomerService
                     'ledgers',
                     'addresses',
                     'legacyDebts',
-                    'unPaidOrders' => fn ($q) => $q
+                    'unPaidOrders' => fn($q) => $q
                         ->withSum('posPayments as total_paid', 'amount')
                         ->withCount(['orderProducts as items_count'])
                         ->with([
-                            'orderProducts' => fn ($q) => $q->select('id', 'order_id', 'item_id', 'quantity'),
+                            'orderProducts' => fn($q) => $q->select('id', 'order_id', 'item_id', 'quantity'),
                             'orderProducts.item:id,name',
                         ]),
                 ])
@@ -312,7 +312,7 @@ class CustomerService
     {
         try {
 
-            if (! $customer->hasRole(EnumRole::CUSTOMER)) {
+            if (!$customer->hasRole(EnumRole::CUSTOMER)) {
                 throw new Exception(trans('all.message.permission_denied'), 422);
             }
 
@@ -369,6 +369,6 @@ class CustomerService
     {
         $emails = explode('@', $email);
 
-        return $emails[0].mt_rand();
+        return $emails[0] . mt_rand();
     }
 }
