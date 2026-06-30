@@ -115,4 +115,28 @@
             'name'    => env( 'MAIL_FROM_NAME' , 'Example' ) ,
         ] ,
 
+        /*
+        |--------------------------------------------------------------------------
+        | Support / Contact Inbox
+        |--------------------------------------------------------------------------
+        |
+        | Destination address for website contact-form submissions. Falls back to
+        | the configured admin/from address so enquiries are never lost even when
+        | CONTACT_FORM_RECIPIENT is not set in the environment.
+        |
+        */
+
+        'support_address' => env(
+            'CONTACT_FORM_RECIPIENT' ,
+            env( 'ADMIN_MAIL_ADDRESS' , env( 'MAIL_FROM_ADDRESS' , 'support@smartduuka.com' ) )
+        ) ,
+
+        // Backwards-friendly alias used by some callers.
+        'contact' => [
+            'recipient' => env(
+                'CONTACT_FORM_RECIPIENT' ,
+                env( 'ADMIN_MAIL_ADDRESS' , env( 'MAIL_FROM_ADDRESS' , 'support@smartduuka.com' ) )
+            ) ,
+        ] ,
+
     ];

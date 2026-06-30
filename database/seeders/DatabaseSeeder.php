@@ -17,6 +17,7 @@
             $this->call( RoleTableSeeder::class );
             $this->call( PermissionTableSeeder::class );
             $this->call( UserTableSeeder::class );
+            $this->call( AccountingSeeder::class );
             $this->call( PaymentMethodSeeder::class );
             $this->call( PrintDesignSeeder::class );
             $this->call( PrintTemplateSeeder::class );

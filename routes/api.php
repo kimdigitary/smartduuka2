@@ -1,6 +1,7 @@
 <?php
 
     use App\Http\Controllers\Auth\Apps\AuthenticatedSessionController;
+    use App\Http\Controllers\ContactController;
     use App\Http\Controllers\IotecController;
     use App\Http\Controllers\SubscriptionController;
     use App\Http\Controllers\SubscriptionPlanController;
@@ -16,6 +17,11 @@
         Route::domain( $domain )->group( function () {
             Route::post( 'success' , [ IotecController::class , 'success' ] );
             Route::post( 'pay' , [ IotecController::class , 'pay' ] );
+
+            // Public website "Contact Us" form — rate limited to deter spam.
+            Route::post( 'contact' , [ ContactController::class , 'store' ] )
+                ->middleware( 'throttle:6,1' )
+                ->name( 'contact.store' );
 
             Route::get( 'whatsapp' , [ WhatsAppController::class , 'index' ] )->name( 'whats-app.index' );
             Route::post( 'whatsapp' , [ WhatsAppController::class , 'message' ] )->name( 'whats-app.message' );
