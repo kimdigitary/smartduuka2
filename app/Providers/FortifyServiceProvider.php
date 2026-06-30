@@ -15,6 +15,7 @@ use App\Http\Requests\LoginValidationRequest;
 use App\Models\CentralUser;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\LowStockNotifier;
 use App\Services\PinService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -106,6 +107,7 @@ class FortifyServiceProvider extends ServiceProvider
 
                     activityLog('Logged in', $tenantId, $tenantUser);
                     app(SyncTenantUsersToCentral::class)->sync();
+                    LowStockNotifier::checkTrackedProductsForLogin();
 
                     $tenant = $tenantUser->tenant;
 
