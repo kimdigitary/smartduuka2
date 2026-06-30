@@ -20,4 +20,13 @@
                 Log::error( 'Accounting auto-post (customer payment) failed: ' . $e->getMessage(), [ 'customer_payment_id' => $payment->id ] );
             }
         }
+
+        public function deleted(CustomerPayment $payment) : void
+        {
+            try {
+                $this->posting->reverse( [ 'customer_payment' ], $payment->id );
+            } catch ( \Throwable $e ) {
+                Log::error( 'Accounting reversal (customer payment) failed: ' . $e->getMessage(), [ 'customer_payment_id' => $payment->id ] );
+            }
+        }
     }

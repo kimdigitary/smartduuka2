@@ -14,6 +14,25 @@
 
         public function created(Expense $expense) : void
         {
+            $this->sync( $expense );
+        }
+
+        public function updated(Expense $expense) : void
+        {
+            $this->sync( $expense );
+        }
+
+        public function deleted(Expense $expense) : void
+        {
+            try {
+                $this->posting->voidExpense( $expense );
+            } catch ( \Throwable $e ) {
+                Log::error( 'Accounting void (expense) failed: ' . $e->getMessage(), [ 'expense_id' => $expense->id ] );
+            }
+        }
+
+        private function sync(Expense $expense) : void
+        {
             try {
                 $this->posting->postExpense( $expense );
             } catch ( \Throwable $e ) {
