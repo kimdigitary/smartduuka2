@@ -127,7 +127,9 @@
                                      ->first();
 
             if ( $period && $period->status === ReportingPeriod::CLOSED ) {
-                throw new \RuntimeException( 'Cannot post to a closed reporting period.' );
+                throw new \App\Exceptions\Accounting\ClosedPeriodException(
+                    'Cannot post to the closed reporting period ' . $calendarYear . '.'
+                );
             }
         }
     }

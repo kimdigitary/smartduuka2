@@ -20,4 +20,13 @@
                 Log::error( 'Accounting auto-post (purchase payment) failed: ' . $e->getMessage(), [ 'purchase_payment_id' => $payment->id ] );
             }
         }
+
+        public function deleted(PurchasePayment $payment) : void
+        {
+            try {
+                $this->posting->reverse( [ 'purchase_payment' ], $payment->id );
+            } catch ( \Throwable $e ) {
+                Log::error( 'Accounting reversal (purchase payment) failed: ' . $e->getMessage(), [ 'purchase_payment_id' => $payment->id ] );
+            }
+        }
     }
