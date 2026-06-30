@@ -663,7 +663,7 @@ class OrderService
                 customerName: $order->user?->name ?? null,
                 createdBy: auth()->user()->name,
                 orderDate: $order->order_datetime?->format('d M Y, H:i:s') ?? now()->format('d M Y, H:i:s'),
-                itemCount: $order->orderProducts->count(),
+                itemCount: $order->orderProducts->count()
             );
 
             Notification::route('mail', $adminEmail)

@@ -30,7 +30,7 @@
 
             $used = $this->countActiveUsers();
 
-            if ( $used >= $limit ) {
+            if ( $used > $limit ) {
                 return $this->deny(
                     "You have reached your plan's limit of {$limit} users. Please upgrade."
                 );
