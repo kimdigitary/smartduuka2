@@ -3,6 +3,18 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AccountingController;
+use App\Http\Controllers\Accounting\CurrencyController as AccountingCurrencyController;
+use App\Http\Controllers\Accounting\ExchangeRateController as AccountingExchangeRateController;
+use App\Http\Controllers\Accounting\VatController as AccountingVatController;
+use App\Http\Controllers\Accounting\DefaultAccountController as AccountingDefaultAccountController;
+use App\Http\Controllers\Accounting\AccountController as AccountingAccountController;
+use App\Http\Controllers\Accounting\CategoryController as AccountingCategoryController;
+use App\Http\Controllers\Accounting\TransactionController as AccountingTransactionController;
+use App\Http\Controllers\Accounting\PeriodController as AccountingPeriodController;
+use App\Http\Controllers\Accounting\ReportController as AccountingReportController;
+use App\Http\Controllers\Accounting\RecurringJournalController as AccountingRecurringJournalController;
+use App\Http\Controllers\Accounting\DeferralController as AccountingDeferralController;
+use App\Http\Controllers\Accounting\BudgetController as AccountingBudgetController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\AdministratorAddressController;
 use App\Http\Controllers\Admin\AdministratorController;
@@ -566,6 +578,82 @@ Route::middleware([
         Route::prefix('accounting')->name('accounting.')->group(function () {
             Route::get('entity', [AccountingController::class, 'getEntity']);
             Route::post('entity', [AccountingController::class, 'sveEntity']);
+
+            // Settings — currencies
+            Route::get('currency', [AccountingCurrencyController::class, 'index']);
+            Route::post('currency', [AccountingCurrencyController::class, 'store']);
+            Route::delete('currency/delete', [AccountingCurrencyController::class, 'destroy']);
+            Route::put('currency/{id}', [AccountingCurrencyController::class, 'update']);
+
+            // Settings — exchange rates
+            Route::get('exchange-rate', [AccountingExchangeRateController::class, 'index']);
+            Route::post('exchange-rate', [AccountingExchangeRateController::class, 'store']);
+            Route::delete('exchange-rate/delete', [AccountingExchangeRateController::class, 'destroy']);
+            Route::put('exchange-rate/{id}', [AccountingExchangeRateController::class, 'update']);
+
+            // Settings — taxes / VAT
+            Route::get('vat', [AccountingVatController::class, 'index']);
+            Route::post('vat', [AccountingVatController::class, 'store']);
+            Route::delete('vat/delete', [AccountingVatController::class, 'destroy']);
+            Route::put('vat/{id}', [AccountingVatController::class, 'update']);
+
+            // Settings — default account mapping
+            Route::get('default-accounts', [AccountingDefaultAccountController::class, 'index']);
+            Route::post('default-accounts', [AccountingDefaultAccountController::class, 'store']);
+
+            // Chart of accounts — categories
+            Route::get('category', [AccountingCategoryController::class, 'index']);
+            Route::post('category', [AccountingCategoryController::class, 'store']);
+            Route::delete('category/delete', [AccountingCategoryController::class, 'destroy']);
+            Route::put('category/{id}', [AccountingCategoryController::class, 'update']);
+
+            // Chart of accounts — accounts
+            Route::get('account', [AccountingAccountController::class, 'index']);
+            Route::post('account', [AccountingAccountController::class, 'store']);
+            Route::delete('account/delete', [AccountingAccountController::class, 'destroy']);
+            Route::put('account/{id}', [AccountingAccountController::class, 'update']);
+
+            // Transactions & journals
+            Route::get('transaction', [AccountingTransactionController::class, 'index']);
+            Route::post('transaction', [AccountingTransactionController::class, 'store']);
+            Route::get('transaction/{id}', [AccountingTransactionController::class, 'show']);
+
+            // Recurring journals
+            Route::get('recurring-journal', [AccountingRecurringJournalController::class, 'index']);
+            Route::post('recurring-journal', [AccountingRecurringJournalController::class, 'store']);
+            Route::delete('recurring-journal/delete', [AccountingRecurringJournalController::class, 'destroy']);
+            Route::put('recurring-journal/{id}', [AccountingRecurringJournalController::class, 'update']);
+
+            // Deferrals (accruals / prepayments)
+            Route::get('deferral', [AccountingDeferralController::class, 'index']);
+            Route::post('deferral', [AccountingDeferralController::class, 'store']);
+            Route::delete('deferral/delete', [AccountingDeferralController::class, 'destroy']);
+            Route::put('deferral/{id}', [AccountingDeferralController::class, 'update']);
+
+            // Budgets
+            Route::get('budget', [AccountingBudgetController::class, 'index']);
+            Route::post('budget', [AccountingBudgetController::class, 'store']);
+            Route::delete('budget/delete', [AccountingBudgetController::class, 'destroy']);
+            Route::put('budget/{id}', [AccountingBudgetController::class, 'update']);
+
+            // Reporting periods & year-end close
+            Route::get('period', [AccountingPeriodController::class, 'index']);
+            Route::post('period/open-next', [AccountingPeriodController::class, 'openNext']);
+            Route::post('period/{id}/close', [AccountingPeriodController::class, 'close']);
+            Route::post('period/{id}/adjusting', [AccountingPeriodController::class, 'adjusting']);
+            Route::post('period/{id}/reopen', [AccountingPeriodController::class, 'reopen']);
+            Route::post('period/{id}/year-end-close', [AccountingPeriodController::class, 'yearEndClose']);
+
+            // Reports
+            Route::prefix('reports')->group(function () {
+                Route::get('trial-balance', [AccountingReportController::class, 'trialBalance']);
+                Route::get('income-statement', [AccountingReportController::class, 'incomeStatement']);
+                Route::get('balance-sheet', [AccountingReportController::class, 'balanceSheet']);
+                Route::get('cash-flow', [AccountingReportController::class, 'cashFlow']);
+                Route::get('account-statement', [AccountingReportController::class, 'accountStatement']);
+                Route::get('vat-return', [AccountingReportController::class, 'vatReturn']);
+                Route::get('aging', [AccountingReportController::class, 'aging']);
+            });
         });
 
 

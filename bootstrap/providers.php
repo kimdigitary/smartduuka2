@@ -1,5 +1,6 @@
 <?php
 
+use App\Providers\AccountingObserverServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
 use App\Providers\PaymentServiceProvider;
@@ -14,4 +15,5 @@ return [
     PaymentServiceProvider::class,
     LaravelServiceProvider::class,
     IFRSServiceProvider::class,
+    AccountingObserverServiceProvider::class,
 ];
