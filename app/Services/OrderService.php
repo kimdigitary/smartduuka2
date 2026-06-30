@@ -519,10 +519,6 @@ class OrderService
     {
         try {
             DB::transaction(function () use ($request) {
-                //                    $current_total_sales = Order::count();
-                //                    $tenantId            = tenant( 'id' );
-                //                      starter( $tenantId )
-
                 $status = $request->integer('status');
                 $is_preorder = $request->integer('is_preorder');
                 $paymentType = $request->integer('paymentType');
