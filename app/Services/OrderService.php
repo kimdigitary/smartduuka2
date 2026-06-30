@@ -519,10 +519,6 @@ class OrderService
     {
         try {
             DB::transaction(function () use ($request) {
-                //                    $current_total_sales = Order::count();
-                //                    $tenantId            = tenant( 'id' );
-                //                      starter( $tenantId )
-
                 $status = $request->integer('status');
                 $is_preorder = $request->integer('is_preorder');
                 $paymentType = $request->integer('paymentType');
@@ -667,7 +663,7 @@ class OrderService
                 customerName: $order->user?->name ?? null,
                 createdBy: auth()->user()->name,
                 orderDate: $order->order_datetime?->format('d M Y, H:i:s') ?? now()->format('d M Y, H:i:s'),
-                itemCount: $order->orderProducts->count(),
+                itemCount: $order->orderProducts->count()
             );
 
             Notification::route('mail', $adminEmail)
