@@ -65,25 +65,25 @@ function formatPhoneNumber(string|int|null $phone): ?string
         return null;
     }
 
-    $cleanPhone = preg_replace('/[^0-9]/', '', (string) $phone) ?? '';
+    $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone) ?? '';
 
     if ($cleanPhone === '') {
         return null;
     }
 
     if (strlen($cleanPhone) === 10 && str_starts_with($cleanPhone, '0')) {
-        return '+256'.substr($cleanPhone, 1);
+        return '+256' . substr($cleanPhone, 1);
     }
 
     if (strlen($cleanPhone) === 9) {
-        return '+256'.$cleanPhone;
+        return '+256' . $cleanPhone;
     }
 
     if (strlen($cleanPhone) === 12 && str_starts_with($cleanPhone, '256')) {
-        return '+'.$cleanPhone;
+        return '+' . $cleanPhone;
     }
 
-    return '+'.ltrim($cleanPhone, '+');
+    return '+' . ltrim($cleanPhone, '+');
 }
 
 function tenantContext(callable $callback, int|Tenant|string|null $tenant = null): mixed
@@ -94,7 +94,7 @@ function tenantContext(callable $callback, int|Tenant|string|null $tenant = null
 
         return $callback();
     } catch (TenantCouldNotBeIdentifiedById $exception) {
-        info('Functions.php: '.$exception->getMessage());
+        info('Functions.php: ' . $exception->getMessage());
 
         return null;
     } finally {
@@ -102,7 +102,7 @@ function tenantContext(callable $callback, int|Tenant|string|null $tenant = null
             try {
                 tenancy()->initialize($previousTenant);
             } catch (TenantCouldNotBeIdentifiedById $e) {
-                info('Functions.php: '.$e->getMessage());
+                info('Functions.php: ' . $e->getMessage());
             }
         } else {
             tenancy()->end();
@@ -138,7 +138,7 @@ function numericToAssociativeArrayBuilder($array): array
     $buildArray = [];
     if (count($array)) {
         foreach ($array as $arr) {
-            if (! $arr['parent']) {
+            if (!$arr['parent']) {
                 $parentId = $arr['id'];
                 $parentIncrementId = $i;
                 $buildArray[$i] = $arr;
@@ -152,7 +152,7 @@ function numericToAssociativeArrayBuilder($array): array
     }
     if ($buildArray) {
         foreach ($buildArray as $key => $build) {
-            if ($build['url'] == '#' && ! isset($build['children'])) {
+            if ($build['url'] == '#' && !isset($build['children'])) {
                 unset($buildArray[$key]);
             }
         }
@@ -163,7 +163,7 @@ function numericToAssociativeArrayBuilder($array): array
 
 function isDev(): bool
 {
-    return ((bool) config('app.dev')) === true;
+    return ((bool)config('app.dev')) === true;
 }
 
 function eventConfig(string $event)
@@ -178,12 +178,12 @@ function eventConfig(string $event)
     }
 
     return collect($decodedEvents)->firstWhere('id', $event) ?? [
-        'id' => $event,
+        'id'       => $event,
         'channels' => [
-            'email' => false,
-            'sms' => false,
+            'email'    => false,
+            'sms'      => false,
             'whatsapp' => false,
-            'system' => true,
+            'system'   => true,
         ],
     ];
 }
@@ -191,22 +191,22 @@ function eventConfig(string $event)
 function notificationChannels(object $notifiable, string $event): array
 {
     $eventConfig = eventConfig($event);
-    if (! $eventConfig || ! isset($eventConfig['channels'])) {
+    if (!$eventConfig || !isset($eventConfig['channels'])) {
         return [];
     }
 
     $isAnonymous = $notifiable instanceof AnonymousNotifiable;
 
     $channelMap = [
-        'email' => ['mail'],
-        'sms' => ['sms'],
+        'email'    => ['mail'],
+        'sms'      => ['sms'],
         'whatsapp' => ['whatsapp'],
-        'system' => ['database', 'broadcast'],
+        'system'   => ['database', 'broadcast'],
     ];
 
     $channels = collect($channelMap)
         ->filter(function (array $channels, string $key) use ($eventConfig) {
-            return (bool) ($eventConfig['channels'][$key] ?? false);
+            return (bool)($eventConfig['channels'][$key] ?? false);
         })
         ->flatMap(function (array $channels) use ($isAnonymous) {
             if ($isAnonymous) {
@@ -221,7 +221,7 @@ function notificationChannels(object $notifiable, string $event): array
         ->values()
         ->all();
 
-    return ! empty($channels) ? $channels : [];
+    return !empty($channels) ? $channels : [];
 }
 
 function phoneNumber(): string
@@ -239,7 +239,7 @@ function normalisePhone(string $phone): string
     }
 
     if (str_starts_with($phone, '0')) {
-        return '256'.substr($phone, 1);
+        return '256' . substr($phone, 1);
     }
 
     return $phone;
@@ -247,7 +247,7 @@ function normalisePhone(string $phone): string
 
 function recordId(string $prefix, Model $model, $pad = null): string
 {
-    return $prefix.'-'.Str::padLeft($model->id, $pad ?? 6, '0');
+    return $prefix . '-' . Str::padLeft($model->id, $pad ?? 6, '0');
 }
 
 function permissionWithAccess(&$permissions, $rolePermissions): object
@@ -269,7 +269,7 @@ function isDistributor()
 {
     $user = Auth::user();
 
-    return $user->roles->some(fn ($role) => $role->id == Role::DISTRIBUTOR);
+    return $user->roles->some(fn($role) => $role->id == Role::DISTRIBUTOR);
 }
 
 function parseDate(string $date): string
@@ -286,7 +286,7 @@ function ledgerCode(): int|string
 {
     $last_ledger = Ledger::orderBy('id', 'desc')->first();
 
-    return ! $last_ledger ? Str::padLeft(1, 5, '0') : Str::padLeft(((int) $last_ledger->code) + 1, 5, '0');
+    return !$last_ledger ? Str::padLeft(1, 5, '0') : Str::padLeft(((int)$last_ledger->code) + 1, 5, '0');
 }
 
 function enabledWarehouse(): bool
@@ -325,7 +325,7 @@ function hasFeature(string $tenantId, PlanFeature $feature): bool
     return tenancy()->central(function () use ($tenantId, $feature) {
         $plan = activeSubscription($tenantId);
 
-        if (! $plan) {
+        if (!$plan) {
             return false;
         }
 
@@ -345,7 +345,7 @@ function logo()
 
 function tenantSubscriptions(string $tenantId): Builder
 {
-    return centralContext(fn () => TenantSubscription::with('subscriptionPlan')
+    return centralContext(fn() => TenantSubscription::with('subscriptionPlan')
         ->where('expires_at', '>=', now())
         ->where('payment_status', SubscriptionPaymentStatus::Paid)
         ->where('status', Status::ACTIVE)
@@ -356,12 +356,12 @@ function tenantSubscriptions(string $tenantId): Builder
 
 function activeSubscription(string $tenantId): ?SubscriptionPlan
 {
-    return centralContext(fn () => tenantSubscriptions($tenantId)?->first()?->subscriptionPlan);
+    return centralContext(fn() => tenantSubscriptions($tenantId)?->first()?->subscriptionPlan);
 }
 
 function branchId(): int
 {
-    return (int) request()->header('X-BranchId');
+    return (int)request()->header('X-BranchId');
 }
 
 function tenantId(): ?string
@@ -373,13 +373,13 @@ function addPayment(?Order $order = null, int $amount = 0, int $payment_method =
 PosPaymentType::SALE): void
 {
     $p = PosPayment::create([
-        'date' => now(),
-        'reference_no' => $reference ?? 'PP-'.time(),
-        'amount' => $amount,
+        'date'              => now(),
+        'reference_no'      => $reference ?? 'PP-' . time(),
+        'amount'            => $amount,
         'payment_method_id' => $payment_method,
-        'pos_payment_type' => $pos_payment_type,
-        'register_id' => register()?->id,
-        'branch_id' => branchId(),
+        'pos_payment_type'  => $pos_payment_type,
+        'register_id'       => register()?->id,
+        'branch_id'         => branchId(),
     ]);
 
     $p->update(['reference_no' => recordId('PP', $p)]);
@@ -389,15 +389,15 @@ PosPaymentType::SALE): void
     }
 
     $pmt = PaymentMethodTransaction::create([
-        'amount' => $amount,
-        'charge' => 0,
-        'description' => 'Customer Payment ',
+        'amount'            => $amount,
+        'charge'            => 0,
+        'description'       => 'Customer Payment ',
         'payment_method_id' => $payment_method,
-        'branch_id' => branchId(),
+        'branch_id'         => branchId(),
     ]);
     if ($order) {
         $pmt->update([
-            'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #'.$order->order_serial_no,
+            'item_type' => Order::class, 'item_id' => $order->id, 'description' => 'Order Payment #' . $order->order_serial_no,
         ]);
     }
 }
@@ -410,14 +410,14 @@ function datetime2(?Carbon $datetime): string
 function addToLedger(User $user, string $reference, float $bill_amount, float $paid)
 {
     return CustomerLedger::create([
-        'user_id' => $user->id,
-        'date' => now(),
-        'reference' => time(),
+        'user_id'     => $user->id,
+        'date'        => now(),
+        'reference'   => time(),
         'description' => $reference,
         'bill_amount' => $bill_amount,
-        'paid' => $paid,
-        'branch_id' => branchId(),
-        'balance' => userCredit($user) - $paid,
+        'paid'        => $paid,
+        'branch_id'   => branchId(),
+        'balance'     => userCredit($user) - $paid,
     ]);
 }
 
@@ -456,20 +456,20 @@ function orderName(Order $order): string
     $order_serial_no = $order->order_serial_no;
     $label = orderLabel($order);
 
-    return $order->user->name.' '.$label.'#'.$order_serial_no;
+    return $order->user->name . ' ' . $label . '#' . $order_serial_no;
 }
 
 function addToCustomerWalletTransaction(User $customer, float $amount, CustomerWalletTransactionType $typ, int $payment_method_id, ?string $reference = null)
 {
     $transaction = CustomerWalletTransaction::create([
-        'user_id' => $customer->id,
-        'branch_id' => branchId(),
-        'reference' => '',
-        'amount' => $amount,
-        'type' => $typ,
+        'user_id'           => $customer->id,
+        'branch_id'         => branchId(),
+        'reference'         => '',
+        'amount'            => $amount,
+        'type'              => $typ,
         'payment_method_id' => $payment_method_id,
-        'register_id' => register()?->id,
-        'balance' => 0,
+        'register_id'       => register()?->id,
+        'balance'           => 0,
     ]);
     $transaction->update(['reference' => $reference ?? walletTransactionReferenceNo($transaction)]);
     $customer->refresh();
@@ -481,7 +481,7 @@ function addToCustomerWalletTransaction(User $customer, float $amount, CustomerW
 
 function walletBalance(User $user): float
 {
-    return (float) $user->walletTransactions()->sum('amount');
+    return (float)$user->walletTransactions()->sum('amount');
 }
 
 function orderSerialNo(Order $order): string
@@ -495,7 +495,7 @@ function orderSerialNo(Order $order): string
         default => 'ORD-'
     };
 
-    return $prefix.Str::padLeft($id, Pad::LENGTH, '0');
+    return $prefix . Str::padLeft($id, Pad::LENGTH, '0');
 }
 
 function walletTransactionReferenceNo(CustomerWalletTransaction $wallet_transaction): string
@@ -508,12 +508,12 @@ function walletTransactionReferenceNo(CustomerWalletTransaction $wallet_transact
         default => 'WT-'
     };
 
-    return $prefix.Str::padLeft($id, Pad::LENGTH, '0');
+    return $prefix . Str::padLeft($id, Pad::LENGTH, '0');
 }
 
 function validateAndCorrectChecksum($code, $type): string
 {
-    $code = (string) $code;
+    $code = (string)$code;
 
     if ($type === BarcodeType::EAN_13) {
         if (strlen($code) !== 13) {
@@ -525,7 +525,7 @@ function validateAndCorrectChecksum($code, $type): string
 
         // Calculate the checksum for EAN-13
         for ($i = 0; $i < 12; $i++) {
-            $digit = (int) $digits[$i];
+            $digit = (int)$digits[$i];
             $checksum += ($i % 2 === 0) ? $digit : $digit * 3;
         }
 
@@ -534,7 +534,7 @@ function validateAndCorrectChecksum($code, $type): string
         // Compare the calculated checksum with the 13th digit
         if ($calculatedChecksum != $digits[12]) {
             // If the checksum is invalid, correct it
-            return substr($code, 0, 12).$calculatedChecksum;
+            return substr($code, 0, 12) . $calculatedChecksum;
         }
 
         return $code; // The checksum is already correct
@@ -551,7 +551,7 @@ function validateAndCorrectChecksum($code, $type): string
 
         // Calculate the checksum for UPC-A
         for ($i = 0; $i < 11; $i++) {
-            $digit = (int) $digits[$i];
+            $digit = (int)$digits[$i];
             $checksum += ($i % 2 === 0) ? $digit * 3 : $digit;
         }
 
@@ -560,7 +560,7 @@ function validateAndCorrectChecksum($code, $type): string
         // Compare the calculated checksum with the 12th digit
         if ($calculatedChecksum != $digits[11]) {
             // If the checksum is invalid, correct it
-            return substr($code, 0, 11).$calculatedChecksum;
+            return substr($code, 0, 11) . $calculatedChecksum;
         }
 
         return $code; // The checksum is already correct
@@ -580,7 +580,7 @@ function validateAndCorrectEAN13Checksum($ean13)
 
     // Calculate the checksum
     for ($i = 0; $i < 12; $i++) {
-        $digit = (int) $digits[$i];
+        $digit = (int)$digits[$i];
         $checksum += ($i % 2 === 0) ? $digit : $digit * 3;
     }
 
@@ -589,7 +589,7 @@ function validateAndCorrectEAN13Checksum($ean13)
     // Compare the calculated checksum with the 13th digit
     if ($calculatedChecksum != $digits[12]) {
         // If the checksum is invalid, correct it
-        $correctedEAN13 = substr($ean13, 0, 12).$calculatedChecksum;
+        $correctedEAN13 = substr($ean13, 0, 12) . $calculatedChecksum;
 
         return $correctedEAN13;
     }
@@ -610,7 +610,7 @@ function royaltyPointsExchangeRate(): float|int
 
 function clean_amount(string $value): int
 {
-    return (int) preg_replace('/\D/', '', $value);
+    return (int)preg_replace('/\D/', '', $value);
 }
 
 function currency($value): string
@@ -637,10 +637,10 @@ function format_currency_short($n): string
     }
 
     if (config('system.currency_position') == CurrencyPosition::RIGHT) {
-        return $format.$suffix.' '.currencySymbol();
+        return $format . $suffix . ' ' . currencySymbol();
     }
 
-    return currencySymbol().' '.$format.$suffix;
+    return currencySymbol() . ' ' . $format . $suffix;
 }
 
 function currencySymbol(): string
@@ -654,7 +654,7 @@ function currencySymbol(): string
 
 function datetime($value): string
 {
-    if (! $value) {
+    if (!$value) {
         return '';
     }
 
@@ -663,7 +663,7 @@ function datetime($value): string
 
 function siteDate($value): string
 {
-    if (! $value) {
+    if (!$value) {
         return '';
     }
 
@@ -673,10 +673,10 @@ function siteDate($value): string
 function transformGroup($group)
 {
     return [
-        'id' => $group->id,
-        'name' => $group->name,
-        'ledgers' => $group->ledger,
-        'children' => $group->childrenRecursive->map(fn ($child) => transformGroup($child)),
+        'id'       => $group->id,
+        'name'     => $group->name,
+        'ledgers'  => $group->ledger,
+        'children' => $group->childrenRecursive->map(fn($child) => transformGroup($child)),
     ];
 }
 
@@ -705,8 +705,8 @@ function updateCoa(): void
                 ['name' => $payment_account->name, 'parent_id' => $current_assets->id],
                 [
                     'currency_id' => $payment_account->currency_id,
-                    'type' => 'debit',
-                    'code' => $code,
+                    'type'        => 'debit',
+                    'code'        => $code,
                 ]
             );
         }
@@ -714,24 +714,24 @@ function updateCoa(): void
 
     $ledgers = [
         [
-            'name' => 'Stock value',
+            'name'      => 'Stock value',
             'parent_id' => $current_assets?->id,
-            'type' => 'debit',
+            'type'      => 'debit',
         ],
         [
-            'name' => 'Sales',
+            'name'      => 'Sales',
             'parent_id' => $revenue?->id,
-            'type' => 'credit',
+            'type'      => 'credit',
         ],
         [
-            'name' => 'Sales return',
+            'name'      => 'Sales return',
             'parent_id' => $revenue?->id,
-            'type' => 'debit',
+            'type'      => 'debit',
         ],
         [
-            'name' => 'Cost of Sales',
+            'name'      => 'Cost of Sales',
             'parent_id' => $revenue?->id,
-            'type' => 'debit',
+            'type'      => 'debit',
         ],
     ];
 
@@ -741,8 +741,8 @@ function updateCoa(): void
                 ['name' => $ledger['name'], 'parent_id' => $ledger['parent_id']],
                 [
                     'currency_id' => $default_currency->id,
-                    'type' => $ledger['type'],
-                    'code' => $code,
+                    'type'        => $ledger['type'],
+                    'code'        => $code,
                 ]
             );
         }
