@@ -14,11 +14,34 @@
 
         public function created(Order $order) : void
         {
+            $this->sync( $order, 'create' );
+        }
+
+        /**
+         * Edits, quotation→sale conversion and payment changes all flow through an
+         * Order update — postSale reconciles the ledger to the new state (delta only).
+         */
+        public function updated(Order $order) : void
+        {
+            $this->sync( $order, 'update' );
+        }
+
+        public function deleted(Order $order) : void
+        {
+            try {
+                $this->posting->voidSale( $order );
+            } catch ( \Throwable $e ) {
+                Log::error( 'Accounting void (sale) failed: ' . $e->getMessage(), [ 'order_id' => $order->id ] );
+            }
+        }
+
+        private function sync(Order $order, string $context) : void
+        {
             // Auto-posting must never break the operational flow.
             try {
                 $this->posting->postSale( $order );
             } catch ( \Throwable $e ) {
-                Log::error( 'Accounting auto-post (sale) failed: ' . $e->getMessage(), [ 'order_id' => $order->id ] );
+                Log::error( "Accounting auto-post (sale {$context}) failed: " . $e->getMessage(), [ 'order_id' => $order->id ] );
             }
         }
     }

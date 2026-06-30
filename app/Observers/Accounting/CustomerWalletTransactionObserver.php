@@ -20,4 +20,13 @@
                 Log::error( 'Accounting auto-post (wallet) failed: ' . $e->getMessage(), [ 'wallet_txn_id' => $wallet->id ] );
             }
         }
+
+        public function deleted(CustomerWalletTransaction $wallet) : void
+        {
+            try {
+                $this->posting->reverse( [ 'wallet' ], $wallet->id );
+            } catch ( \Throwable $e ) {
+                Log::error( 'Accounting reversal (wallet) failed: ' . $e->getMessage(), [ 'wallet_txn_id' => $wallet->id ] );
+            }
+        }
     }

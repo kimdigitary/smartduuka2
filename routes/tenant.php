@@ -7,6 +7,7 @@ use App\Http\Controllers\Accounting\CurrencyController as AccountingCurrencyCont
 use App\Http\Controllers\Accounting\ExchangeRateController as AccountingExchangeRateController;
 use App\Http\Controllers\Accounting\VatController as AccountingVatController;
 use App\Http\Controllers\Accounting\DefaultAccountController as AccountingDefaultAccountController;
+use App\Http\Controllers\Accounting\PaymentMethodAccountController as AccountingPaymentMethodAccountController;
 use App\Http\Controllers\Accounting\AccountController as AccountingAccountController;
 use App\Http\Controllers\Accounting\CategoryController as AccountingCategoryController;
 use App\Http\Controllers\Accounting\TransactionController as AccountingTransactionController;
@@ -15,6 +16,11 @@ use App\Http\Controllers\Accounting\ReportController as AccountingReportControll
 use App\Http\Controllers\Accounting\RecurringJournalController as AccountingRecurringJournalController;
 use App\Http\Controllers\Accounting\DeferralController as AccountingDeferralController;
 use App\Http\Controllers\Accounting\BudgetController as AccountingBudgetController;
+use App\Http\Controllers\Accounting\FixedAssetController as AccountingFixedAssetController;
+use App\Http\Controllers\Accounting\LoanController as AccountingLoanController;
+use App\Http\Controllers\Accounting\AssignmentController as AccountingAssignmentController;
+use App\Http\Controllers\Accounting\BankReconciliationController as AccountingBankReconciliationController;
+use App\Http\Controllers\Accounting\PostingAlertController as AccountingPostingAlertController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\Admin\AdministratorAddressController;
 use App\Http\Controllers\Admin\AdministratorController;
@@ -601,6 +607,10 @@ Route::middleware([
             Route::get('default-accounts', [AccountingDefaultAccountController::class, 'index']);
             Route::post('default-accounts', [AccountingDefaultAccountController::class, 'store']);
 
+            // Settings — payment method → ledger account mapping
+            Route::get('payment-method-accounts', [AccountingPaymentMethodAccountController::class, 'index']);
+            Route::post('payment-method-accounts', [AccountingPaymentMethodAccountController::class, 'store']);
+
             // Chart of accounts — categories
             Route::get('category', [AccountingCategoryController::class, 'index']);
             Route::post('category', [AccountingCategoryController::class, 'store']);
@@ -635,6 +645,32 @@ Route::middleware([
             Route::post('budget', [AccountingBudgetController::class, 'store']);
             Route::delete('budget/delete', [AccountingBudgetController::class, 'destroy']);
             Route::put('budget/{id}', [AccountingBudgetController::class, 'update']);
+
+            // Fixed assets
+            Route::get('fixed-asset', [AccountingFixedAssetController::class, 'index']);
+            Route::post('fixed-asset', [AccountingFixedAssetController::class, 'store']);
+            Route::delete('fixed-asset/delete', [AccountingFixedAssetController::class, 'destroy']);
+            Route::put('fixed-asset/{id}', [AccountingFixedAssetController::class, 'update']);
+
+            // Loans
+            Route::get('loan', [AccountingLoanController::class, 'index']);
+            Route::post('loan', [AccountingLoanController::class, 'store']);
+            Route::delete('loan/delete', [AccountingLoanController::class, 'destroy']);
+            Route::put('loan/{id}', [AccountingLoanController::class, 'update']);
+
+            // Assignments (clearing / matching)
+            Route::get('assignment', [AccountingAssignmentController::class, 'index']);
+            Route::post('assignment', [AccountingAssignmentController::class, 'store']);
+            Route::delete('assignment/delete', [AccountingAssignmentController::class, 'destroy']);
+
+            // Bank reconciliation state
+            Route::get('bank-reconciliation', [AccountingBankReconciliationController::class, 'index']);
+            Route::post('bank-reconciliation', [AccountingBankReconciliationController::class, 'store']);
+
+            // Posting alerts (operational changes that couldn't reach the ledger)
+            Route::get('posting-alerts', [AccountingPostingAlertController::class, 'index']);
+            Route::post('posting-alerts/{id}/resolve', [AccountingPostingAlertController::class, 'resolve']);
+            Route::delete('posting-alerts/delete', [AccountingPostingAlertController::class, 'destroy']);
 
             // Reporting periods & year-end close
             Route::get('period', [AccountingPeriodController::class, 'index']);
